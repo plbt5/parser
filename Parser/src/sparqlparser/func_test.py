@@ -12,7 +12,7 @@ from sparqlparser.grammar import *
 s = "'work' ^^<work>"
 
 r = RDFLiteral(s)
-r.test()
+assert r.test()
 
 # test copy 
 

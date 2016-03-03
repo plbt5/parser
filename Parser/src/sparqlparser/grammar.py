@@ -199,17 +199,19 @@ class ParseInfo(metaclass=ParsePattern):
         self.__dict__['items'] = other.__dict__['items']
         assert self.isValid()
     
-    def test(self, *, render=False, dump=False):
-        '''Prints a report with the result of various checks. Optionally renders and/or dumps itself.'''
-        print('{} is{}internally label-consistent'.format(self, ' ' if self.__isLabelConsistent() else ' not '))
-        print('{} renders a{}expression ({})'.format(self, ' valid ' if self.yieldsValidExpression() else 'n invalid ', self.__str__()))
-        print('{} is a{}valid parse object'.format(self, ' ' if self.isValid() else ' not '))
+    def test(self, *, report = False, render=False, dump=False):
+        '''Runs various checks. Returns True if all pass, else False. Optionally prints a report with the check results, renders and/or dumps itself.'''
+        if report:
+            print('{} is{}internally label-consistent'.format(self, ' ' if self.__isLabelConsistent() else ' not '))
+            print('{} renders a{}expression ({})'.format(self, ' valid ' if self.yieldsValidExpression() else 'n invalid ', self.__str__()))
+            print('{} is a{}valid parse object'.format(self, ' ' if self.isValid() else ' not '))
         if render:
             print('--rendering:')
             self.render()
         if dump:
             print('--dump:')
             self.dump()
+        return self.__isLabelConsistent() and self.yieldsValidExpression() and self.isValid()
 
     def getName(self):
         '''Returns name attribute (non-recursive).'''
