@@ -121,7 +121,7 @@ class ParseInfo(metaclass=ParsePattern):
         '''Checks if for labels are only not None for pairs [label, value] where value is a ParseInfo instance, and in those cases label must be equal to value.name.
         This is for internal use only.'''
         return all([i[0] == i[1].name if isinstance(i[1], ParseInfo) else i[0] == None if isinstance(i[1], str) else False for i in self.getItems()]) and \
-                all([i[1].__isLabelConsistent() if isinstance(i[1], ParseInfo) else True for i in self.getItems()])
+                all([i[1].__isLabelConsistent() if isinstance(i[1], ParseInfo) else i[0] == None for i in self.getItems()])
 
     def __getPattern(self):
         '''Returns the pattern used to parse expressions for this class.'''
@@ -199,8 +199,8 @@ class ParseInfo(metaclass=ParsePattern):
         self.__dict__['items'] = other.__dict__['items']
         assert self.isValid()
     
-    def test(self, *, report = False, render=False, dump=False):
-        '''Runs various checks. Returns True if all pass, else False. Optionally prints a report with the check results, renders and/or dumps itself.'''
+    def check(self, *, report = False, render=False, dump=False):
+        '''Runs various checks. Returns True if all checks pass, else False. Optionally prints a report with the check results, renders, and/or dumps itself.'''
         if report:
             print('{} is{}internally label-consistent'.format(self, ' ' if self.__isLabelConsistent() else ' not '))
             print('{} renders a{}expression ({})'.format(self, ' valid ' if self.yieldsValidExpression() else 'n invalid ', self.__str__()))
@@ -210,7 +210,7 @@ class ParseInfo(metaclass=ParsePattern):
             self.render()
         if dump:
             print('--dump:')
-            self.dump()
+            print(self.dump())
         return self.__isLabelConsistent() and self.yieldsValidExpression() and self.isValid()
 
     def getName(self):
@@ -344,7 +344,7 @@ def __parseInfoFunc(cls):
     
     return makeparseinfo
 
-def punctuatedList(pattern, delim=','):
+def separatedList(pattern, delim=','):
     '''Similar to a delimited list of instances from a ParseInfo subclass, but includes the delimiter in its ParseResults. Returns a 
     ParseResults object containing a simple list of matched tokens separated by the delimiter.'''
     
@@ -1466,7 +1466,7 @@ class Expression(SPARQLNonTerminal): pass
 if do_parseactions: Expression_p.setName('Expression').setParseAction(__parseInfoFunc((Expression)))
 
 # pattern and class to parse and __str__ delimited Expression lists
-Expression_list_p = punctuatedList(Expression_p)
+Expression_list_p = separatedList(Expression_p)
  
 # [71]    ArgList   ::=   NIL | '(' 'DISTINCT'? Expression ( ',' Expression )* ')' 
 ArgList_p = Group(NIL_p('nil')) | (LPAR_p + Optional(DISTINCT_kw_p('distinct')) + Expression_list_p('argument') + RPAR_p)
@@ -1792,10 +1792,10 @@ class PathOneInPropertySet(SPARQLNonTerminal): pass
 if do_parseactions: PathOneInPropertySet_p.setName('PathOneInPropertySet').setParseAction(__parseInfoFunc((PathOneInPropertySet)))
 
 # pattern and class to parse and __str__ delimited PathOneInPropertySet lists
-PathOneInPropertySet_list_p = punctuatedList(PathOneInPropertySet_p, delim='|')
+PathOneInPropertySet_list_p = separatedList(PathOneInPropertySet_p, delim='|')
 
 # [95]    PathNegatedPropertySet    ::=   PathOneInPropertySet | '(' ( PathOneInPropertySet ( '|' PathOneInPropertySet )* )? ')' 
-PathNegatedPropertySet_p = Group(PathOneInPropertySet_p | (LPAR_p + Optional(PathOneInPropertySet_list_p('pathone')) + RPAR_p))
+PathNegatedPropertySet_p = Group(PathOneInPropertySet_p | (LPAR_p + Optional(PathOneInPropertySet_list_p('pathinone')) + RPAR_p))
 class PathNegatedPropertySet(SPARQLNonTerminal): pass
 if do_parseactions: PathNegatedPropertySet_p.setName('PathNegatedPropertySet').setParseAction(__parseInfoFunc((PathNegatedPropertySet)))
 
@@ -1824,17 +1824,13 @@ class PathEltOrInverse(SPARQLNonTerminal): pass
 if do_parseactions: PathEltOrInverse_p.setName('PathEltOrInverse').setParseAction(__parseInfoFunc((PathEltOrInverse)))
 
 # [90]    PathSequence      ::=   PathEltOrInverse ( '/' PathEltOrInverse )* 
-PathSequence_p = Group(delimitedList(PathEltOrInverse_p, delim='/'))
-class PathSequence(SPARQLNonTerminal):  
-    def __str__(self):
-        return ' / '.join([v[1] if isinstance(v[1], str) else v[1].__str__() for v in self.getItems()])
+PathSequence_p = Group(separatedList(PathEltOrInverse_p, delim='/'))
+class PathSequence(SPARQLNonTerminal):pass
 if do_parseactions: PathSequence_p.setName('PathSequence').setParseAction(__parseInfoFunc((PathSequence)))
 
 # [89]    PathAlternative   ::=   PathSequence ( '|' PathSequence )* 
-PathAlternative_p = Group(delimitedList(PathSequence_p, delim='|'))
-class PathAlternative(SPARQLNonTerminal):
-    def __str__(self):
-        return ' | '.join([v[1] if isinstance(v[1], str) else v[1].__str__() for v in self.getItems()])
+PathAlternative_p = Group(separatedList(PathSequence_p, delim='|'))
+class PathAlternative(SPARQLNonTerminal): pass
 if do_parseactions: PathAlternative_p.setName('PathAlternative').setParseAction(__parseInfoFunc((PathAlternative)))
  
 # [88]    Path      ::=   PathAlternative
@@ -1846,10 +1842,8 @@ class ObjectPath(SPARQLNonTerminal): pass
 if do_parseactions: ObjectPath_p.setName('ObjectPath').setParseAction(__parseInfoFunc((ObjectPath)))
 
 # [86]    ObjectListPath    ::=   ObjectPath ( ',' ObjectPath )* 
-ObjectListPath_p = Group(delimitedList(ObjectPath_p))
-class ObjectListPath(SPARQLNonTerminal):
-    def __str__(self):
-        return ', '.join([v[1] if isinstance(v[1], str) else v[1].__str__() for v in self.getItems()])
+ObjectListPath_p = Group(separatedList(ObjectPath_p))
+class ObjectListPath(SPARQLNonTerminal): pass
 if do_parseactions: ObjectListPath_p.setName('ObjectListPath').setParseAction(__parseInfoFunc((ObjectListPath)))
 
 # [85]    VerbSimple        ::=   Var 
@@ -1868,10 +1862,8 @@ class Object(SPARQLNonTerminal): pass
 if do_parseactions: Object_p.setName('Object').setParseAction(__parseInfoFunc((Object)))
  
 # [79]    ObjectList        ::=   Object ( ',' Object )* 
-ObjectList_p = Group(delimitedList(Object_p))
-class ObjectList(SPARQLNonTerminal):
-    def __str__(self):
-        return ', '.join([v[1] if isinstance(v[1], str) else v[1].__str__() for v in self.getItems()])
+ObjectList_p = Group(separatedList(Object_p))
+class ObjectList(SPARQLNonTerminal): pass
 if do_parseactions: ObjectList_p.setName('ObjectList').setParseAction(__parseInfoFunc((ObjectList)))
 
 # [83]    PropertyListPathNotEmpty          ::=   ( VerbPath | VerbSimple ) ObjectListPath ( ';' ( ( VerbPath | VerbSimple ) ObjectList )? )* 
@@ -1906,7 +1898,7 @@ class TriplesSameSubject(SPARQLNonTerminal): pass
 if do_parseactions: TriplesSameSubject_p.setName('TriplesSameSubject').setParseAction(__parseInfoFunc((TriplesSameSubject)))
 
 # pattern and class to parse and __str__ delimited TriplesSameSubject lists
-TriplesSameSubject_list_p = punctuatedList(TriplesSameSubject_p, delim='.')
+TriplesSameSubject_list_p = separatedList(TriplesSameSubject_p, delim='.')
 
 # [74]    ConstructTriples          ::=   TriplesSameSubject ( '.' ConstructTriples? )? 
 ConstructTriples_p = Group(TriplesSameSubject_list_p + Optional(PERIOD_p))
@@ -1997,7 +1989,7 @@ class GraphPatternNotTriples(SPARQLNonTerminal): pass
 if do_parseactions: GraphPatternNotTriples_p.setName('GraphPatternNotTriples').setParseAction(__parseInfoFunc((GraphPatternNotTriples)))
 
 # pattern and class to parse and __str__ delimited TriplesSameSubjectPath lists
-TriplesSameSubjectPath_list_p = punctuatedList(TriplesSameSubjectPath_p, delim='.')
+TriplesSameSubjectPath_list_p = separatedList(TriplesSameSubjectPath_p, delim='.')
                                            
 # [55]    TriplesBlock      ::=   TriplesSameSubjectPath ( '.' TriplesBlock? )? 
 TriplesBlock_p = Group(TriplesSameSubjectPath_list_p('subjpath') + Optional(PERIOD_p))

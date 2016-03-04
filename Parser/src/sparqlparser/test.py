@@ -4,17 +4,23 @@ from sparqlparser.grammar import *
 from sparqlparser.grammar import stripComments
 from sparqlparser.grammar_functest import printResults
 
-# l = ['<test>', 'a', '^<test>', '^ a']
-# printResults(l, 'PathOneInPropertySet', dump=True)    
+s = "test / test / test"
 
+p = separatedList(Word(alphas), delim='/')
 
+r = p.parseString(s)
 
-# PathOneInPropertySet_list_p = punctuatedList(PathOneInPropertySet_p)
-print()
-r = PathOneInPropertySet('^<test>')
-# print(r)
-# r.dump(output=sys.stdout)
-print(r.dump())# print(repr(r))
-r.render()
-print(repr(r))
-assert r == eval(repr(r))
+print(r)
+
+print(type(r))
+
+s = 'a ? / ^ ! ( ^ <testIri> | ^ <testIri> )'
+
+r = PathSequence(s)
+
+# r.render()
+# 
+# print(r.dump()) 
+
+l = ['a ? / ^ ! ( ^ <testIri> | ^ <testIri> ) | a ? / ^ ! ( ^ <testIri> | ^ <testIri> )']
+printResults(l, 'PathAlternative', dump=True)  

@@ -41,7 +41,7 @@ class Test(unittest.TestCase):
                     e = e[0]
                 if debug >= 2:
                     print()
-                    e[0].dump()
+                    print(e[0].dump())
                     print()
                 if debug >= 1:
                     print(' --> ' + str(e), end='')
