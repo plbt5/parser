@@ -1,5 +1,2 @@
-API: ParseInfo.test() hernoemd naar ParseInfo.check()
-
-INTERN: fout hersteld in test ParseInfo(isLabelConsistent())
-INTERN: alle delimitedList's vervangen door punctuatedList's
-INTERN: tests aangepast en verbeterd
+INTERN: ParseInfo.punctuatedList heet nu ParseInfo.separatedList, parameter is nu sep ipv delim
+INTERN: Generic classes (SPARQLTerminal enz.) hernoemd (Terminal_ enz.), klassenstructuur vereenvoudigd.
