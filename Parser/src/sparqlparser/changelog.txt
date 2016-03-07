@@ -1,2 +1,3 @@
 INTERN: ParseInfo.punctuatedList heet nu ParseInfo.separatedList, parameter is nu sep ipv delim
 INTERN: Generic classes (SPARQLTerminal enz.) hernoemd (Terminal_ enz.), klassenstructuur vereenvoudigd.
+INTERN: Operator en Keyword subclasses erven __str__ nu van Operator_ en Keyword_

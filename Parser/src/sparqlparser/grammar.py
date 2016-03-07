@@ -265,32 +265,32 @@ class ParseInfo(metaclass=ParsePattern):
         
         return result
 
-    def __str__(self):
-        '''Generates the string corresponding to the object. Except for whitespace variations, 
-        this is identical to the string that was used to create the object.'''
-        sep = ' '
-#         def renderList(l):
-#             resultList = []
-#             for i in l:
-#                 if isinstance(i, str):
-#                     resultList.append(i)
-#                     continue
-#                 if isinstance(i, ParseInfo):
-#                     resultList.append(i.__str__())
-#                     continue
-#                 if isinstance(i, list):
-#                     resultList.append(renderList(i))
-#             return sep.join(resultList)
-        result = []
-        for t in self.items:
-            if isinstance(t[1], str):
-                result.append(t[1]) 
-#             elif isinstance(t[1], list):
-#                 result.append(renderList(t[1]))
-            else:
-                assert isinstance(t[1], ParseInfo), type(t[1])
-                result.append(t[1].__str__())
-        return sep.join([r for r in result if r != ''])
+#     def __str__(self):
+#         '''Generates the string corresponding to the object. Except for whitespace variations, 
+#         this is identical to the string that was used to create the object.'''
+#         sep = ' '
+# #         def renderList(l):
+# #             resultList = []
+# #             for i in l:
+# #                 if isinstance(i, str):
+# #                     resultList.append(i)
+# #                     continue
+# #                 if isinstance(i, ParseInfo):
+# #                     resultList.append(i.__str__())
+# #                     continue
+# #                 if isinstance(i, list):
+# #                     resultList.append(renderList(i))
+# #             return sep.join(resultList)
+#         result = []
+#         for t in self.items:
+#             if isinstance(t[1], str):
+#                 result.append(t[1]) 
+# #             elif isinstance(t[1], list):
+# #                 result.append(renderList(t[1]))
+#             else:
+#                 assert isinstance(t[1], ParseInfo), type(t[1])
+#                 result.append(t[1].__str__())
+#         return sep.join([r for r in result if r != ''])
     
     def render(self):
         print(self.__str__())
@@ -382,15 +382,40 @@ class Terminal_(ParseInfo):
             
             
 class NonTerminal_(ParseInfo):
-    pass
+    def __str__(self):
+        sep = ' '
+#         def renderList(l):
+#             resultList = []
+#             for i in l:
+#                 if isinstance(i, str):
+#                     resultList.append(i)
+#                     continue
+#                 if isinstance(i, ParseInfo):
+#                     resultList.append(i.__str__())
+#                     continue
+#                 if isinstance(i, list):
+#                     resultList.append(renderList(i))
+#             return sep.join(resultList)
+        result = []
+        for t in self.items:
+            if isinstance(t[1], str):
+                result.append(t[1]) 
+#             elif isinstance(t[1], list):
+#                 result.append(renderList(t[1]))
+            else:
+                assert isinstance(t[1], ParseInfo), type(t[1])
+                result.append(t[1].__str__())
+        return sep.join([r for r in result if r != ''])
 
 
 class Keyword_(ParseInfo):
-    pass
+    def __str__(self):
+        return ' '.join([t[1] for t in self.items])
 
 
 class Operator_(ParseInfo):
-    pass
+    def __str__(self):
+        return self.items[0][1]
 
 
 
@@ -413,87 +438,59 @@ LPAR_p, RPAR_p, LBRACK_p, RBRACK_p, LCURL_p, RCURL_p, SEMICOL_p, COMMA_p, PERIOD
 #
 
 NOT_op_p = Literal('!')
-class NOT_op(Operator_):
-    def __str__(self):
-        return '!'
+class NOT_op(Operator_): pass
 if do_parseactions: NOT_op_p.setName('NOT_op').setParseAction(parseInfoFunc((NOT_op)))
 
 PLUS_op_p = Literal('+')
-class PLUS_op(Operator_):
-    def __str__(self):
-        return '+'
+class PLUS_op(Operator_): pass
 if do_parseactions: PLUS_op_p.setName('PLUS_op').setParseAction(parseInfoFunc((PLUS_op)))
 
 MINUS_op_p = Literal('-')
-class MINUS_op(Operator_):
-    def __str__(self):
-        return '-'
+class MINUS_op(Operator_): pass
 if do_parseactions: MINUS_op_p.setName('MINUS_op').setParseAction(parseInfoFunc((MINUS_op)))
 
 TIMES_op_p = Literal('*')
-class TIMES_op(Operator_):
-    def __str__(self):
-        return '*'
+class TIMES_op(Operator_): pass
 if do_parseactions: TIMES_op_p.setName('TIMES_op').setParseAction(parseInfoFunc((TIMES_op)))
 
 DIV_op_p = Literal('/')
-class DIV_op(Operator_):
-    def __str__(self):
-        return '/'
+class DIV_op(Operator_): pass
 if do_parseactions: DIV_op_p.setName('DIV_op').setParseAction(parseInfoFunc((DIV_op)))
 
 EQ_op_p = Literal('=') 
-class EQ_op(Operator_):
-    def __str__(self):
-        return '='
+class EQ_op(Operator_): pass
 if do_parseactions: EQ_op_p.setName('EQ_op').setParseAction(parseInfoFunc((EQ_op)))
 
 NE_op_p = Literal('!=') 
-class NE_op(Operator_):
-    def __str__(self):
-        return '!='
+class NE_op(Operator_): pass
 if do_parseactions: NE_op_p.setName('NE_op').setParseAction(parseInfoFunc((NE_op)))
 
 GT_op_p = Literal('>') 
-class GT_op(Operator_):
-    def __str__(self):
-        return '>'
+class GT_op(Operator_): pass
 if do_parseactions: GT_op_p.setName('GT_op').setParseAction(parseInfoFunc((GT_op)))
 
 LT_op_p = Literal('<') 
-class LT_op(Operator_):
-    def __str__(self):
-        return '<'
+class LT_op(Operator_): pass
 if do_parseactions: LT_op_p.setName('LT_op').setParseAction(parseInfoFunc((LT_op)))
 
 GE_op_p = Literal('>=') 
-class GE_op(Operator_):
-    def __str__(self):
-        return '>='
+class GE_op(Operator_): pass
 if do_parseactions: GE_op_p.setName('GE_op').setParseAction(parseInfoFunc((GE_op)))
 
 LE_op_p = Literal('<=') 
-class LE_op(Operator_):
-    def __str__(self):
-        return '<='
+class LE_op(Operator_): pass
 if do_parseactions: LE_op_p.setName('LE_op').setParseAction(parseInfoFunc((LE_op)))
 
 AND_op_p = Literal('&&')
-class AND_op(Operator_):
-    def __str__(self):
-        return '&&'
+class AND_op(Operator_): pass
 if do_parseactions: AND_op_p.setName('AND_op').setParseAction(parseInfoFunc((AND_op)))
   
 OR_op_p = Literal('||')
-class OR_op(Operator_):
-    def __str__(self):
-        return '||'
+class OR_op(Operator_): pass
 if do_parseactions: OR_op_p.setName('OR_op').setParseAction(parseInfoFunc((OR_op)))
 
 INVERSE_op_p = Literal('^')
-class INVERSE_op(Operator_):
-    def __str__(self):
-        return '^'
+class INVERSE_op(Operator_): pass
 if do_parseactions: INVERSE_op_p.setName('INVERSE_op').setParseAction(parseInfoFunc((INVERSE_op)))
 
 
@@ -501,682 +498,460 @@ if do_parseactions: INVERSE_op_p.setName('INVERSE_op').setParseAction(parseInfoF
 # Keywords
 #
 
+ALL_VALUES_kw_p = Literal('*')
+class ALL_VALUES_kw(Keyword_): pass
+if do_parseactions: ALL_VALUES_kw_p.setName('ALL_VALUES_kw').setParseAction(parseInfoFunc((ALL_VALUES_kw)))
+
 TYPE_kw_p = Keyword('a')
-class TYPE_kw(Keyword_):
-    def __str__(self):
-        return 'a'
+class TYPE_kw(Keyword_): pass
 if do_parseactions: TYPE_kw_p.setName('TYPE_kw').setParseAction(parseInfoFunc((TYPE_kw)))
 
 DISTINCT_kw_p = CaselessKeyword('DISTINCT')
-class DISTINCT_kw(Keyword_):
-    def __str__(self):
-        return 'DISTINCT'
+class DISTINCT_kw(Keyword_): pass
 if do_parseactions: DISTINCT_kw_p.setName('DISTINCT_kw').setParseAction(parseInfoFunc((DISTINCT_kw)))
 
 COUNT_kw_p = CaselessKeyword('COUNT')
-class COUNT_kw(Keyword_):
-    def __str__(self):
-        return 'COUNT'
+class COUNT_kw(Keyword_): pass
 if do_parseactions: COUNT_kw_p.setName('COUNT_kw').setParseAction(parseInfoFunc((COUNT_kw)))
 
 SUM_kw_p = CaselessKeyword('SUM')
-class SUM_kw(Keyword_):
-    def __str__(self):
-        return 'SUM'
+class SUM_kw(Keyword_): pass
 if do_parseactions: SUM_kw_p.setName('SUM_kw').setParseAction(parseInfoFunc((SUM_kw)))
 
 MIN_kw_p = CaselessKeyword('MIN') 
-class MIN_kw(Keyword_):
-    def __str__(self):
-        return 'MIN'
+class MIN_kw(Keyword_): pass
 if do_parseactions: MIN_kw_p.setName('MIN_kw').setParseAction(parseInfoFunc((MIN_kw)))
 
 MAX_kw_p = CaselessKeyword('MAX') 
-class MAX_kw(Keyword_):
-    def __str__(self):
-        return 'MAX'
+class MAX_kw(Keyword_): pass
 if do_parseactions: MAX_kw_p.setName('MAX_kw').setParseAction(parseInfoFunc((MAX_kw)))
 
 AVG_kw_p = CaselessKeyword('AVG') 
-class AVG_kw(Keyword_):
-    def __str__(self):
-        return 'AVG'
+class AVG_kw(Keyword_): pass
 if do_parseactions: AVG_kw_p.setName('AVG_kw').setParseAction(parseInfoFunc((AVG_kw)))
 
 SAMPLE_kw_p = CaselessKeyword('SAMPLE') 
-class SAMPLE_kw(Keyword_):
-    def __str__(self):
-        return 'SAMPLE'
+class SAMPLE_kw(Keyword_): pass
 if do_parseactions: SAMPLE_kw_p.setName('SAMPLE_kw').setParseAction(parseInfoFunc((SAMPLE_kw)))
 
 GROUP_CONCAT_kw_p = CaselessKeyword('GROUP_CONCAT') 
-class GROUP_CONCAT_kw(Keyword_):
-    def __str__(self):
-        return 'GROUP_CONCAT'
+class GROUP_CONCAT_kw(Keyword_): pass
 if do_parseactions: GROUP_CONCAT_kw_p.setName('GROUP_CONCAT_kw').setParseAction(parseInfoFunc((GROUP_CONCAT_kw)))
 
 SEPARATOR_kw_p = CaselessKeyword('SEPARATOR')
-class SEPARATOR_kw(Keyword_):
-    def __str__(self):
-        return 'SEPARATOR'
+class SEPARATOR_kw(Keyword_): pass
 if do_parseactions: SEPARATOR_kw_p.setName('SEPARATOR_kw').setParseAction(parseInfoFunc((SEPARATOR_kw)))
 
 NOT_kw_p = CaselessKeyword('NOT') + NotAny(CaselessKeyword('EXISTS') | CaselessKeyword('IN'))
-class NOT_kw(Keyword_):
-    def __str__(self):
-        return 'NOT'
+class NOT_kw(Keyword_): pass
 if do_parseactions: NOT_kw_p.setName('NOT_kw').setParseAction(parseInfoFunc((NOT_kw)))
 
 EXISTS_kw_p = CaselessKeyword('EXISTS')
-class EXISTS_kw(Keyword_):
-    def __str__(self):
-        return 'EXISTS'
+class EXISTS_kw(Keyword_): pass
 if do_parseactions: EXISTS_kw_p.setName('EXISTS_kw').setParseAction(parseInfoFunc((EXISTS_kw)))
 
 NOT_EXISTS_kw_p = CaselessKeyword('NOT') + CaselessKeyword('EXISTS')
-class NOT_EXISTS_kw(Keyword_):
-    def __str__(self):
-        return 'NOT EXISTS'
+class NOT_EXISTS_kw(Keyword_): pass
 if do_parseactions: NOT_EXISTS_kw_p.setName('NOT_EXISTS_kw').setParseAction(parseInfoFunc((NOT_EXISTS_kw)))
 
 REPLACE_kw_p = CaselessKeyword('REPLACE')
-class REPLACE_kw(Keyword_):
-    def __str__(self):
-        return 'REPLACE'
+class REPLACE_kw(Keyword_): pass
 if do_parseactions: REPLACE_kw_p.setName('REPLACE_kw').setParseAction(parseInfoFunc((REPLACE_kw)))
 
 SUBSTR_kw_p = CaselessKeyword('SUBSTR')
-class SUBSTR_kw(Keyword_):
-    def __str__(self):
-        return 'SUBSTR'
+class SUBSTR_kw(Keyword_): pass
 if do_parseactions: SUBSTR_kw_p.setName('SUBSTR_kw').setParseAction(parseInfoFunc((SUBSTR_kw)))
 
 REGEX_kw_p = CaselessKeyword('REGEX')
-class REGEX_kw(Keyword_):
-    def __str__(self):
-        return 'REGEX'
+class REGEX_kw(Keyword_): pass
 if do_parseactions: REGEX_kw_p.setName('REGEX_kw').setParseAction(parseInfoFunc((REGEX_kw)))
 
 STR_kw_p = CaselessKeyword('STR') 
-class STR_kw(Keyword_):
-    def __str__(self):
-        return 'STR'
+class STR_kw(Keyword_): pass
 if do_parseactions: STR_kw_p.setName('STR_kw').setParseAction(parseInfoFunc((STR_kw)))
 
 LANG_kw_p = CaselessKeyword('LANG') 
-class LANG_kw(Keyword_):
-    def __str__(self):
-        return 'LANG'
+class LANG_kw(Keyword_): pass
 if do_parseactions: LANG_kw_p.setName('LANG_kw').setParseAction(parseInfoFunc((LANG_kw)))
 
 LANGMATCHES_kw_p = CaselessKeyword('LANGMATCHES') 
-class LANGMATCHES_kw(Keyword_):
-    def __str__(self):
-        return 'LANGMATCHES'
+class LANGMATCHES_kw(Keyword_): pass
 if do_parseactions: LANGMATCHES_kw_p.setName('LANGMATCHES_kw').setParseAction(parseInfoFunc((LANGMATCHES_kw)))
 
 DATATYPE_kw_p = CaselessKeyword('DATATYPE') 
-class DATATYPE_kw(Keyword_):
-    def __str__(self):
-        return 'DATATYPE'
+class DATATYPE_kw(Keyword_): pass
 if do_parseactions: DATATYPE_kw_p.setName('DATATYPE_kw').setParseAction(parseInfoFunc((DATATYPE_kw)))
 
 BOUND_kw_p = CaselessKeyword('BOUND') 
-class BOUND_kw(Keyword_):
-    def __str__(self):
-        return 'BOUND'
+class BOUND_kw(Keyword_): pass
 if do_parseactions: BOUND_kw_p.setName('BOUND_kw').setParseAction(parseInfoFunc((BOUND_kw)))
 
 IRI_kw_p = CaselessKeyword('IRI') 
-class IRI_kw(Keyword_):
-    def __str__(self):
-        return 'IRI'
+class IRI_kw(Keyword_): pass
 if do_parseactions: IRI_kw_p.setName('IRI_kw').setParseAction(parseInfoFunc((IRI_kw)))
 
 URI_kw_p = CaselessKeyword('URI') 
-class URI_kw(Keyword_):
-    def __str__(self):
-        return 'URI'
+class URI_kw(Keyword_): pass
 if do_parseactions: URI_kw_p.setName('URI_kw').setParseAction(parseInfoFunc((URI_kw)))
 
 BNODE_kw_p = CaselessKeyword('BNODE') 
-class BNODE_kw(Keyword_):
-    def __str__(self):
-        return 'BNODE'
+class BNODE_kw(Keyword_): pass
 if do_parseactions: BNODE_kw_p.setName('BNODE_kw').setParseAction(parseInfoFunc((BNODE_kw)))
 
 RAND_kw_p = CaselessKeyword('RAND') 
-class RAND_kw(Keyword_):
-    def __str__(self):
-        return 'RAND'
+class RAND_kw(Keyword_): pass
 if do_parseactions: RAND_kw_p.setName('RAND_kw').setParseAction(parseInfoFunc((RAND_kw)))
 
 ABS_kw_p = CaselessKeyword('ABS') 
-class ABS_kw(Keyword_):
-    def __str__(self):
-        return 'ABS'
+class ABS_kw(Keyword_): pass
 if do_parseactions: ABS_kw_p.setName('ABS_kw').setParseAction(parseInfoFunc((ABS_kw)))
 
 CEIL_kw_p = CaselessKeyword('CEIL') 
-class CEIL_kw(Keyword_):
-    def __str__(self):
-        return 'CEIL'
+class CEIL_kw(Keyword_): pass
 if do_parseactions: CEIL_kw_p.setName('CEIL_kw').setParseAction(parseInfoFunc((CEIL_kw)))
 
 FLOOR_kw_p = CaselessKeyword('FLOOR') 
-class FLOOR_kw(Keyword_):
-    def __str__(self):
-        return 'FLOOR'
+class FLOOR_kw(Keyword_): pass
 if do_parseactions: FLOOR_kw_p.setName('FLOOR_kw').setParseAction(parseInfoFunc((FLOOR_kw)))
 
 ROUND_kw_p = CaselessKeyword('ROUND') 
-class ROUND_kw(Keyword_):
-    def __str__(self):
-        return 'ROUND'
+class ROUND_kw(Keyword_): pass
 if do_parseactions: ROUND_kw_p.setName('ROUND_kw').setParseAction(parseInfoFunc((ROUND_kw)))
 
 CONCAT_kw_p = CaselessKeyword('CONCAT') 
-class CONCAT_kw(Keyword_):
-    def __str__(self):
-        return 'CONCAT'
+class CONCAT_kw(Keyword_): pass
 if do_parseactions: CONCAT_kw_p.setName('CONCAT_kw').setParseAction(parseInfoFunc((CONCAT_kw)))
 
 STRLEN_kw_p = CaselessKeyword('STRLEN') 
-class STRLEN_kw(Keyword_):
-    def __str__(self):
-        return 'STRLEN'
+class STRLEN_kw(Keyword_): pass
 if do_parseactions: STRLEN_kw_p.setName('STRLEN_kw').setParseAction(parseInfoFunc((STRLEN_kw)))
 
 UCASE_kw_p = CaselessKeyword('UCASE') 
-class UCASE_kw(Keyword_):
-    def __str__(self):
-        return 'UCASE'
+class UCASE_kw(Keyword_): pass
 if do_parseactions: UCASE_kw_p.setName('UCASE_kw').setParseAction(parseInfoFunc((UCASE_kw)))
 
 LCASE_kw_p = CaselessKeyword('LCASE') 
-class LCASE_kw(Keyword_):
-    def __str__(self):
-        return 'LCASE'
+class LCASE_kw(Keyword_): pass
 if do_parseactions: LCASE_kw_p.setName('LCASE_kw').setParseAction(parseInfoFunc((LCASE_kw)))
 
 ENCODE_FOR_URI_kw_p = CaselessKeyword('ENCODE_FOR_URI') 
-class ENCODE_FOR_URI_kw(Keyword_):
-    def __str__(self):
-        return 'ENCODE_FOR_URI'
+class ENCODE_FOR_URI_kw(Keyword_): pass
 if do_parseactions: ENCODE_FOR_URI_kw_p.setName('ENCODE_FOR_URI_kw').setParseAction(parseInfoFunc((ENCODE_FOR_URI_kw)))
 
 CONTAINS_kw_p = CaselessKeyword('CONTAINS') 
-class CONTAINS_kw(Keyword_):
-    def __str__(self):
-        return 'CONTAINS'
+class CONTAINS_kw(Keyword_): pass
 if do_parseactions: CONTAINS_kw_p.setName('CONTAINS_kw').setParseAction(parseInfoFunc((CONTAINS_kw)))
 
 STRSTARTS_kw_p = CaselessKeyword('STRSTARTS') 
-class STRSTARTS_kw(Keyword_):
-    def __str__(self):
-        return 'STRSTARTS'
+class STRSTARTS_kw(Keyword_): pass
 if do_parseactions: STRSTARTS_kw_p.setName('STRSTARTS_kw').setParseAction(parseInfoFunc((STRSTARTS_kw)))
 
 STRENDS_kw_p = CaselessKeyword('STRENDS') 
-class STRENDS_kw(Keyword_):
-    def __str__(self):
-        return 'STRENDS'
+class STRENDS_kw(Keyword_): pass
 if do_parseactions: STRENDS_kw_p.setName('STRENDS_kw').setParseAction(parseInfoFunc((STRENDS_kw)))
 
 STRBEFORE_kw_p = CaselessKeyword('STRBEFORE') 
-class STRBEFORE_kw(Keyword_):
-    def __str__(self):
-        return 'STRBEFORE'
+class STRBEFORE_kw(Keyword_): pass
 if do_parseactions: STRBEFORE_kw_p.setName('STRBEFORE_kw').setParseAction(parseInfoFunc((STRBEFORE_kw)))
 
 STRAFTER_kw_p = CaselessKeyword('STRAFTER') 
-class STRAFTER_kw(Keyword_):
-    def __str__(self):
-        return 'STRAFTER'
+class STRAFTER_kw(Keyword_): pass
 if do_parseactions: STRAFTER_kw_p.setName('STRAFTER_kw').setParseAction(parseInfoFunc((STRAFTER_kw)))
 
 YEAR_kw_p = CaselessKeyword('YEAR') 
-class YEAR_kw(Keyword_):
-    def __str__(self):
-        return 'YEAR'
+class YEAR_kw(Keyword_): pass
 if do_parseactions: YEAR_kw_p.setName('YEAR_kw').setParseAction(parseInfoFunc((YEAR_kw)))
 
 MONTH_kw_p = CaselessKeyword('MONTH') 
-class MONTH_kw(Keyword_):
-    def __str__(self):
-        return 'MONTH'
+class MONTH_kw(Keyword_): pass
 if do_parseactions: MONTH_kw_p.setName('MONTH_kw').setParseAction(parseInfoFunc((MONTH_kw)))
 
 DAY_kw_p = CaselessKeyword('DAY') 
-class DAY_kw(Keyword_):
-    def __str__(self):
-        return 'DAY'
+class DAY_kw(Keyword_): pass
 if do_parseactions: DAY_kw_p.setName('DAY_kw').setParseAction(parseInfoFunc((DAY_kw)))
 
 HOURS_kw_p = CaselessKeyword('HOURS') 
-class HOURS_kw(Keyword_):
-    def __str__(self):
-        return 'HOURS'
+class HOURS_kw(Keyword_): pass
 if do_parseactions: HOURS_kw_p.setName('HOURS_kw').setParseAction(parseInfoFunc((HOURS_kw)))
 
 MINUTES_kw_p = CaselessKeyword('MINUTES') 
-class MINUTES_kw(Keyword_):
-    def __str__(self):
-        return 'MINUTES'
+class MINUTES_kw(Keyword_): pass
 if do_parseactions: MINUTES_kw_p.setName('MINUTES_kw').setParseAction(parseInfoFunc((MINUTES_kw)))
 
 SECONDS_kw_p = CaselessKeyword('SECONDS') 
-class SECONDS_kw(Keyword_):
-    def __str__(self):
-        return 'SECONDS'
+class SECONDS_kw(Keyword_): pass
 if do_parseactions: SECONDS_kw_p.setName('SECONDS_kw').setParseAction(parseInfoFunc((SECONDS_kw)))
 
 TIMEZONE_kw_p = CaselessKeyword('TIMEZONE') 
-class TIMEZONE_kw(Keyword_):
-    def __str__(self):
-        return 'TIMEZONE'
+class TIMEZONE_kw(Keyword_): pass
 if do_parseactions: TIMEZONE_kw_p.setName('TIMEZONE_kw').setParseAction(parseInfoFunc((TIMEZONE_kw)))
 
 TZ_kw_p = CaselessKeyword('TZ') 
-class TZ_kw(Keyword_):
-    def __str__(self):
-        return 'TZ'
+class TZ_kw(Keyword_): pass
 if do_parseactions: TZ_kw_p.setName('TZ_kw').setParseAction(parseInfoFunc((TZ_kw)))
 
 NOW_kw_p = CaselessKeyword('NOW') 
-class NOW_kw(Keyword_):
-    def __str__(self):
-        return 'NOW'
+class NOW_kw(Keyword_): pass
 if do_parseactions: NOW_kw_p.setName('NOW_kw').setParseAction(parseInfoFunc((NOW_kw)))
 
 UUID_kw_p = CaselessKeyword('UUID') 
-class UUID_kw(Keyword_):
-    def __str__(self):
-        return 'UUID'
+class UUID_kw(Keyword_): pass
 if do_parseactions: UUID_kw_p.setName('UUID_kw').setParseAction(parseInfoFunc((UUID_kw)))
 
 STRUUID_kw_p = CaselessKeyword('STRUUID') 
-class STRUUID_kw(Keyword_):
-    def __str__(self):
-        return 'STRUUID'
+class STRUUID_kw(Keyword_): pass
 if do_parseactions: STRUUID_kw_p.setName('STRUUID_kw').setParseAction(parseInfoFunc((STRUUID_kw)))
 
 MD5_kw_p = CaselessKeyword('MD5') 
-class MD5_kw(Keyword_):
-    def __str__(self):
-        return 'MD5'
+class MD5_kw(Keyword_): pass
 if do_parseactions: MD5_kw_p.setParseAction(parseInfoFunc(MD5_kw))
 
 SHA1_kw_p = CaselessKeyword('SHA1') 
-class SHA1_kw(Keyword_):
-    def __str__(self):
-        return 'SHA1'
+class SHA1_kw(Keyword_): pass
 if do_parseactions: SHA1_kw_p.setParseAction(parseInfoFunc(SHA1_kw))
 
 SHA256_kw_p = CaselessKeyword('SHA256') 
-class SHA256_kw(Keyword_):
-    def __str__(self):
-        return 'SHA256'
+class SHA256_kw(Keyword_): pass
 if do_parseactions: SHA256_kw_p.setParseAction(parseInfoFunc(SHA256_kw))
 
 SHA384_kw_p = CaselessKeyword('SHA384') 
-class SHA384_kw(Keyword_):
-    def __str__(self):
-        return 'SHA384'
+class SHA384_kw(Keyword_): pass
 if do_parseactions: SHA384_kw_p.setParseAction(parseInfoFunc(SHA384_kw))
 
 SHA512_kw_p = CaselessKeyword('SHA512') 
-class SHA512_kw(Keyword_):
-    def __str__(self):
-        return 'SHA512'
+class SHA512_kw(Keyword_): pass
 if do_parseactions: SHA512_kw_p.setParseAction(parseInfoFunc(SHA512_kw))
 
 COALESCE_kw_p = CaselessKeyword('COALESCE') 
-class COALESCE_kw(Keyword_):
-    def __str__(self):
-        return 'COALESCE'
+class COALESCE_kw(Keyword_): pass
 if do_parseactions: COALESCE_kw_p.setName('COALESCE_kw').setParseAction(parseInfoFunc((COALESCE_kw)))
 
 IF_kw_p = CaselessKeyword('IF') 
-class IF_kw(Keyword_):
-    def __str__(self):
-        return 'IF'
+class IF_kw(Keyword_): pass
 if do_parseactions: IF_kw_p.setName('IF_kw').setParseAction(parseInfoFunc((IF_kw)))
 
 STRLANG_kw_p = CaselessKeyword('STRLANG') 
-class STRLANG_kw(Keyword_):
-    def __str__(self):
-        return 'STRLANG'
+class STRLANG_kw(Keyword_): pass
 if do_parseactions: STRLANG_kw_p.setName('STRLANG_kw').setParseAction(parseInfoFunc((STRLANG_kw)))
 
 STRDT_kw_p = CaselessKeyword('STRDT') 
-class STRDT_kw(Keyword_):
-    def __str__(self):
-        return 'STRDT'
+class STRDT_kw(Keyword_): pass
 if do_parseactions: STRDT_kw_p.setName('STRDT_kw').setParseAction(parseInfoFunc((STRDT_kw)))
 
 sameTerm_kw_p = CaselessKeyword('sameTerm') 
-class sameTerm_kw(Keyword_):
-    def __str__(self):
-        return 'sameTerm'
+class sameTerm_kw(Keyword_): pass
 if do_parseactions: sameTerm_kw_p.setName('sameTerm_kw').setParseAction(parseInfoFunc((sameTerm_kw)))
 
 isIRI_kw_p = CaselessKeyword('isIRI') 
-class isIRI_kw(Keyword_):
-    def __str__(self):
-        return 'isIRI'
+class isIRI_kw(Keyword_): pass
 if do_parseactions: isIRI_kw_p.setName('isIRI_kw').setParseAction(parseInfoFunc((isIRI_kw)))
 
 isURI_kw_p = CaselessKeyword('isURI') 
-class isURI_kw(Keyword_):
-    def __str__(self):
-        return 'isURI'
+class isURI_kw(Keyword_): pass
 if do_parseactions: isURI_kw_p.setName('isURI_kw').setParseAction(parseInfoFunc((isURI_kw)))
 
 isBLANK_kw_p = CaselessKeyword('isBLANK') 
-class isBLANK_kw(Keyword_):
-    def __str__(self):
-        return 'isBLANK'
+class isBLANK_kw(Keyword_): pass
 if do_parseactions: isBLANK_kw_p.setName('isBLANK_kw').setParseAction(parseInfoFunc((isBLANK_kw)))
 
 isLITERAL_kw_p = CaselessKeyword('isLITERAL') 
-class isLITERAL_kw(Keyword_):
-    def __str__(self):
-        return 'isLITERAL'
+class isLITERAL_kw(Keyword_): pass
 if do_parseactions: isLITERAL_kw_p.setName('isLITERAL_kw').setParseAction(parseInfoFunc((isLITERAL_kw)))
 
 isNUMERIC_kw_p = CaselessKeyword('isNUMERIC') 
-class isNUMERIC_kw(Keyword_):
-    def __str__(self):
-        return 'isNUMERIC'
+class isNUMERIC_kw(Keyword_): pass
 if do_parseactions: isNUMERIC_kw_p.setName('isNUMERIC_kw').setParseAction(parseInfoFunc((isNUMERIC_kw)))
 
 IN_kw_p = CaselessKeyword('IN') 
-class IN_kw(Keyword_):
-    def __str__(self):
-        return 'IN'
+class IN_kw(Keyword_): pass
 if do_parseactions: IN_kw_p.setName('IN_kw').setParseAction(parseInfoFunc((IN_kw)))
 
 NOT_IN_kw_p = CaselessKeyword('NOT') + CaselessKeyword('IN')
-class NOT_IN_kw(Keyword_):
-    def __str__(self):
-        return 'NOT IN'
+class NOT_IN_kw(Keyword_): pass
 if do_parseactions: NOT_IN_kw_p.setName('NOT_IN_kw').setParseAction(parseInfoFunc((NOT_IN_kw)))
 
 FILTER_kw_p = CaselessKeyword('FILTER')
-class FILTER_kw(Keyword_):
-    def __str__(self):
-        return 'FILTER'
+class FILTER_kw(Keyword_): pass
 if do_parseactions: FILTER_kw_p.setName('FILTER_kw').setParseAction(parseInfoFunc((FILTER_kw)))
 
 UNION_kw_p = CaselessKeyword('UNION')
-class UNION_kw(Keyword_):
-    def __str__(self):
-        return 'UNION'
+class UNION_kw(Keyword_): pass
 if do_parseactions: UNION_kw_p.setName('UNION_kw').setParseAction(parseInfoFunc((UNION_kw)))
 
 MINUS_kw_p = CaselessKeyword('MINUS')
-class MINUS_kw(Keyword_):
-    def __str__(self):
-        return 'MINUS'
+class MINUS_kw(Keyword_): pass
 if do_parseactions: MINUS_kw_p.setName('MINUS_kw').setParseAction(parseInfoFunc((MINUS_kw)))
 
 UNDEF_kw_p = CaselessKeyword('UNDEF')
-class UNDEF_kw(Keyword_):
-    def __str__(self):
-        return 'UNDEF'
+class UNDEF_kw(Keyword_): pass
 if do_parseactions: UNDEF_kw_p.setName('UNDEF_kw').setParseAction(parseInfoFunc((UNDEF_kw)))
 
 VALUES_kw_p = CaselessKeyword('VALUES')
-class VALUES_kw(Keyword_):
-    def __str__(self):
-        return 'VALUES'
+class VALUES_kw(Keyword_): pass
 if do_parseactions: VALUES_kw_p.setName('VALUES_kw').setParseAction(parseInfoFunc((VALUES_kw)))
 
 BIND_kw_p = CaselessKeyword('BIND')
-class BIND_kw(Keyword_):
-    def __str__(self):
-        return 'BIND'
+class BIND_kw(Keyword_): pass
 if do_parseactions: BIND_kw_p.setName('BIND_kw').setParseAction(parseInfoFunc((BIND_kw)))
 
 AS_kw_p = CaselessKeyword('AS')
-class AS_kw(Keyword_):
-    def __str__(self):
-        return 'AS'
+class AS_kw(Keyword_): pass
 if do_parseactions: AS_kw_p.setName('AS_kw').setParseAction(parseInfoFunc((AS_kw)))
 
 SERVICE_kw_p = CaselessKeyword('SERVICE')
-class SERVICE_kw(Keyword_):
-    def __str__(self):
-        return 'SERVICE'
+class SERVICE_kw(Keyword_): pass
 if do_parseactions: SERVICE_kw_p.setName('SERVICE_kw').setParseAction(parseInfoFunc((SERVICE_kw)))
 
 SILENT_kw_p = CaselessKeyword('SILENT')
-class SILENT_kw(Keyword_):
-    def __str__(self):
-        return 'SILENT'
+class SILENT_kw(Keyword_): pass
 if do_parseactions: SILENT_kw_p.setName('SILENT_kw').setParseAction(parseInfoFunc((SILENT_kw)))
 
 GRAPH_kw_p = CaselessKeyword('GRAPH')
-class GRAPH_kw(Keyword_):
-    def __str__(self):
-        return 'GRAPH'
+class GRAPH_kw(Keyword_): pass
 if do_parseactions: GRAPH_kw_p.setName('GRAPH_kw').setParseAction(parseInfoFunc((GRAPH_kw)))
 
 OPTIONAL_kw_p = CaselessKeyword('OPTIONAL')
-class OPTIONAL_kw(Keyword_):
-    def __str__(self):
-        return 'OPTIONAL'
+class OPTIONAL_kw(Keyword_): pass
 if do_parseactions: OPTIONAL_kw_p.setName('OPTIONAL_kw').setParseAction(parseInfoFunc((OPTIONAL_kw)))
 
 DEFAULT_kw_p = CaselessKeyword('DEFAULT')
-class DEFAULT_kw(Keyword_):
-    def __str__(self):
-        return 'DEFAULT'
+class DEFAULT_kw(Keyword_): pass
 if do_parseactions: DEFAULT_kw_p.setName('DEFAULT_kw').setParseAction(parseInfoFunc((DEFAULT_kw)))
 
 NAMED_kw_p = CaselessKeyword('NAMED')
-class NAMED_kw(Keyword_):
-    def __str__(self):
-        return 'NAMED'
+class NAMED_kw(Keyword_): pass
 if do_parseactions: NAMED_kw_p.setName('NAMED_kw').setParseAction(parseInfoFunc((NAMED_kw)))
 
 ALL_kw_p = CaselessKeyword('ALL')
-class ALL_kw(Keyword_):
-    def __str__(self):
-        return 'ALL'
+class ALL_kw(Keyword_): pass
 if do_parseactions: ALL_kw_p.setName('ALL_kw').setParseAction(parseInfoFunc((ALL_kw)))
 
 USING_kw_p = CaselessKeyword('USING')
-class USING_kw(Keyword_):
-    def __str__(self):
-        return 'USING'
+class USING_kw(Keyword_): pass
 if do_parseactions: USING_kw_p.setName('USING_kw').setParseAction(parseInfoFunc((USING_kw)))
 
 INSERT_kw_p = CaselessKeyword('INSERT')
-class INSERT_kw(Keyword_):
-    def __str__(self):
-        return 'INSERT'
+class INSERT_kw(Keyword_): pass
 if do_parseactions: INSERT_kw_p.setName('INSERT_kw').setParseAction(parseInfoFunc((INSERT_kw)))
 
 DELETE_kw_p = CaselessKeyword('DELETE')
-class DELETE_kw(Keyword_):
-    def __str__(self):
-        return 'DELETE'
+class DELETE_kw(Keyword_): pass
 if do_parseactions: DELETE_kw_p.setName('DELETE_kw').setParseAction(parseInfoFunc((DELETE_kw)))
 
 WITH_kw_p = CaselessKeyword('WITH')
-class WITH_kw(Keyword_):
-    def __str__(self):
-        return 'WITH'
+class WITH_kw(Keyword_): pass
 if do_parseactions: WITH_kw_p.setName('WITH_kw').setParseAction(parseInfoFunc((WITH_kw)))
 
 WHERE_kw_p = CaselessKeyword('WHERE')
-class WHERE_kw(Keyword_):
-    def __str__(self):
-        return 'WHERE'
+class WHERE_kw(Keyword_): pass
 if do_parseactions: WHERE_kw_p.setName('WHERE_kw').setParseAction(parseInfoFunc((WHERE_kw)))
 
 DELETE_WHERE_kw_p = CaselessKeyword('DELETE') + CaselessKeyword('WHERE')
-class DELETE_WHERE_kw(Keyword_):
-    def __str__(self):
-        return 'DELETE WHERE'
+class DELETE_WHERE_kw(Keyword_): pass
 if do_parseactions: DELETE_WHERE_kw_p.setName('DELETE_WHERE_kw').setParseAction(parseInfoFunc((DELETE_WHERE_kw)))
 
 DELETE_DATA_kw_p = CaselessKeyword('DELETE') + CaselessKeyword('DATA')
-class DELETE_DATA_kw(Keyword_):
-    def __str__(self):
-        return 'DELETE DATA'
+class DELETE_DATA_kw(Keyword_): pass
 if do_parseactions: DELETE_DATA_kw_p.setName('DELETE_DATA_kw').setParseAction(parseInfoFunc((DELETE_DATA_kw)))
 
 INSERT_DATA_kw_p = CaselessKeyword('INSERT') + CaselessKeyword('DATA')
-class INSERT_DATA_kw(Keyword_):
-    def __str__(self):
-        return 'INSERT DATA'
+class INSERT_DATA_kw(Keyword_): pass
 if do_parseactions: INSERT_DATA_kw_p.setName('INSERT_DATA_kw').setParseAction(parseInfoFunc((INSERT_DATA_kw)))
 
 COPY_kw_p = CaselessKeyword('COPY')
-class COPY_kw(Keyword_):
-    def __str__(self):
-        return 'COPY'
+class COPY_kw(Keyword_): pass
 if do_parseactions: COPY_kw_p.setName('COPY_kw').setParseAction(parseInfoFunc((COPY_kw)))
 
 MOVE_kw_p = CaselessKeyword('MOVE')
-class MOVE_kw(Keyword_):
-    def __str__(self):
-        return 'MOVE'
+class MOVE_kw(Keyword_): pass
 if do_parseactions: MOVE_kw_p.setName('MOVE_kw').setParseAction(parseInfoFunc((MOVE_kw)))
 
 ADD_kw_p = CaselessKeyword('ADD')
-class ADD_kw(Keyword_):
-    def __str__(self):
-        return 'ADD'
+class ADD_kw(Keyword_): pass
 if do_parseactions: ADD_kw_p.setName('ADD_kw').setParseAction(parseInfoFunc((ADD_kw)))
 
 CREATE_kw_p = CaselessKeyword('CREATE')
-class CREATE_kw(Keyword_):
-    def __str__(self):
-        return 'CREATE'
+class CREATE_kw(Keyword_): pass
 if do_parseactions: CREATE_kw_p.setName('CREATE_kw').setParseAction(parseInfoFunc((CREATE_kw)))
 
 DROP_kw_p = CaselessKeyword('DROP')
-class DROP_kw(Keyword_):
-    def __str__(self):
-        return 'DROP'
+class DROP_kw(Keyword_): pass
 if do_parseactions: DROP_kw_p.setName('DROP_kw').setParseAction(parseInfoFunc((DROP_kw)))
 
 CLEAR_kw_p = CaselessKeyword('CLEAR')
-class CLEAR_kw(Keyword_):
-    def __str__(self):
-        return 'CLEAR'
+class CLEAR_kw(Keyword_): pass
 if do_parseactions: CLEAR_kw_p.setName('CLEAR_kw').setParseAction(parseInfoFunc((CLEAR_kw)))
 
 LOAD_kw_p = CaselessKeyword('LOAD')
-class LOAD_kw(Keyword_):
-    def __str__(self):
-        return 'LOAD'
+class LOAD_kw(Keyword_): pass
 if do_parseactions: LOAD_kw_p.setName('LOAD_kw').setParseAction(parseInfoFunc((LOAD_kw)))
 
 TO_kw_p = CaselessKeyword('TO')
-class TO_kw(Keyword_):
-    def __str__(self):
-        return 'TO'
+class TO_kw(Keyword_): pass
 if do_parseactions: TO_kw_p.setName('TO_kw').setParseAction(parseInfoFunc((TO_kw)))
 
 INTO_kw_p = CaselessKeyword('INTO')
-class INTO_kw(Keyword_):
-    def __str__(self):
-        return 'INTO'
+class INTO_kw(Keyword_): pass
 if do_parseactions: INTO_kw_p.setName('INTO_kw').setParseAction(parseInfoFunc((INTO_kw)))
 
 OFFSET_kw_p = CaselessKeyword('OFFSET')
-class OFFSET_kw(Keyword_):
-    def __str__(self):
-        return 'OFFSET'
+class OFFSET_kw(Keyword_): pass
 if do_parseactions: OFFSET_kw_p.setName('OFFSET_kw').setParseAction(parseInfoFunc((OFFSET_kw)))
 
 LIMIT_kw_p = CaselessKeyword('LIMIT')
-class LIMIT_kw(Keyword_):
-    def __str__(self):
-        return 'LIMIT'
+class LIMIT_kw(Keyword_): pass
 if do_parseactions: LIMIT_kw_p.setName('LIMIT_kw').setParseAction(parseInfoFunc((LIMIT_kw)))
 
 ASC_kw_p = CaselessKeyword('ASC')
-class ASC_kw(Keyword_):
-    def __str__(self):
-        return 'ASC'
+class ASC_kw(Keyword_): pass
 if do_parseactions: ASC_kw_p.setName('ASC_kw').setParseAction(parseInfoFunc((ASC_kw)))
 
 DESC_kw_p = CaselessKeyword('DESC')
-class DESC_kw(Keyword_):
-    def __str__(self):
-        return 'DESC'
+class DESC_kw(Keyword_): pass
 if do_parseactions: DESC_kw_p.setName('DESC_kw').setParseAction(parseInfoFunc((DESC_kw)))
 
 ORDER_BY_kw_p = CaselessKeyword('ORDER') + CaselessKeyword('BY')
-class ORDER_BY_kw(Keyword_):
-    def __str__(self):
-        return 'ORDER BY'
+class ORDER_BY_kw(Keyword_): pass
 if do_parseactions: ORDER_BY_kw_p.setName('ORDER_BY_kw').setParseAction(parseInfoFunc((ORDER_BY_kw)))
 
 HAVING_kw_p = CaselessKeyword('HAVING') 
-class HAVING_kw(Keyword_):
-    def __str__(self):
-        return 'HAVING'
+class HAVING_kw(Keyword_): pass
 if do_parseactions: HAVING_kw_p.setName('HAVING_kw').setParseAction(parseInfoFunc((HAVING_kw)))
 
 GROUP_BY_kw_p = CaselessKeyword('GROUP') + CaselessKeyword('BY') 
-class GROUP_BY_kw(Keyword_):
-    def __str__(self):
-        return 'GROUP BY'
+class GROUP_BY_kw(Keyword_): pass
 if do_parseactions: GROUP_BY_kw_p.setName('GROUP_BY_kw').setParseAction(parseInfoFunc((GROUP_BY_kw)))
 
 FROM_kw_p = CaselessKeyword('FROM')
-class FROM_kw(Keyword_):
-    def __str__(self):
-        return 'FROM'
+class FROM_kw(Keyword_): pass
 if do_parseactions: FROM_kw_p.setName('FROM_kw').setParseAction(parseInfoFunc((FROM_kw)))
 
 ASK_kw_p = CaselessKeyword('ASK')
-class ASK_kw(Keyword_):
-    def __str__(self):
-        return 'ASK'
+class ASK_kw(Keyword_): pass
 if do_parseactions: ASK_kw_p.setName('ASK_kw').setParseAction(parseInfoFunc((ASK_kw)))
 
 DESCRIBE_kw_p = CaselessKeyword('DESCRIBE')
-class DESCRIBE_kw(Keyword_):
-    def __str__(self):
-        return 'DESCRIBE'
+class DESCRIBE_kw(Keyword_): pass
 if do_parseactions: DESCRIBE_kw_p.setName('DESCRIBE_kw').setParseAction(parseInfoFunc((DESCRIBE_kw)))
 
 CONSTRUCT_kw_p = CaselessKeyword('CONSTRUCT')
-class CONSTRUCT_kw(Keyword_):
-    def __str__(self):
-        return 'CONSTRUCT'
+class CONSTRUCT_kw(Keyword_): pass
 if do_parseactions: CONSTRUCT_kw_p.setName('CONSTRUCT_kw').setParseAction(parseInfoFunc((CONSTRUCT_kw)))
 
 SELECT_kw_p = CaselessKeyword('SELECT')
-class SELECT_kw(Keyword_):
-    def __str__(self):
-        return 'SELECT'
+class SELECT_kw(Keyword_): pass
 if do_parseactions: SELECT_kw_p.setName('SELECT_kw').setParseAction(parseInfoFunc((SELECT_kw)))
 
 REDUCED_kw_p = CaselessKeyword('REDUCED')
-class REDUCED_kw(Keyword_):
-    def __str__(self):
-        return 'REDUCED'
+class REDUCED_kw(Keyword_): pass
 if do_parseactions: REDUCED_kw_p.setName('REDUCED_kw').setParseAction(parseInfoFunc((REDUCED_kw)))
 
 PREFIX_kw_p = CaselessKeyword('PREFIX')
-class PREFIX_kw(Keyword_):
-    def __str__(self):
-        return 'PREFIX'
+class PREFIX_kw(Keyword_): pass
 if do_parseactions: PREFIX_kw_p.setName('PREFIX_kw').setParseAction(parseInfoFunc((PREFIX_kw)))
 
 BASE_kw_p = CaselessKeyword('BASE')
-class BASE_kw(Keyword_):
-    def __str__(self):
-        return 'BASE'
+class BASE_kw(Keyword_): pass
 if do_parseactions: BASE_kw_p.setName('BASE_kw').setParseAction(parseInfoFunc((BASE_kw)))
 
 
