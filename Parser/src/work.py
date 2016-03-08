@@ -1,6 +1,4 @@
-from sparqlparser.grammar import *
-print(help(ParseInfo))
+lines = map(lambda x: x[:-1], open('sparqlparser/rulesedit.txt', 'r').readlines())
 
 
-import sys
-print(sys.path)
+

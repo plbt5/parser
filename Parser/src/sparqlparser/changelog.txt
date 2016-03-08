@@ -1,3 +1,3 @@
-INTERN: ParseInfo.punctuatedList heet nu ParseInfo.separatedList, parameter is nu sep ipv delim
-INTERN: Generic classes (SPARQLTerminal enz.) hernoemd (Terminal_ enz.), klassenstructuur vereenvoudigd.
-INTERN: Operator en Keyword subclasses erven __str__ nu van Operator_ en Keyword_
+INTERN: Class "punctuation" toegevoegd met interpunctie, d.w.z (){}[].,; als instances
+INTERN: Alle subclasses van ParseInfo erven nu dezelfde __str__ / render() code van ParseInfo. Er is geen wezenlijk onderscheid meer tussen Operator, Keyword, Punctuation, Terminal en NonTerminal.
+INTERN: Werkdocument "patterns.py" gecreeerd, ter voorbereiding op refactoring van .grammar in .base en .grammar

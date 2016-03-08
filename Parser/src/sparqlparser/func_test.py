@@ -140,7 +140,8 @@ s = '(DISTINCT "*Expression*",  "*Expression*",   "*Expression*" )'
 
 s_dump = '''
 [ArgList] /( DISTINCT "*Expression*" , "*Expression*" , "*Expression*" )/
-|  (
+|  [LPAR] /(/
+|  |  (
 |  > distinct:
 |  [DISTINCT_kw] /DISTINCT/
 |  |  DISTINCT
@@ -194,7 +195,8 @@ s_dump = '''
 |  |  |  |  |  |  |  |  |  |  |  |  [String] /"*Expression*"/
 |  |  |  |  |  |  |  |  |  |  |  |  |  [STRING_LITERAL2] /"*Expression*"/
 |  |  |  |  |  |  |  |  |  |  |  |  |  |  "*Expression*"
-|  )
+|  [RPAR] /)/
+|  |  )
 '''[1:]
 
 r = ArgList(s)

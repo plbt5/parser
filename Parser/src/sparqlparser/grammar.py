@@ -103,7 +103,7 @@ class ParseInfo(metaclass=ParsePattern):
         return self.__class__ == other.__class__ and self.items == other.items
     
     def __getattr__(self, label):
-        '''Retrieves the unique element corresponding to the label (non-recursive). Raises an exception if zero, or more than one values exist.'''
+        '''Retrieves the unique element corresponding to the label (non-recursive). Raises an exception if zero, or if more than one values exist.'''
         if label in self.getLabels():
             values = self.getValuesForLabel(label)
             assert len(values) == 1
@@ -265,32 +265,32 @@ class ParseInfo(metaclass=ParsePattern):
         
         return result
 
-#     def __str__(self):
-#         '''Generates the string corresponding to the object. Except for whitespace variations, 
-#         this is identical to the string that was used to create the object.'''
-#         sep = ' '
-# #         def renderList(l):
-# #             resultList = []
-# #             for i in l:
-# #                 if isinstance(i, str):
-# #                     resultList.append(i)
-# #                     continue
-# #                 if isinstance(i, ParseInfo):
-# #                     resultList.append(i.__str__())
-# #                     continue
-# #                 if isinstance(i, list):
-# #                     resultList.append(renderList(i))
-# #             return sep.join(resultList)
-#         result = []
-#         for t in self.items:
-#             if isinstance(t[1], str):
-#                 result.append(t[1]) 
-# #             elif isinstance(t[1], list):
-# #                 result.append(renderList(t[1]))
-#             else:
-#                 assert isinstance(t[1], ParseInfo), type(t[1])
-#                 result.append(t[1].__str__())
-#         return sep.join([r for r in result if r != ''])
+    def __str__(self):
+        '''Generates the string corresponding to the object. Except for whitespace variations, 
+        this is identical to the string that was used to create the object.'''
+        sep = ' '
+#         def renderList(l):
+#             resultList = []
+#             for i in l:
+#                 if isinstance(i, str):
+#                     resultList.append(i)
+#                     continue
+#                 if isinstance(i, ParseInfo):
+#                     resultList.append(i.__str__())
+#                     continue
+#                 if isinstance(i, list):
+#                     resultList.append(renderList(i))
+#             return sep.join(resultList)
+        result = []
+        for t in self.items:
+            if isinstance(t[1], str):
+                result.append(t[1]) 
+#             elif isinstance(t[1], list):
+#                 result.append(renderList(t[1]))
+            else:
+                assert isinstance(t[1], ParseInfo), type(t[1])
+                result.append(t[1].__str__())
+        return sep.join([r for r in result if r != ''])
     
     def render(self):
         print(self.__str__())
@@ -382,64 +382,83 @@ class Terminal_(ParseInfo):
             
             
 class NonTerminal_(ParseInfo):
-    def __str__(self):
-        sep = ' '
-#         def renderList(l):
-#             resultList = []
-#             for i in l:
-#                 if isinstance(i, str):
-#                     resultList.append(i)
-#                     continue
-#                 if isinstance(i, ParseInfo):
-#                     resultList.append(i.__str__())
-#                     continue
-#                 if isinstance(i, list):
-#                     resultList.append(renderList(i))
-#             return sep.join(resultList)
-        result = []
-        for t in self.items:
-            if isinstance(t[1], str):
-                result.append(t[1]) 
-#             elif isinstance(t[1], list):
-#                 result.append(renderList(t[1]))
-            else:
-                assert isinstance(t[1], ParseInfo), type(t[1])
-                result.append(t[1].__str__())
-        return sep.join([r for r in result if r != ''])
+    pass
+#     def __str__(self):
+#         sep = ' '
+#         result = []
+#         for t in self.items:
+#             if isinstance(t[1], str):
+#                 result.append(t[1]) 
+#             else:
+#                 assert isinstance(t[1], ParseInfo), type(t[1])
+#                 result.append(t[1].__str__())
+#         return sep.join([r for r in result if r != ''])
 
 
 class Keyword_(ParseInfo):
-    def __str__(self):
-        return ' '.join([t[1] for t in self.items])
+    pass
+#     def __str__(self):
+#         return ' '.join([t[1] for t in self.items])
 
 
 class Operator_(ParseInfo):
-    def __str__(self):
-        return self.items[0][1]
-
-
-
-# Special tokens
-ALL_VALUES_st_p = Literal('*')
-class ALL_VALUES_st(Keyword_):
     pass
-    def __str__(self):
-        return '*'
-if do_parseactions: ALL_VALUES_st_p.setName('ALL_VALUES_st').setParseAction(parseInfoFunc((ALL_VALUES_st)))
+#     def __str__(self):
+#         return self.items[0][1]
+    
+class Punctuation(ParseInfo):
+    pass
+#     def __str__(self):
+#         return self.items[0][1]    
 
 #
 # Brackets and interpunction
 #
 
-LPAR_p, RPAR_p, LBRACK_p, RBRACK_p, LCURL_p, RCURL_p, SEMICOL_p, COMMA_p, PERIOD_p = map(Literal, '()[]{};,.')
+LPAR_punc_p = Literal('(').setName('LPAR_punc') 
+class LPAR(Punctuation): pass
+if do_parseactions: LPAR_punc_p.setName('LPAR_punc').setParseAction(parseInfoFunc((LPAR)))
+
+RPAR_punc_p = Literal(')').setName('RPAR_punc') 
+class RPAR(Punctuation): pass
+if do_parseactions: RPAR_punc_p.setName('RPAR_punc').setParseAction(parseInfoFunc((RPAR)))
+
+LBRACK_punc_p = Literal('[').setName('LBRACK_punc') 
+class LBRACK(Punctuation): pass
+if do_parseactions: LBRACK_punc_p.setName('LBRACK_punc').setParseAction(parseInfoFunc((LBRACK)))
+
+RBRACK_punc_p = Literal(']').setName('RBRACK_punc') 
+class RBRACK(Punctuation): pass
+if do_parseactions: RBRACK_punc_p.setName('RBRACK_punc').setParseAction(parseInfoFunc((RBRACK)))
+
+LCURL_punc_p = Literal('{').setName('LCURL_punc') 
+class LCURL(Punctuation): pass
+if do_parseactions: LCURL_punc_p.setName('LCURL_punc').setParseAction(parseInfoFunc((LCURL)))
+
+RCURL_punc_p = Literal('}').setName('RCURL_punc') 
+class RCURL(Punctuation): pass
+if do_parseactions: RCURL_punc_p.setName('RCURL_punc').setParseAction(parseInfoFunc((RCURL)))
+
+SEMICOL_punc_p = Literal(';').setName('SEMICOL_punc') 
+class SEMICOL(Punctuation): pass
+if do_parseactions: SEMICOL_punc_p.setName('SEMICOL_punc').setParseAction(parseInfoFunc((SEMICOL)))
+
+PERIOD_punc_p = Literal('.').setName('PERIOD_punc') 
+class PERIOD(Punctuation): pass
+if do_parseactions: PERIOD_punc_p.setName('PERIOD_punc').setParseAction(parseInfoFunc((PERIOD)))
+
+COMMA_punc_p = Literal(',').setName('COMMA_punc') 
+class COMMA(Punctuation): pass
+if do_parseactions: COMMA_punc_p.setName('COMMA').setParseAction(parseInfoFunc((COMMA)))
+
 
 #
 # Operators
 #
 
-NOT_op_p = Literal('!')
-class NOT_op(Operator_): pass
-if do_parseactions: NOT_op_p.setName('NOT_op').setParseAction(parseInfoFunc((NOT_op)))
+NEGATE_op_p = Literal('!')
+class NEGATE_op(Operator_): pass
+if do_parseactions: NEGATE_op_p.setName('NEGATE_op').setParseAction(parseInfoFunc((NEGATE_op)))
 
 PLUS_op_p = Literal('+')
 class PLUS_op(Operator_): pass
@@ -497,6 +516,7 @@ if do_parseactions: INVERSE_op_p.setName('INVERSE_op').setParseAction(parseInfoF
 #
 # Keywords
 #
+
 
 ALL_VALUES_kw_p = Literal('*')
 class ALL_VALUES_kw(Keyword_): pass
@@ -1197,7 +1217,7 @@ if do_parseactions: iri_p.setName('iri').setParseAction(parseInfoFunc((iri)))
 String_p = Group(STRING_LITERAL1_p ^ STRING_LITERAL2_p ^ STRING_LITERAL_LONG1_p ^ STRING_LITERAL_LONG2_p)
 class String(NonTerminal_):  
     pass
-String_p.parseWithTabs()
+# String_p.parseWithTabs()
 if do_parseactions: String_p.setName('String').setParseAction(parseInfoFunc((String)))
  
 # [134]   BooleanLiteral    ::=   'true' | 'false' 
@@ -1238,7 +1258,7 @@ if do_parseactions: Expression_p.setName('Expression').setParseAction(parseInfoF
 Expression_list_p = separatedList(Expression_p)
  
 # [71]    ArgList   ::=   NIL | '(' 'DISTINCT'? Expression ( ',' Expression )* ')' 
-ArgList_p = Group(NIL_p('nil')) | (LPAR_p + Optional(DISTINCT_kw_p('distinct')) + Expression_list_p('argument') + RPAR_p)
+ArgList_p = Group(NIL_p('nil')) | (LPAR_punc_p + Optional(DISTINCT_kw_p('distinct')) + Expression_list_p('argument') + RPAR_punc_p)
 class ArgList(NonTerminal_): pass
 if do_parseactions: ArgList_p.setName('ArgList').setParseAction(parseInfoFunc((ArgList)))
 
@@ -1255,13 +1275,13 @@ if do_parseactions: iriOrFunction_p.setName('iriOrFunction').setParseAction(pars
 #             | 'AVG' '(' 'DISTINCT'? Expression ')' 
 #             | 'SAMPLE' '(' 'DISTINCT'? Expression ')' 
 #             | 'GROUP_CONCAT' '(' 'DISTINCT'? Expression ( ';' 'SEPARATOR' '=' String )? ')' 
-Aggregate_p = Group(COUNT_kw_p('count') + LPAR_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_st_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( SUM_kw_p('sum') + LPAR_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_st_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( MIN_kw_p('min') + LPAR_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_st_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( MAX_kw_p('max') + LPAR_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_st_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( AVG_kw_p('avg') + LPAR_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_st_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( SAMPLE_kw_p('sample') + LPAR_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_st_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( GROUP_CONCAT_kw_p('group_concat') + LPAR_p + Optional(DISTINCT_kw_p('distinct')) + Expression_p('expression') + Optional( SEMICOL_p + SEPARATOR_kw_p + '=' + String_p('separator') ) + RPAR_p )
+Aggregate_p = Group(COUNT_kw_p('count') + LPAR_punc_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_kw_p('all') ^ Expression_p('expression') ) + RPAR_punc_p ) | \
+            ( SUM_kw_p('sum') + LPAR_punc_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_kw_p('all') ^ Expression_p('expression') ) + RPAR_punc_p ) | \
+            ( MIN_kw_p('min') + LPAR_punc_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_kw_p('all') ^ Expression_p('expression') ) + RPAR_punc_p ) | \
+            ( MAX_kw_p('max') + LPAR_punc_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_kw_p('all') ^ Expression_p('expression') ) + RPAR_punc_p ) | \
+            ( AVG_kw_p('avg') + LPAR_punc_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_kw_p('all') ^ Expression_p('expression') ) + RPAR_punc_p ) | \
+            ( SAMPLE_kw_p('sample') + LPAR_punc_p + Optional(DISTINCT_kw_p('distinct')) + ( ALL_VALUES_kw_p('all') ^ Expression_p('expression') ) + RPAR_punc_p ) | \
+            ( GROUP_CONCAT_kw_p('group_concat') + LPAR_punc_p + Optional(DISTINCT_kw_p('distinct')) + Expression_p('expression') + Optional( SEMICOL_punc_p + SEPARATOR_kw_p + '=' + String_p('separator') ) + RPAR_punc_p )
 class Aggregate(NonTerminal_): pass
 if do_parseactions: Aggregate_p.setName('Aggregate').setParseAction(parseInfoFunc((Aggregate)))
 
@@ -1280,17 +1300,17 @@ class ExistsFunc(NonTerminal_): pass
 if do_parseactions: ExistsFunc_p.setName('ExistsFunc').setParseAction(parseInfoFunc((ExistsFunc)))
  
 # [124]   StrReplaceExpression      ::=   'REPLACE' '(' Expression ',' Expression ',' Expression ( ',' Expression )? ')' 
-StrReplaceExpression_p = Group(REPLACE_kw_p + LPAR_p + Expression_p('arg') + COMMA_p + Expression_p('pattern') + COMMA_p + Expression_p('replacement') + Optional(COMMA_p + Expression_p('flags')) + RPAR_p)
+StrReplaceExpression_p = Group(REPLACE_kw_p + LPAR_punc_p + Expression_p('arg') + COMMA_punc_p + Expression_p('pattern') + COMMA_punc_p + Expression_p('replacement') + Optional(COMMA_punc_p + Expression_p('flags')) + RPAR_punc_p)
 class StrReplaceExpression(NonTerminal_): pass
 if do_parseactions: StrReplaceExpression_p.setName('StrReplaceExpression').setParseAction(parseInfoFunc((StrReplaceExpression)))
  
 # [123]   SubstringExpression       ::=   'SUBSTR' '(' Expression ',' Expression ( ',' Expression )? ')' 
-SubstringExpression_p = Group(SUBSTR_kw_p + LPAR_p + Expression_p('source') + COMMA_p + Expression_p('startloc') + Optional(COMMA_p + Expression_p('length')) + RPAR_p)
+SubstringExpression_p = Group(SUBSTR_kw_p + LPAR_punc_p + Expression_p('source') + COMMA_punc_p + Expression_p('startloc') + Optional(COMMA_punc_p + Expression_p('length')) + RPAR_punc_p)
 class SubstringExpression(NonTerminal_): pass
 if do_parseactions: SubstringExpression_p.setName('SubstringExpression').setParseAction(parseInfoFunc((SubstringExpression)))
  
 # [122]   RegexExpression   ::=   'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')' 
-RegexExpression_p = Group(REGEX_kw_p + LPAR_p + Expression_p('text') + COMMA_p + Expression_p('pattern') + Optional(COMMA_p + Expression_p('flags')) + RPAR_p)
+RegexExpression_p = Group(REGEX_kw_p + LPAR_punc_p + Expression_p('text') + COMMA_punc_p + Expression_p('pattern') + Optional(COMMA_punc_p + Expression_p('flags')) + RPAR_punc_p)
 class RegexExpression(NonTerminal_): pass
 if do_parseactions: RegexExpression_p.setName('RegexExpression').setParseAction(parseInfoFunc((RegexExpression)))
 
@@ -1360,57 +1380,57 @@ if do_parseactions: ExpressionList_p.setName('ExpressionList').setParseAction(pa
 #             | ExistsFunc 
 #             | NotExistsFunc 
 BuiltInCall_p = Group(Aggregate_p | \
-                STR_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                LANG_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                LANGMATCHES_kw_p + LPAR_p + Expression_p('language-tag') + COMMA_p + Expression_p('language-range') + RPAR_p    | \
-                DATATYPE_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                BOUND_kw_p + LPAR_p + Var_p('var') + RPAR_p    | \
-                IRI_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                URI_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                BNODE_kw_p + (LPAR_p + Expression_p('expression') + RPAR_p | NIL_p)    | \
+                STR_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                LANG_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                LANGMATCHES_kw_p + LPAR_punc_p + Expression_p('language-tag') + COMMA_punc_p + Expression_p('language-range') + RPAR_punc_p    | \
+                DATATYPE_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                BOUND_kw_p + LPAR_punc_p + Var_p('var') + RPAR_punc_p    | \
+                IRI_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                URI_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                BNODE_kw_p + (LPAR_punc_p + Expression_p('expression') + RPAR_punc_p | NIL_p)    | \
                 RAND_kw_p + NIL_p    | \
-                ABS_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                CEIL_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                FLOOR_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                ROUND_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
+                ABS_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                CEIL_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                FLOOR_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                ROUND_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
                 CONCAT_kw_p + ExpressionList_p('expressionList')    | \
                 SubstringExpression_p   | \
-                STRLEN_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
+                STRLEN_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
                 StrReplaceExpression_p  | \
-                UCASE_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                LCASE_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                ENCODE_FOR_URI_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                CONTAINS_kw_p + LPAR_p + Expression_p('arg1') + COMMA_p + Expression_p('arg2') + RPAR_p    | \
-                STRSTARTS_kw_p + LPAR_p + Expression_p('arg1') + COMMA_p + Expression_p('arg2') + RPAR_p    | \
-                STRENDS_kw_p + LPAR_p + Expression_p('arg1') + COMMA_p + Expression_p('arg2') + RPAR_p    | \
-                STRBEFORE_kw_p + LPAR_p + Expression_p('arg1') + COMMA_p + Expression_p('arg2') + RPAR_p    | \
-                STRAFTER_kw_p + LPAR_p + Expression_p('arg1') + COMMA_p + Expression_p('arg2') + RPAR_p    | \
-                YEAR_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                MONTH_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                DAY_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                HOURS_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                MINUTES_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                SECONDS_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                TIMEZONE_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                TZ_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
+                UCASE_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                LCASE_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                ENCODE_FOR_URI_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                CONTAINS_kw_p + LPAR_punc_p + Expression_p('arg1') + COMMA_punc_p + Expression_p('arg2') + RPAR_punc_p    | \
+                STRSTARTS_kw_p + LPAR_punc_p + Expression_p('arg1') + COMMA_punc_p + Expression_p('arg2') + RPAR_punc_p    | \
+                STRENDS_kw_p + LPAR_punc_p + Expression_p('arg1') + COMMA_punc_p + Expression_p('arg2') + RPAR_punc_p    | \
+                STRBEFORE_kw_p + LPAR_punc_p + Expression_p('arg1') + COMMA_punc_p + Expression_p('arg2') + RPAR_punc_p    | \
+                STRAFTER_kw_p + LPAR_punc_p + Expression_p('arg1') + COMMA_punc_p + Expression_p('arg2') + RPAR_punc_p    | \
+                YEAR_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                MONTH_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                DAY_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                HOURS_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                MINUTES_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                SECONDS_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                TIMEZONE_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                TZ_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
                 NOW_kw_p + NIL_p    | \
                 UUID_kw_p + NIL_p    | \
                 STRUUID_kw_p + NIL_p    | \
-                MD5_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                SHA1_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                SHA256_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                SHA384_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                SHA512_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
+                MD5_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                SHA1_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                SHA256_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                SHA384_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                SHA512_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
                 COALESCE_kw_p + ExpressionList_p('expressionList')    | \
-                IF_kw_p + LPAR_p + Expression_p('expression1') + COMMA_p + Expression_p('expression2') + COMMA_p + Expression_p('expression3') + RPAR_p    | \
-                STRLANG_kw_p + LPAR_p + Expression_p('lexicalForm') + COMMA_p + Expression_p('langTag') + RPAR_p    | \
-                STRDT_kw_p + LPAR_p + Expression_p('lexicalForm') + COMMA_p + Expression_p('datatypeIRI') + RPAR_p    | \
-                sameTerm_kw_p + LPAR_p + Expression_p('term1') + COMMA_p + Expression_p('term2') + RPAR_p    | \
-                isIRI_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                isURI_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                isBLANK_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                isLITERAL_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                isNUMERIC_kw_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
+                IF_kw_p + LPAR_punc_p + Expression_p('expression1') + COMMA_punc_p + Expression_p('expression2') + COMMA_punc_p + Expression_p('expression3') + RPAR_punc_p    | \
+                STRLANG_kw_p + LPAR_punc_p + Expression_p('lexicalForm') + COMMA_punc_p + Expression_p('langTag') + RPAR_punc_p    | \
+                STRDT_kw_p + LPAR_punc_p + Expression_p('lexicalForm') + COMMA_punc_p + Expression_p('datatypeIRI') + RPAR_punc_p    | \
+                sameTerm_kw_p + LPAR_punc_p + Expression_p('term1') + COMMA_punc_p + Expression_p('term2') + RPAR_punc_p    | \
+                isIRI_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                isURI_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                isBLANK_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                isLITERAL_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
+                isNUMERIC_kw_p + LPAR_punc_p + Expression_p('expression') + RPAR_punc_p    | \
                 RegexExpression_p | \
                 ExistsFunc_p | \
                 NotExistsFunc_p )
@@ -1418,7 +1438,7 @@ class BuiltInCall(NonTerminal_): pass
 if do_parseactions: BuiltInCall_p.setName('BuiltInCall').setParseAction(parseInfoFunc((BuiltInCall)))
 
 # [120]   BrackettedExpression      ::=   '(' Expression ')' 
-BracketedExpression_p = Group(LPAR_p + Expression_p('expression') + RPAR_p)
+BracketedExpression_p = Group(LPAR_punc_p + Expression_p('expression') + RPAR_punc_p)
 class BracketedExpression(NonTerminal_): pass
 if do_parseactions: BracketedExpression_p.setName('BracketedExpression').setParseAction(parseInfoFunc((BracketedExpression)))
 
@@ -1431,7 +1451,7 @@ if do_parseactions: PrimaryExpression_p.setName('PrimaryExpression').setParseAct
 #             | '+' PrimaryExpression 
 #             | '-' PrimaryExpression 
 #             | PrimaryExpression 
-UnaryExpression_p = Group(NOT_op_p + PrimaryExpression_p | PLUS_op_p + PrimaryExpression_p | MINUS_op_p + PrimaryExpression_p | PrimaryExpression_p)
+UnaryExpression_p = Group(NEGATE_op_p + PrimaryExpression_p | PLUS_op_p + PrimaryExpression_p | MINUS_op_p + PrimaryExpression_p | PrimaryExpression_p)
 class UnaryExpression(NonTerminal_): pass
 if do_parseactions: UnaryExpression_p.setName('UnaryExpression').setParseAction(parseInfoFunc((UnaryExpression)))
 
@@ -1517,12 +1537,12 @@ class GraphNode(NonTerminal_): pass
 if do_parseactions: GraphNode_p.setName('GraphNode').setParseAction(parseInfoFunc((GraphNode)))
 
 # [103]   CollectionPath    ::=   '(' GraphNodePath+ ')' 
-CollectionPath_p = Group( LPAR_p + OneOrMore(GraphNodePath_p) + RPAR_p)
+CollectionPath_p = Group( LPAR_punc_p + OneOrMore(GraphNodePath_p) + RPAR_punc_p)
 class CollectionPath(NonTerminal_): pass
 if do_parseactions: CollectionPath_p.setName('CollectionPath').setParseAction(parseInfoFunc((CollectionPath)))
 
 # [102]   Collection        ::=   '(' GraphNode+ ')' 
-Collection_p = Group( LPAR_p + OneOrMore(GraphNode_p) + RPAR_p)
+Collection_p = Group( LPAR_punc_p + OneOrMore(GraphNode_p) + RPAR_punc_p)
 class Collection(NonTerminal_): pass
 if do_parseactions: Collection_p.setName('Collection').setParseAction(parseInfoFunc((Collection)))
 
@@ -1531,7 +1551,7 @@ class PropertyListPathNotEmpty(NonTerminal_): pass
 if do_parseactions: PropertyListPathNotEmpty_p.setName('PropertyListPathNotEmpty').setParseAction(parseInfoFunc((PropertyListPathNotEmpty)))
 
 # [101]   BlankNodePropertyListPath         ::=   '[' PropertyListPathNotEmpty ']'
-BlankNodePropertyListPath_p = Group(  LBRACK_p + PropertyListPathNotEmpty_p + RBRACK_p )
+BlankNodePropertyListPath_p = Group(  LBRACK_punc_p + PropertyListPathNotEmpty_p + RBRACK_punc_p )
 class BlankNodePropertyListPath(NonTerminal_): pass
 if do_parseactions: BlankNodePropertyListPath_p.setName('BlankNodePropertyListPath').setParseAction(parseInfoFunc((BlankNodePropertyListPath)))
 
@@ -1543,7 +1563,7 @@ class PropertyListNotEmpty(NonTerminal_): pass
 if do_parseactions: PropertyListNotEmpty_p.setName('PropertyListNotEmpty').setParseAction(parseInfoFunc((PropertyListNotEmpty)))
 
 # [99]    BlankNodePropertyList     ::=   '[' PropertyListNotEmpty ']' 
-BlankNodePropertyList_p = Group(  LBRACK_p + PropertyListNotEmpty_p + RBRACK_p )
+BlankNodePropertyList_p = Group(  LBRACK_punc_p + PropertyListNotEmpty_p + RBRACK_punc_p )
 class BlankNodePropertyList(NonTerminal_): pass
 if do_parseactions: BlankNodePropertyList_p.setName('BlankNodePropertyList').setParseAction(parseInfoFunc((BlankNodePropertyList)))
 
@@ -1564,7 +1584,7 @@ if do_parseactions: PathOneInPropertySet_p.setName('PathOneInPropertySet').setPa
 PathOneInPropertySet_list_p = separatedList(PathOneInPropertySet_p, sep='|')
 
 # [95]    PathNegatedPropertySet    ::=   PathOneInPropertySet | '(' ( PathOneInPropertySet ( '|' PathOneInPropertySet )* )? ')' 
-PathNegatedPropertySet_p = Group(PathOneInPropertySet_p | (LPAR_p + Optional(PathOneInPropertySet_list_p('pathinone')) + RPAR_p))
+PathNegatedPropertySet_p = Group(PathOneInPropertySet_p | (LPAR_punc_p + Optional(PathOneInPropertySet_list_p('pathinone')) + RPAR_punc_p))
 class PathNegatedPropertySet(NonTerminal_): pass
 if do_parseactions: PathNegatedPropertySet_p.setName('PathNegatedPropertySet').setParseAction(parseInfoFunc((PathNegatedPropertySet)))
 
@@ -1573,7 +1593,7 @@ class Path(NonTerminal_): pass
 if do_parseactions: Path_p.setName('Path').setParseAction(parseInfoFunc((Path)))
 
 # [94]    PathPrimary       ::=   iri | 'a' | '!' PathNegatedPropertySet | '(' Path ')' 
-PathPrimary_p = Group(iri_p | TYPE_kw_p | (NOT_op_p + PathNegatedPropertySet_p) | (LPAR_p + Path_p + RPAR_p))
+PathPrimary_p = Group(iri_p | TYPE_kw_p | (NEGATE_op_p + PathNegatedPropertySet_p) | (LPAR_punc_p + Path_p + RPAR_punc_p))
 class PathPrimary(NonTerminal_): pass
 if do_parseactions: PathPrimary_p.setName('PathPrimary').setParseAction(parseInfoFunc((PathPrimary)))
 
@@ -1636,7 +1656,7 @@ class ObjectList(NonTerminal_): pass
 if do_parseactions: ObjectList_p.setName('ObjectList').setParseAction(parseInfoFunc((ObjectList)))
 
 # [83]    PropertyListPathNotEmpty          ::=   ( VerbPath | VerbSimple ) ObjectListPath ( ';' ( ( VerbPath | VerbSimple ) ObjectList )? )* 
-PropertyListPathNotEmpty_p << Group((VerbPath_p | VerbSimple_p) + ObjectListPath_p +  ZeroOrMore(SEMICOL_p + Optional(( VerbPath_p | VerbSimple_p) + ObjectList_p)))
+PropertyListPathNotEmpty_p << Group((VerbPath_p | VerbSimple_p) + ObjectListPath_p +  ZeroOrMore(SEMICOL_punc_p + Optional(( VerbPath_p | VerbSimple_p) + ObjectList_p)))
 
 # [82]    PropertyListPath          ::=   PropertyListPathNotEmpty? 
 PropertyListPath_p = Group(Optional(PropertyListPathNotEmpty_p))
@@ -1654,7 +1674,7 @@ class Verb(NonTerminal_): pass
 if do_parseactions: Verb_p.setName('Verb').setParseAction(parseInfoFunc((Verb)))
 
 # [77]    PropertyListNotEmpty      ::=   Verb ObjectList ( ';' ( Verb ObjectList )? )* 
-PropertyListNotEmpty_p << Group(Verb_p + ObjectList_p + ZeroOrMore(SEMICOL_p + Optional(Verb_p + ObjectList_p))) 
+PropertyListNotEmpty_p << Group(Verb_p + ObjectList_p + ZeroOrMore(SEMICOL_punc_p + Optional(Verb_p + ObjectList_p))) 
 
 # [76]    PropertyList      ::=   PropertyListNotEmpty?
 PropertyList_p = Group(Optional(PropertyListNotEmpty_p) )
@@ -1670,17 +1690,17 @@ if do_parseactions: TriplesSameSubject_p.setName('TriplesSameSubject').setParseA
 TriplesSameSubject_list_p = separatedList(TriplesSameSubject_p, sep='.')
 
 # [74]    ConstructTriples          ::=   TriplesSameSubject ( '.' ConstructTriples? )? 
-ConstructTriples_p = Group(TriplesSameSubject_list_p + Optional(PERIOD_p))
+ConstructTriples_p = Group(TriplesSameSubject_list_p + Optional(PERIOD_punc_p))
 class ConstructTriples(NonTerminal_): pass
 if do_parseactions: ConstructTriples_p.setName('ConstructTriples').setParseAction(parseInfoFunc((ConstructTriples)))
 
 # [73]    ConstructTemplate         ::=   '{' ConstructTriples? '}'
-ConstructTemplate_p = Group(  LCURL_p + Optional(ConstructTriples_p) + RCURL_p )
+ConstructTemplate_p = Group(  LCURL_punc_p + Optional(ConstructTriples_p) + RCURL_punc_p )
 class ConstructTemplate(NonTerminal_): pass
 if do_parseactions: ConstructTemplate_p.setName('ConstructTemplate').setParseAction(parseInfoFunc((ConstructTemplate)))
 
 # [72]    ExpressionList    ::=   NIL | '(' Expression ( ',' Expression )* ')' 
-ExpressionList_p << Group(NIL_p | (LPAR_p + Expression_list_p + RPAR_p))
+ExpressionList_p << Group(NIL_p | (LPAR_punc_p + Expression_list_p + RPAR_punc_p))
 
 # [70]    FunctionCall      ::=   iri ArgList 
 FunctionCall_p = Group(iri_p + ArgList_p)
@@ -1713,12 +1733,12 @@ class DataBlockValue(NonTerminal_): pass
 if do_parseactions: DataBlockValue_p.setName('DataBlockValue').setParseAction(parseInfoFunc((DataBlockValue)))
 
 # [64]    InlineDataFull    ::=   ( NIL | '(' Var* ')' ) '{' ( '(' DataBlockValue* ')' | NIL )* '}' 
-InlineDataFull_p = Group(( NIL_p | (LPAR_p + ZeroOrMore(Var_p) + RPAR_p)) + LCURL_p +  ZeroOrMore((LPAR_p + ZeroOrMore(DataBlockValue_p) + RPAR_p) | NIL_p) + RCURL_p )
+InlineDataFull_p = Group(( NIL_p | (LPAR_punc_p + ZeroOrMore(Var_p) + RPAR_punc_p)) + LCURL_punc_p +  ZeroOrMore((LPAR_punc_p + ZeroOrMore(DataBlockValue_p) + RPAR_punc_p) | NIL_p) + RCURL_punc_p )
 class InlineDataFull(NonTerminal_): pass
 if do_parseactions: InlineDataFull_p.setName('InlineDataFull').setParseAction(parseInfoFunc((InlineDataFull)))
 
 # [63]    InlineDataOneVar          ::=   Var '{' DataBlockValue* '}' 
-InlineDataOneVar_p = Group(Var_p + LCURL_p + ZeroOrMore(DataBlockValue_p) + RCURL_p )
+InlineDataOneVar_p = Group(Var_p + LCURL_punc_p + ZeroOrMore(DataBlockValue_p) + RCURL_punc_p )
 class InlineDataOneVar(NonTerminal_): pass
 if do_parseactions: InlineDataOneVar_p.setName('InlineDataOneVar').setParseAction(parseInfoFunc((InlineDataOneVar)))
 
@@ -1733,7 +1753,7 @@ class InlineData(NonTerminal_): pass
 if do_parseactions: InlineData_p.setName('InlineData').setParseAction(parseInfoFunc((InlineData)))
 
 # [60]    Bind      ::=   'BIND' '(' Expression 'AS' Var ')' 
-Bind_p = Group(  BIND_kw_p + LPAR_p + Expression_p + AS_kw_p + Var_p + RPAR_p )
+Bind_p = Group(  BIND_kw_p + LPAR_punc_p + Expression_p + AS_kw_p + Var_p + RPAR_punc_p )
 class Bind(NonTerminal_): pass
 if do_parseactions: Bind_p.setName('Bind').setParseAction(parseInfoFunc((Bind)))
 
@@ -1761,12 +1781,12 @@ if do_parseactions: GraphPatternNotTriples_p.setName('GraphPatternNotTriples').s
 TriplesSameSubjectPath_list_p = separatedList(TriplesSameSubjectPath_p, sep='.')
                                            
 # [55]    TriplesBlock      ::=   TriplesSameSubjectPath ( '.' TriplesBlock? )? 
-TriplesBlock_p = Group(TriplesSameSubjectPath_list_p('subjpath') + Optional(PERIOD_p))
+TriplesBlock_p = Group(TriplesSameSubjectPath_list_p('subjpath') + Optional(PERIOD_punc_p))
 class TriplesBlock(NonTerminal_): pass
 if do_parseactions: TriplesBlock_p.setName('TriplesBlock').setParseAction(parseInfoFunc((TriplesBlock)))
 
 # [54]    GroupGraphPatternSub      ::=   TriplesBlock? ( GraphPatternNotTriples '.'? TriplesBlock? )* 
-GroupGraphPatternSub_p = Group(Optional(TriplesBlock_p) + ZeroOrMore(GraphPatternNotTriples_p + Optional(PERIOD_p) + Optional(TriplesBlock_p)) )
+GroupGraphPatternSub_p = Group(Optional(TriplesBlock_p) + ZeroOrMore(GraphPatternNotTriples_p + Optional(PERIOD_punc_p) + Optional(TriplesBlock_p)) )
 class GroupGraphPatternSub(NonTerminal_): pass
 if do_parseactions: GroupGraphPatternSub_p.setName('GroupGraphPatternSub').setParseAction(parseInfoFunc((GroupGraphPatternSub)))
 
@@ -1775,30 +1795,30 @@ class SubSelect(NonTerminal_): pass
 if do_parseactions: SubSelect_p.setName('SubSelect').setParseAction(parseInfoFunc((SubSelect)))
 
 # [53]    GroupGraphPattern         ::=   '{' ( SubSelect | GroupGraphPatternSub ) '}' 
-GroupGraphPattern_p << Group(LCURL_p + (SubSelect_p | GroupGraphPatternSub_p)('pattern') + RCURL_p) 
+GroupGraphPattern_p << Group(LCURL_punc_p + (SubSelect_p | GroupGraphPatternSub_p)('pattern') + RCURL_punc_p) 
 
 # [52]    TriplesTemplate   ::=   TriplesSameSubject ( '.' TriplesTemplate? )? 
-TriplesTemplate_p = Group(TriplesSameSubject_list_p + Optional(PERIOD_p)) 
+TriplesTemplate_p = Group(TriplesSameSubject_list_p + Optional(PERIOD_punc_p)) 
 class TriplesTemplate(NonTerminal_): pass
 if do_parseactions: TriplesTemplate_p.setName('TriplesTemplate').setParseAction(parseInfoFunc((TriplesTemplate)))
 
 # [51]    QuadsNotTriples   ::=   'GRAPH' VarOrIri '{' TriplesTemplate? '}' 
-QuadsNotTriples_p = Group(GRAPH_kw_p + VarOrIri_p + LCURL_p + Optional(TriplesTemplate_p) + RCURL_p )
+QuadsNotTriples_p = Group(GRAPH_kw_p + VarOrIri_p + LCURL_punc_p + Optional(TriplesTemplate_p) + RCURL_punc_p )
 class QuadsNotTriples(NonTerminal_): pass
 if do_parseactions: QuadsNotTriples_p.setName('QuadsNotTriples').setParseAction(parseInfoFunc((QuadsNotTriples)))
 
 # [50]    Quads     ::=   TriplesTemplate? ( QuadsNotTriples '.'? TriplesTemplate? )* 
-Quads_p = Group(Optional(TriplesTemplate_p) + ZeroOrMore(QuadsNotTriples_p + Optional(PERIOD_p) + Optional(TriplesTemplate_p)) )
+Quads_p = Group(Optional(TriplesTemplate_p) + ZeroOrMore(QuadsNotTriples_p + Optional(PERIOD_punc_p) + Optional(TriplesTemplate_p)) )
 class Quads(NonTerminal_): pass
 if do_parseactions: Quads_p.setName('Quads').setParseAction(parseInfoFunc((Quads)))
 
 # [49]    QuadData          ::=   '{' Quads '}' 
-QuadData_p = Group(LCURL_p + Quads_p + RCURL_p )
+QuadData_p = Group(LCURL_punc_p + Quads_p + RCURL_punc_p )
 class QuadData(NonTerminal_): pass
 if do_parseactions: QuadData_p.setName('QuadData').setParseAction(parseInfoFunc((QuadData)))
 
 # [48]    QuadPattern       ::=   '{' Quads '}' 
-QuadPattern_p = Group(LCURL_p + Quads_p + RCURL_p )
+QuadPattern_p = Group(LCURL_punc_p + Quads_p + RCURL_punc_p )
 class QuadPattern(NonTerminal_): pass
 if do_parseactions: QuadPattern_p.setName('QuadPattern').setParseAction(parseInfoFunc((QuadPattern)))
 
@@ -1901,7 +1921,7 @@ class Update(NonTerminal_): pass
 if do_parseactions: Update_p.setName('Update').setParseAction(parseInfoFunc((Update)))
 
 # [29]    Update    ::=   Prologue ( Update1 ( ';' Update )? )? 
-Update_p << Group(Prologue_p + Optional(Update1_p + Optional(SEMICOL_p + Update_p))) 
+Update_p << Group(Prologue_p + Optional(Update1_p + Optional(SEMICOL_punc_p + Update_p))) 
 
 # [28]    ValuesClause      ::=   ( 'VALUES' DataBlock )? 
 ValuesClause_p = Group(Optional(VALUES_kw_p + DataBlock_p) )
@@ -1944,7 +1964,7 @@ class HavingClause(NonTerminal_): pass
 if do_parseactions: HavingClause_p.setName('HavingClause').setParseAction(parseInfoFunc((HavingClause)))
 
 # [20]    GroupCondition    ::=   BuiltInCall | FunctionCall | '(' Expression ( 'AS' Var )? ')' | Var 
-GroupCondition_p = Group(BuiltInCall_p | FunctionCall_p | (LPAR_p + Expression_p + Optional(AS_kw_p + Var_p) + RPAR_p) | Var_p )
+GroupCondition_p = Group(BuiltInCall_p | FunctionCall_p | (LPAR_punc_p + Expression_p + Optional(AS_kw_p + Var_p) + RPAR_punc_p) | Var_p )
 class GroupCondition(NonTerminal_): pass
 if do_parseactions: GroupCondition_p.setName('GroupCondition').setParseAction(parseInfoFunc((GroupCondition)))
 
@@ -1989,18 +2009,18 @@ class AskQuery(NonTerminal_): pass
 if do_parseactions: AskQuery_p.setName('AskQuery').setParseAction(parseInfoFunc((AskQuery)))
 
 # [11]    DescribeQuery     ::=   'DESCRIBE' ( VarOrIri+ | '*' ) DatasetClause* WhereClause? SolutionModifier 
-DescribeQuery_p = Group(DESCRIBE_kw_p + (OneOrMore(VarOrIri_p) | ALL_VALUES_st_p) + ZeroOrMore(DatasetClause_p) + Optional(WhereClause_p) + SolutionModifier_p )
+DescribeQuery_p = Group(DESCRIBE_kw_p + (OneOrMore(VarOrIri_p) | ALL_VALUES_kw_p) + ZeroOrMore(DatasetClause_p) + Optional(WhereClause_p) + SolutionModifier_p )
 class DescribeQuery(NonTerminal_): pass
 if do_parseactions: DescribeQuery_p.setName('DescribeQuery').setParseAction(parseInfoFunc((DescribeQuery)))
 
 # [10]    ConstructQuery    ::=   'CONSTRUCT' ( ConstructTemplate DatasetClause* WhereClause SolutionModifier | DatasetClause* 'WHERE' '{' TriplesTemplate? '}' SolutionModifier ) 
 ConstructQuery_p = Group(CONSTRUCT_kw_p + ( (ConstructTemplate_p + ZeroOrMore(DatasetClause_p) + WhereClause_p + SolutionModifier_p) | \
-                                      (ZeroOrMore(DatasetClause_p) + WHERE_kw_p + LCURL_p +  Optional(TriplesTemplate_p) + RCURL_p + SolutionModifier_p) ) )
+                                      (ZeroOrMore(DatasetClause_p) + WHERE_kw_p + LCURL_punc_p +  Optional(TriplesTemplate_p) + RCURL_punc_p + SolutionModifier_p) ) )
 class ConstructQuery(NonTerminal_): pass
 if do_parseactions: ConstructQuery_p.setName('ConstructQuery').setParseAction(parseInfoFunc((ConstructQuery)))
 
 # [9]     SelectClause      ::=   'SELECT' ( 'DISTINCT' | 'REDUCED' )? ( ( Var | ( '(' Expression 'AS' Var ')' ) )+ | '*' ) 
-SelectClause_p = Group(SELECT_kw_p + Optional(DISTINCT_kw_p | REDUCED_kw_p) + ( OneOrMore(Var_p | (LPAR_p + Expression_p + AS_kw_p + Var_p + RPAR_p)) | ALL_VALUES_st_p ) )
+SelectClause_p = Group(SELECT_kw_p + Optional(DISTINCT_kw_p | REDUCED_kw_p) + ( OneOrMore(Var_p | (LPAR_punc_p + Expression_p + AS_kw_p + Var_p + RPAR_punc_p)) | ALL_VALUES_kw_p ) )
 class SelectClause(NonTerminal_): pass
 if do_parseactions: SelectClause_p.setName('SelectClause').setParseAction(parseInfoFunc((SelectClause)))
 
