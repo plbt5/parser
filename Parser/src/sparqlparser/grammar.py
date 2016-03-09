@@ -20,7 +20,7 @@ def stripComments(text):
         text = '\n'.join(text)
     Comment = Literal('#') + SkipTo(lineEnd)
     NormalText = Regex('[^#<\'"]+')    
-    Line = ZeroOrMore(String_p | IRIREF_p | NormalText) + Optional(Comment)
+    Line = ZeroOrMore(String_p | (IRIREF_p | Literal('<')) | NormalText) + Optional(Comment) + lineEnd
     Line.ignore(Comment)
     Line.setParseAction(lambda tokens: ' '.join([t if isinstance(t, str) else t.__str__() for t in tokens]))
     lines = text.split('\n')
