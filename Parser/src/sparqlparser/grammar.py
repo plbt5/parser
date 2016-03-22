@@ -166,9 +166,9 @@ class ParseInfo(metaclass=ParsePattern):
         result.extend(flattenList(self.getItems()))
         return result  
     
-    def searchElements(self, *, label=None, element_type = None, value = None, labeledOnly=True):
-        '''Returns a list of all elements with the specified search pattern. If labeledOnly is True (the default case),
-        only elements with label not None are considered for inclusion. Otherwise all elements are considered.
+    def searchElements(self, *, label=None, element_type = None, value = None, labeledOnly=False):
+        '''Returns a list of all elements with the specified search pattern. If labeledOnly is True,
+        only elements with label not None are considered for inclusion. Otherwise (the default case) all elements are considered.
         Keyword arguments label, element_type, value are used as a wildcard if None. All must be matched for an element to be included in the result.'''
         
         result = []
@@ -246,7 +246,19 @@ class ParseInfo(metaclass=ParsePattern):
     def getItemsForLabel(self, k):
         '''Returns list of items with given label. (Non-recursive).'''
         return [i for i in self.getItems() if i[0] == k]
-
+    
+    def getChildren(self):
+        '''Returns a list of all its child elements.'''
+        return [i[1] for i in self.getItems() if isinstance(i[1], ParseInfo)]
+    
+    def getParent(self, start):
+        '''Returns a list of its parent element, which is the first element encountered when going up to Start.
+        Start must be given to provide a context for the search, and will normally correspond to the main expression parsed.'''
+        for i in start.searchElements():
+            if self in i.getChildren():
+                return i
+        return None
+            
     def dump(self, indent='', step='|  '):
         '''Returns a dump of the object, with rich information'''
         result = ''
