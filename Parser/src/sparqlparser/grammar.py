@@ -177,8 +177,13 @@ class ParseInfo(metaclass=ParsePattern):
                 continue
             if element_type and element_type != e.__class__:
                 continue
-            if value and e != e.pattern.parseString(value)[0]:
-                continue
+            if value:
+                try:
+                    e1 = e.pattern.parseString(value)[0]
+                    if e != e1:
+                        continue
+                except ParseException:
+                    continue
             result.append(e)
         return result    
         
