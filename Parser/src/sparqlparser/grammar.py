@@ -172,7 +172,8 @@ class ParseInfo(metaclass=ParsePattern):
         Keyword arguments label, element_type, value are used as a wildcard if None. All must be matched for an element to be included in the result.'''
         
         result = []
-        for e in self.__getElements(labeledOnly=labeledOnly):
+        
+        for e in [self] + self.__getElements(labeledOnly=labeledOnly):
             if label and label != e.getName():
                 continue
             if element_type and element_type != e.__class__:
@@ -251,13 +252,22 @@ class ParseInfo(metaclass=ParsePattern):
         '''Returns a list of all its child elements.'''
         return [i[1] for i in self.getItems() if isinstance(i[1], ParseInfo)]
     
-    def getParent(self, start):
-        '''Returns a list of its parent element, which is the first element encountered when going up to Start.
-        Start must be given to provide a context for the search, and will normally correspond to the main expression parsed.'''
-        for i in start.searchElements():
+    def getParent(self, top):
+        '''Returns a list of its parent element, which is the first element encountered when going up to top, which can be any element in the parse tree.
+        It must be given to provide a context for the search, and will normally correspond to the main expression parsed.'''
+        for i in top.searchElements():
             if self in i.getChildren():
                 return i
         return None
+    
+    def getParents(self, top):
+        '''Returns the list of parent nodes, starting with the direct parent and ending with top.'''
+        result = []
+        parent = self.getParent(top)
+        while parent:
+            result.append(parent)
+            parent = parent.getParent(top)
+        return result
             
     def dump(self, indent='', step='|  '):
         '''Returns a dump of the object, with rich information'''

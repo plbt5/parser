@@ -99,11 +99,11 @@ r = PrimaryExpression(s)
 assert r.iriOrFunction.iri == iri('<check#22?>')
 
 found = r.searchElements()
-assert len(found) == 29, len(found)
+assert len(found) == 30, len(found)
 found = r.searchElements(labeledOnly=False)
-assert len(found) == 29, len(found)
+assert len(found) == 30, len(found)
 found = r.searchElements(labeledOnly=True)
-assert len(found) == 4, len(found)
+assert len(found) == 5, len(found)
 found = r.searchElements(value='<check#22?>')
 assert len(found) == 2, len(found)
 assert type(found[0]) == iri
@@ -124,12 +124,20 @@ assert len(found) == 0
 found = r.searchElements(element_type=ArgList)
 assert len(found) == 1, len(found)
 arglist = found[0]
+print('ArgList:\n')
 print(arglist.dump())
+
+print('\nr:\n')
+print(r.dump())
 
 for i in arglist.getChildren():
     i.render()
-    print(i.dump())
-    print(i.getParent(r))
+#     print(i.dump())
+    print(i.getParent(r), type(i.getParent(r)))
+
+parents = arglist.getParents(r)
+for p in parents:
+    print(p, type(p))
 
 # Test parseQuery
 

@@ -1,3 +1,1 @@
-Default parameter labeledOnly=True van searchElements() veranderd naar labeledOnly=False.
-Implemented ParseInfo.getChildren()
-Implemented ParseInfo.getParent(start). See the help for the meaning of the "start" parameter.
+NEW: getParents() functie geeft alle parent nodes, in volgorde, t/m Start.
