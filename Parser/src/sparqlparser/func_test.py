@@ -135,7 +135,7 @@ for i in arglist.getChildren():
 #     print(i.dump())
     print(i.getParent(r), type(i.getParent(r)))
 
-parents = arglist.getParents(r)
+parents = arglist.getAncestors(r)
 for p in parents:
     print(p, type(p))
 

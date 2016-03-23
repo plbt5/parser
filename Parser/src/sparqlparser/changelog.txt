@@ -1,1 +1,0 @@
-NEW: getParents() functie geeft alle parent nodes, in volgorde, t/m Start.

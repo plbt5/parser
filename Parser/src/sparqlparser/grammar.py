@@ -260,7 +260,7 @@ class ParseInfo(metaclass=ParsePattern):
                 return i
         return None
     
-    def getParents(self, top):
+    def getAncestors(self, top):
         '''Returns the list of parent nodes, starting with the direct parent and ending with top.'''
         result = []
         parent = self.getParent(top)
