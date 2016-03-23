@@ -1,0 +1,1 @@
+ADDED: to ParseInfo methods isAtom(), isBranch(), and descend().

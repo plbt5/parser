@@ -14,6 +14,7 @@ s = "'work' ^^<work>"
 r = RDFLiteral(s)
 assert r.check()
 
+
 # check copy 
 
 rc = r.copy()
@@ -40,6 +41,8 @@ assert r == RDFLiteral_p.parseString(s)[0]
 # check dot access (read)
  
 assert r.lexical_form.__str__() == "'work'"
+assert r.isBranch()
+assert not r.isAtom()
 
 # check dot access (write)
  
@@ -153,6 +156,13 @@ s = '<check#22?> ( $var, ?var )'
   
 r = PrimaryExpression(s)
 
+print(r.dump())
+
+branch = r.descend()
+print('branch:', type(branch))
+print(branch.dump())
+
+
 assert r == eval(repr(r))
 assert str(r) == '<check#22?> ( $var , ?var )'
 
@@ -220,6 +230,22 @@ s_dump = '''
 r = ArgList(s)
 
 assert r.dump() == s_dump
+assert r.descend() == r
+
+v = r.searchElements(element_type=STRING_LITERAL2)
+print('STRING_LITERAL2 elements:', v)
+assert v[0].isAtom()
+assert not v[0].isBranch()
+
+e = r.searchElements(element_type=Expression)[0]
+
+print(e, '\n', e.dump())
+
+d = e.descend()
+
+assert d.isAtom()
+
+
 
 print('Passed')
 

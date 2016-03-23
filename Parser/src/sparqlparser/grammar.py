@@ -268,7 +268,23 @@ class ParseInfo(metaclass=ParsePattern):
             result.append(parent)
             parent = parent.getParent(top)
         return result
+    
+    def isBranch(self):
+        '''Checks whether the node branches.'''
+        return len(self.getItems()) > 1
             
+    def isAtom(self):
+        '''Test whether the node has no ParseInfo subnode, but contains a string.'''
+        return len(self.getItems()) == 1 and isinstance(self.items[0][1], str)
+    
+    def descend(self):
+        '''Descends until either an atom or a branch node is encountered; returns that node.'''
+        result = self
+        while not result.isAtom() and not result.isBranch():
+#             if isinstance(result, str): print()
+            result = result.items[0][1]
+        return result
+        
     def dump(self, indent='', step='|  '):
         '''Returns a dump of the object, with rich information'''
         result = ''
