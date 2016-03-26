@@ -86,14 +86,18 @@ class ParseInfo(metaclass=ParsePattern):
         - another ParseInfo object.
         Only in the latter case the name can be other than None.
         This nested list is the basic internal structure for the class and contains all parsing information.'''
+        
+        self.outerList = None
+        self.parent = None
         if len(args) == 2:
-            self.__dict__['name'] = args[0] 
+#             self.__dict__['name'] = args[0] 
+#             self.__dict__['name'] = None
             self.__dict__['items'] = args[1] 
         else:
             assert len(args) == 1 and isinstance(args[0], str)
-            self.__dict__['name'] = None
+#             self.__dict__['name'] = None
             self.__dict__['items'] = self.__getPattern().parseString(args[0], parseAll=True)[0].items
-        assert self.__isLabelConsistent()
+        self.createParentPointers()
                 
     def __eq__(self, other):
         '''Compares the items part of both classes for equality, recursively.
@@ -102,27 +106,27 @@ class ParseInfo(metaclass=ParsePattern):
         encountered production rules. Equality means that all productions are identical.'''
         return self.__class__ == other.__class__ and self.items == other.items
     
-    def __getattr__(self, label):
-        '''Retrieves the unique element corresponding to the label (non-recursive). Raises an exception if zero, or more than one values exist.'''
-        if label in self.getLabels():
-            values = self.getValuesForLabel(label)
-            assert len(values) == 1
-            return values[0] 
-        else:
-            raise AttributeError('Unknown label: {}'.format(label))
-        
-    def __setattr__(self, label, value):
-        '''Raises exception when trying to set attributes directly.Elements are to be changed using "updateWith()".'''
-        raise AttributeError('Direct setting of attributes not allowed. Try updateWith() instead.')
+#     def __getattr__(self, label):
+#         '''Retrieves the unique element corresponding to the label (non-recursive). Raises an exception if zero, or more than one values exist.'''
+#         if label in self.getLabels():
+#             values = self.getValuesForLabel(label)
+#             assert len(values) == 1
+#             return values[0] 
+#         else:
+#             raise AttributeError('Unknown label: {}'.format(label))
+#         
+#     def __setattr__(self, label, value):
+#         '''Raises exception when trying to set attributes directly.Elements are to be changed using "updateWith()".'''
+#         raise AttributeError('Direct setting of attributes not allowed. Try updateWith() instead.')
     
     def __repr__(self):
         return self.__class__.__name__ + '("' + str(self) + '")'
    
-    def __isLabelConsistent(self):
-        '''Checks if for labels are only not None for pairs [label, value] where value is a ParseInfo instance, and in those cases label must be equal to value.name.
-        This is for internal use only.'''
-        return all([i[0] == i[1].name if isinstance(i[1], ParseInfo) else i[0] == None if isinstance(i[1], str) else False for i in self.getItems()]) and \
-                all([i[1].__isLabelConsistent() if isinstance(i[1], ParseInfo) else i[0] == None for i in self.getItems()])
+#     def __isLabelConsistent(self):
+#         '''Checks if for labels are only not None for pairs [label, value] where value is a ParseInfo instance, and in those cases label must be equal to value.name.
+#         This is for internal use only.'''
+#         return all([i[0] == i[1].name if isinstance(i[1], ParseInfo) else i[0] == None if isinstance(i[1], str) else False for i in self.getItems()]) and \
+#                 all([i[1].__isLabelConsistent() if isinstance(i[1], ParseInfo) else i[0] == None for i in self.getItems()])
 
     def __getPattern(self):
         '''Returns the pattern used to parse expressions for this class.'''
@@ -161,10 +165,15 @@ class ParseInfo(metaclass=ParsePattern):
             return result
         
         result = []
-        if self.name or not labeledOnly:
+        if self.getName() or not labeledOnly:
                 result.append(self)
         result.extend(flattenList(self.getItems()))
         return result  
+    
+    def createParentPointers(self):
+        for i in self.getItems():
+            if isinstance(i[1], ParseInfo):
+                i[1].parent = self
     
     def searchElements(self, *, label=None, element_type = None, value = None, labeledOnly=False):
         '''Returns a list of all elements with the specified search pattern. If labeledOnly is True,
@@ -174,6 +183,8 @@ class ParseInfo(metaclass=ParsePattern):
         result = []
         
         for e in [self] + self.__getElements(labeledOnly=labeledOnly):
+#             print('DEBUG: e.name =', e.getName())
+
             if label and label != e.getName():
                 continue
             if element_type and element_type != e.__class__:
@@ -190,7 +201,7 @@ class ParseInfo(metaclass=ParsePattern):
         
     def copy(self):
         '''Returns a deep copy of itself.'''
-        result = globals()[self.__class__.__name__](self.name, self.__copyItems())
+        result = globals()[self.__class__.__name__](self.getName(), self.__copyItems())
         assert result == self
         return result
     
@@ -222,7 +233,10 @@ class ParseInfo(metaclass=ParsePattern):
 
     def getName(self):
         '''Returns name attribute (non-recursive).'''
-        return self.name
+        try:
+            return self.outerList[0]
+        except TypeError:
+            return None
     
     def getItems(self):
         '''Returns items attribute (non-recursive).'''
@@ -252,13 +266,14 @@ class ParseInfo(metaclass=ParsePattern):
         '''Returns a list of all its child elements.'''
         return [i[1] for i in self.getItems() if isinstance(i[1], ParseInfo)]
     
-    def getParent(self, top):
+    def getParent(self):
         '''Returns a list of its parent element, which is the first element encountered when going up to top, which can be any element in the parse tree.
         It must be given to provide a context for the search, and will normally correspond to the main expression parsed.'''
-        for i in top.searchElements():
-            if self in i.getChildren():
-                return i
-        return None
+        return self.parent
+#         for i in top.searchElements():
+#             if self in i.getChildren():
+#                 return i
+#         return None
     
     def getAncestors(self, top):
         '''Returns the list of parent nodes, starting with the direct parent and ending with top.'''
@@ -303,7 +318,7 @@ class ParseInfo(metaclass=ParsePattern):
                     result += v.dump(indent+step, step)
             return result       
        
-        result += indent + ('> '+ self.name + ':\n' + indent if self.name else '') + '[' + self.__class__.__name__ + '] ' + '/' + self.__str__() + '/' + '\n'
+        result += indent + ('> '+ self.getName() + ':\n' + indent if self.getName() else '') + '[' + self.__class__.__name__ + '] ' + '/' + self.__str__() + '/' + '\n'
         result += dumpItems(self.items, indent, step)
         
         return result
@@ -368,10 +383,14 @@ def parseInfoFunc(cls):
         result = []
         for t in parseresults:
             if isinstance(t, str):
-                result.append([None, t])
+                i = [None, t]
+                result.append(i)
             elif isinstance(t, ParseInfo):
+#                 t.createParentPointers()
+                i = [valuedict.get(id(t)), t]
+                t.outerList = i
                 t.__dict__['name'] = valuedict.get(id(t))
-                result.append([valuedict.get(id(t)), t])
+                result.append(i)
             elif isinstance(t, list):
                 result.append(t)
             else:

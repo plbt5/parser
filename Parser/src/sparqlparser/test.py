@@ -4,23 +4,15 @@ from sparqlparser.grammar import *
 from sparqlparser.grammar import stripComments
 from sparqlparser.grammar_functest import printResults
 
-s = "test / test / test"
+s = '"work"@en-bf'
 
-p = separatedList(Word(alphas), delim='/')
+r = RDFLiteral(s)
 
-r = p.parseString(s)
+print(r.dump())
 
-print(r)
+e = r.searchElements(label='langtag')
 
-print(type(r))
 
-s = 'a ? / ^ ! ( ^ <testIri> | ^ <testIri> )'
-
-r = PathSequence(s)
-
-# r.render()
-# 
-# print(r.dump()) 
-
-l = ['a ? / ^ ! ( ^ <testIri> | ^ <testIri> ) | a ? / ^ ! ( ^ <testIri> | ^ <testIri> )']
-printResults(l, 'PathAlternative', dump=True)  
+for i in e:
+    print(i.dump())
+    print(i.getParent().dump())
