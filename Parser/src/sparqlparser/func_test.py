@@ -25,7 +25,7 @@ assert not rc is r
 try:
     rc.lexical_form = String("'work2'")
 except AttributeError as e:
-    assert str(e) == 'Direct setting of attributes not allowed. Try updateWith() instead.', e
+    assert str(e) == 'Direct setting of attributes not allowed. To change a labeled element, try updateWith() instead.', e
 rc.lexical_form.updateWith("'work2'")
 assert rc == rc2
 assert not rc2 == r
@@ -134,7 +134,7 @@ arglist = found[0]
 assert(len(arglist.getChildren())) == 2
   
 
-ancestors = arglist.getAncestors(r)
+ancestors = arglist.getAncestors()
 assert str(ancestors) == '[iriOrFunction("<9xx9!> ( $var , ?var )"), PrimaryExpression("<9xx9!> ( $var , ?var )")]'
 
 

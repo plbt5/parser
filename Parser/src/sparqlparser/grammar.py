@@ -28,8 +28,8 @@ def stripComments(text):
 
 def prepareQuery(querystring):
     '''Used to prepare a string for parsing. See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
-    # TODO: finish
     stripped = stripComments(querystring)
+    # TODO: finish
     return stripped
 
 def checkQueryResult(r):
@@ -42,6 +42,7 @@ def checkQueryResult(r):
 #
 
 def parseQuery(querystring):
+    '''Entry point to parse any SPARQL query'''
     s = prepareQuery(querystring)
     try:
         result = QueryUnit(s)
@@ -73,15 +74,13 @@ class ParsePattern(type):
         return result
     
 class ParseInfo(metaclass=ParsePattern):
-    '''Parent class for all ParseInfo subclasses. These subclasses form a hierarchy, the leaves of which
-    correspond to productions in the SPARQL EBNF grammar (with one or two exceptions).
-    '''
+    '''Parent class for all ParseInfo subclasses. These subclasses correspond to productions in the SPARQL EBNF grammar.'''
     def __init__(self, *args):
-        '''A ParseInfo object can be initialized wih either a valid string for the subclass initialized,
+        '''A ParseInfo object can be initialized wih either a valid string for the subclass concerned,
         using its own pattern attribute to parse it, or it can be initialized with a label and a list of items
         which together form an existing and valid parse result. The latter option is only meant to be
         used by internal parser processes. The normal use case is to feed it with a string.
-        Each item is a pair consisting of a label and either
+        Each of the items is a pair consisting of a label and either
         - a string
         - another ParseInfo object.
         Only in the latter case the label can be other than None.
@@ -107,7 +106,8 @@ class ParseInfo(metaclass=ParsePattern):
         return self.__class__ == other.__class__ and self.items == other.items
     
     def __getattr__(self, att):
-        '''Retrieves the unique element corresponding to the label (non-recursive). Raises an exception if zero, or more than one values exist.'''
+        '''Retrieves the agtribute concerned, if it exists. Otherwise, it returns the unique element corresponding to the label (non-recursive) if that exists.
+        Raises an exception if zero, or more than one values exist for that label.'''
         if att in self.__dict__:
             return self.__dict__[att]
         if att in self.getLabels():
@@ -115,11 +115,11 @@ class ParseInfo(metaclass=ParsePattern):
             assert len(values) == 1
             return values[0] 
         else:
-            raise AttributeError('Direct setting of attributes not allowed. Try updateWith() instead.')
+            raise AttributeError('No attribute, or unique label found.')
 #         
     def __setattr__(self, label, value):
         '''Raises exception when trying to set attributes directly.Elements are to be changed using "updateWith()".'''
-        raise AttributeError('Direct setting of attributes not allowed. Try updateWith() instead.')
+        raise AttributeError('Direct setting of attributes not allowed. To change a labeled element, try updateWith() instead.')
     
     def __repr__(self):
         return self.__class__.__name__ + '("' + str(self) + '")'
@@ -169,7 +169,7 @@ class ParseInfo(metaclass=ParsePattern):
         return result
     
     def __getElements(self, labeledOnly = True):
-        '''For internal use. Returns a flat list of all pairs [label, value] value is a ParseInfo instance,
+        '''For internal use. Returns a flat list of all enmbedded ParseInfo instances (inclusing itself),
         at any depth of recursion.
         If labeledOnly is True, then in addition label may not be None.'''
         
@@ -285,12 +285,12 @@ class ParseInfo(metaclass=ParsePattern):
         return [i[1] for i in self.getItems() if isinstance(i[1], ParseInfo)]
     
     def getParent(self):
-        '''Returns a list of its parent element, which is the first element encountered when going up to top, which can be any element in the parse tree.
-        It must be given to provide a context for the search, and will normally correspond to the main expression parsed.'''
+        '''Returns a list of its parent element, which is the first element encountered when going up in the parse tree.
+        For the top element, the method returns None'''
         return self.parent
     
-    def getAncestors(self, top):
-        '''Returns the list of parent nodes, starting with the direct parent and ending with top.'''
+    def getAncestors(self):
+        '''Returns the list of parent nodes, starting with the direct parent and ending with the top element.'''
         result = []
         parent = self.getParent()
         while parent:
@@ -303,7 +303,7 @@ class ParseInfo(metaclass=ParsePattern):
         return len(self.getItems()) > 1
             
     def isAtom(self):
-        '''Test whether the node has no ParseInfo subnode, but contains a string.'''
+        '''Test whether the node has no ParseInfo subnode, but instead contains a string.'''
         return len(self.getItems()) == 1 and isinstance(self.items[0][1], str)
     
     def descend(self):
