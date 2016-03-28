@@ -1,1 +1,7 @@
-ADDED: to ParseInfo methods isAtom(), isBranch(), and descend().
+API and internal
+
+New API methods: ParseInfo methods isAtom(), isBranch(), and descend() to ParseInfo.
+API change: getParent() and getAncestors() methods now take no argument (was "top"). 
+Internal:
+- changed implementation of ParseInfo structure. Label field now points to first element of enveloping pair.
+- added "parent" pointer to ParseInfo structure.

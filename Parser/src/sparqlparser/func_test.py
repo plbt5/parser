@@ -98,19 +98,19 @@ assert stripComments(s1) == s2
 s = '<check#22?> ( $var, ?var )'
   
 r = PrimaryExpression(s)
-
 assert r.iriOrFunction.iri == iri('<check#22?>')
 
 found = r.searchElements()
+
 assert len(found) == 30, len(found)
 found = r.searchElements(labeledOnly=False)
 assert len(found) == 30, len(found)
 found = r.searchElements(labeledOnly=True)
-assert len(found) == 5, len(found)
+assert len(found) == 4, len(found)
 found = r.searchElements(value='<check#22?>')
 assert len(found) == 2, len(found)
 assert type(found[0]) == iri
-assert found[0].getName() == 'iri'
+assert found[0].getLabel() == 'iri'
 assert found[0].__str__() == '<check#22?>'
 
 
@@ -127,20 +127,13 @@ assert len(found) == 0
 found = r.searchElements(element_type=ArgList)
 assert len(found) == 1, len(found)
 arglist = found[0]
-print('ArgList:\n')
-print(arglist.dump())
 
-print('\nr:\n')
-print(r.dump())
+assert(len(arglist.getChildren())) == 2
+  
 
-for i in arglist.getChildren():
-    i.render()
-#     print(i.dump())
-    print(i.getParent(r), type(i.getParent(r)))
+ancestors = arglist.getAncestors(r)
+assert str(ancestors) == '[iriOrFunction("<9xx9!> ( $var , ?var )"), PrimaryExpression("<9xx9!> ( $var , ?var )")]'
 
-parents = arglist.getAncestors(r)
-for p in parents:
-    print(p, type(p))
 
 # Test parseQuery
 
@@ -156,12 +149,16 @@ s = '<check#22?> ( $var, ?var )'
   
 r = PrimaryExpression(s)
 
-print(r.dump())
+# print(r.dump())
 
 branch = r.descend()
-print('branch:', type(branch))
-print(branch.dump())
-
+assert branch.isBranch()
+assert len(branch.getChildren()) > 0
+# print('branch:', type(branch))
+a = branch
+while len(a.getChildren()) > 0:
+    a = a.getChildren()[0]
+assert a.isAtom()
 
 assert r == eval(repr(r))
 assert str(r) == '<check#22?> ( $var , ?var )'
@@ -229,17 +226,18 @@ s_dump = '''
 
 r = ArgList(s)
 
+
 assert r.dump() == s_dump
 assert r.descend() == r
 
 v = r.searchElements(element_type=STRING_LITERAL2)
-print('STRING_LITERAL2 elements:', v)
+# print('STRING_LITERAL2 elements:', v)
 assert v[0].isAtom()
 assert not v[0].isBranch()
 
 e = r.searchElements(element_type=Expression)[0]
 
-print(e, '\n', e.dump())
+# print(e, '\n', e.dump())
 
 d = e.descend()
 

@@ -78,16 +78,16 @@ class ParseInfo(metaclass=ParsePattern):
     '''
     def __init__(self, *args):
         '''A ParseInfo object can be initialized wih either a valid string for the subclass initialized,
-        using its own pattern attribute to parse it, or it can be initialized with a name and a list of items
+        using its own pattern attribute to parse it, or it can be initialized with a label and a list of items
         which together form an existing and valid parse result. The latter option is only meant to be
         used by internal parser processes. The normal use case is to feed it with a string.
-        Each item is a pair consisting of a name and either
+        Each item is a pair consisting of a label and either
         - a string
         - another ParseInfo object.
-        Only in the latter case the name can be other than None.
+        Only in the latter case the label can be other than None.
         This nested list is the basic internal structure for the class and contains all parsing information.'''
         
-        self.outerList = None
+        self.label = None
         self.parent = None
         if len(args) == 2:
 #             self.__dict__['name'] = args[0] 
@@ -106,14 +106,14 @@ class ParseInfo(metaclass=ParsePattern):
         encountered production rules. Equality means that all productions are identical.'''
         return self.__class__ == other.__class__ and self.items == other.items
     
-#     def __getattr__(self, label):
-#         '''Retrieves the unique element corresponding to the label (non-recursive). Raises an exception if zero, or more than one values exist.'''
-#         if label in self.getLabels():
-#             values = self.getValuesForLabel(label)
-#             assert len(values) == 1
-#             return values[0] 
-#         else:
-#             raise AttributeError('Unknown label: {}'.format(label))
+    def __getattr__(self, label):
+        '''Retrieves the unique element corresponding to the label (non-recursive). Raises an exception if zero, or more than one values exist.'''
+        if label in self.getLabels():
+            values = self.getValuesForLabel(label)
+            assert len(values) == 1
+            return values[0] 
+        else:
+            return self.__dict__[label]
 #         
 #     def __setattr__(self, label, value):
 #         '''Raises exception when trying to set attributes directly.Elements are to be changed using "updateWith()".'''
@@ -125,7 +125,7 @@ class ParseInfo(metaclass=ParsePattern):
 #     def __isLabelConsistent(self):
 #         '''Checks if for labels are only not None for pairs [label, value] where value is a ParseInfo instance, and in those cases label must be equal to value.name.
 #         This is for internal use only.'''
-#         return all([i[0] == i[1].name if isinstance(i[1], ParseInfo) else i[0] == None if isinstance(i[1], str) else False for i in self.getItems()]) and \
+#         return all([i[0] == i[1].label if isinstance(i[1], ParseInfo) else i[0] == None if isinstance(i[1], str) else False for i in self.getItems()]) and \
 #                 all([i[1].__isLabelConsistent() if isinstance(i[1], ParseInfo) else i[0] == None for i in self.getItems()])
 
     def __getPattern(self):
@@ -165,7 +165,7 @@ class ParseInfo(metaclass=ParsePattern):
             return result
         
         result = []
-        if self.getName() or not labeledOnly:
+        if self.getLabel() or not labeledOnly:
                 result.append(self)
         result.extend(flattenList(self.getItems()))
         return result  
@@ -183,9 +183,11 @@ class ParseInfo(metaclass=ParsePattern):
         result = []
         
         for e in [self] + self.__getElements(labeledOnly=labeledOnly):
-#             print('DEBUG: e.name =', e.getName())
+#             print('DEBUG: e.name =', e.getLabel())
 
-            if label and label != e.getName():
+            if labeledOnly and not e.getLabel():
+                continue
+            if label and label != e.getLabel():
                 continue
             if element_type and element_type != e.__class__:
                 continue
@@ -201,7 +203,7 @@ class ParseInfo(metaclass=ParsePattern):
         
     def copy(self):
         '''Returns a deep copy of itself.'''
-        result = globals()[self.__class__.__name__](self.getName(), self.__copyItems())
+        result = globals()[self.__class__.__name__](self.getLabel(), self.__copyItems())
         assert result == self
         return result
     
@@ -229,14 +231,12 @@ class ParseInfo(metaclass=ParsePattern):
         if dump:
             print('--dump:')
             print(self.dump())
-        return self.__isLabelConsistent() and self.yieldsValidExpression() and self.isValid()
+        return self.yieldsValidExpression() and self.isValid()
 
-    def getName(self):
+    def getLabel(self):
         '''Returns name attribute (non-recursive).'''
-        try:
-            return self.outerList[0]
-        except TypeError:
-            return None
+        return self.label
+
     
     def getItems(self):
         '''Returns items attribute (non-recursive).'''
@@ -278,10 +278,10 @@ class ParseInfo(metaclass=ParsePattern):
     def getAncestors(self, top):
         '''Returns the list of parent nodes, starting with the direct parent and ending with top.'''
         result = []
-        parent = self.getParent(top)
+        parent = self.getParent()
         while parent:
             result.append(parent)
-            parent = parent.getParent(top)
+            parent = parent.getParent()
         return result
     
     def isBranch(self):
@@ -308,17 +308,17 @@ class ParseInfo(metaclass=ParsePattern):
         
         def dumpItems(items, indent, step):
             result = ''
-            for _, v in items:
-                if isinstance(v, str):
-                    result += dumpString(v, indent+step, step)
+            for i in items:
+                if isinstance(i[1], str):
+                    result += dumpString(i[1], indent+step, step)
 #                 elif isinstance(v, list):
 #                     dumpItems(v, indent+step, step)
                 else:
-                    assert isinstance(v, ParseInfo)
-                    result += v.dump(indent+step, step)
+                    assert isinstance(i[1], ParseInfo) 
+                    result += i[1].dump(indent+step, step)
             return result       
        
-        result += indent + ('> '+ self.getName() + ':\n' + indent if self.getName() else '') + '[' + self.__class__.__name__ + '] ' + '/' + self.__str__() + '/' + '\n'
+        result += indent + ('> '+ self.getLabel() + ':\n' + indent if self.getLabel() else '') + '[' + self.__class__.__name__ + '] ' + '/' + self.__str__() + '/' + '\n'
         result += dumpItems(self.items, indent, step)
         
         return result
@@ -369,13 +369,13 @@ class ParseInfo(metaclass=ParsePattern):
     
     
 def parseInfoFunc(cls):
-    '''Returns the function that converts a ParseResults object to a ParseInfo object of class "cls", with name set to None, and
-    items set to a recursive list of [name, value] pairs (see below).
+    '''Returns the function that converts a ParseResults object to a ParseInfo object of class "cls", with label set to None, and
+    items set to a recursive list of [None, value] pairs (see below).
     The function returned is used to set a parseAction for a pattern.'''
             
     def labeledList(parseresults):
-        '''For internal use. Converts a ParseResults object to a recursive structure consisting of a list of pairs [name, obj],
-        where name is a label and obj either a string, a ParseInfo object, or again a similar list.'''
+        '''For internal use. Converts a ParseResults object to a recursive structure consisting of a list of pairs [None, obj],
+        obj either a string, a ParseInfo object, or again a similar list.'''
         while len(parseresults) == 1 and isinstance(parseresults[0], ParseResults):
             parseresults = parseresults[0]
         valuedict = dict((id(t), k) for (k, t) in parseresults.items())
@@ -388,14 +388,14 @@ def parseInfoFunc(cls):
             elif isinstance(t, ParseInfo):
 #                 t.createParentPointers()
                 i = [valuedict.get(id(t)), t]
-                t.outerList = i
-                t.__dict__['name'] = valuedict.get(id(t))
+                t.label = i[0]
+#                 t.__dict__['name'] = valuedict.get(id(t))
                 result.append(i)
             elif isinstance(t, list):
                 result.append(t)
             else:
                 assert isinstance(t, ParseResults), type(t)
-                assert valuedict.get(id(t)) == None, 'Error: found name ({}) for compound expression {}, remove'.format(valuedict.get(id(t)), t.__str__())
+                assert valuedict.get(id(t)) == None, 'Error: found label ({}) for compound expression {}, remove'.format(valuedict.get(id(t)), t.__str__())
                 result.extend(labeledList(t))
         return result
     
@@ -419,7 +419,7 @@ def separatedList(pattern, sep=','):
         templist = []
         for i in parseresults:
             if isinstance(i, ParseInfo):
-                i.__dict__['name'] = label
+                i.__dict__['label'] = label
                 templist.append([label, i])
             else:
                 assert isinstance(i, str)
