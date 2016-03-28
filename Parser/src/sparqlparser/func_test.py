@@ -109,6 +109,7 @@ assert len(found) == 30, len(found)
 found = r.searchElements(labeledOnly=False)
 assert len(found) == 30, len(found)
 found = r.searchElements(labeledOnly=True)
+print(r.dump())
 assert len(found) == 4, len(found)
 found = r.searchElements(value='<check#22?>')
 assert len(found) == 2, len(found)
@@ -229,7 +230,7 @@ s_dump = '''
 
 r = ArgList(s)
 
-
+# print(r.dump())
 assert r.dump() == s_dump
 assert r.descend() == r
 
