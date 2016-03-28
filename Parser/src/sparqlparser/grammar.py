@@ -87,8 +87,8 @@ class ParseInfo(metaclass=ParsePattern):
         Only in the latter case the label can be other than None.
         This nested list is the basic internal structure for the class and contains all parsing information.'''
         
-        self.label = None
-        self.parent = None
+        self.__dict__['label'] = None
+        self.__dict__['parent'] = None
         if len(args) == 2:
 #             self.__dict__['name'] = args[0] 
 #             self.__dict__['name'] = None
@@ -106,18 +106,20 @@ class ParseInfo(metaclass=ParsePattern):
         encountered production rules. Equality means that all productions are identical.'''
         return self.__class__ == other.__class__ and self.items == other.items
     
-    def __getattr__(self, label):
+    def __getattr__(self, att):
         '''Retrieves the unique element corresponding to the label (non-recursive). Raises an exception if zero, or more than one values exist.'''
-        if label in self.getLabels():
-            values = self.getValuesForLabel(label)
+        if att in self.__dict__:
+            return self.__dict__[att]
+        if att in self.getLabels():
+            values = self.getValuesForLabel(att)
             assert len(values) == 1
             return values[0] 
         else:
-            return self.__dict__[label]
+            raise AttributeError('Direct setting of attributes not allowed. Try updateWith() instead.')
 #         
-#     def __setattr__(self, label, value):
-#         '''Raises exception when trying to set attributes directly.Elements are to be changed using "updateWith()".'''
-#         raise AttributeError('Direct setting of attributes not allowed. Try updateWith() instead.')
+    def __setattr__(self, label, value):
+        '''Raises exception when trying to set attributes directly.Elements are to be changed using "updateWith()".'''
+        raise AttributeError('Direct setting of attributes not allowed. Try updateWith() instead.')
     
     def __repr__(self):
         return self.__class__.__name__ + '("' + str(self) + '")'
@@ -155,7 +157,7 @@ class ParseInfo(metaclass=ParsePattern):
                 assert isinstance(v, ParseInfo)
                 c = v.copy()
                 i = [k, c]
-                c.label = i[0]
+                c.__dict__['label'] = i[0]
                 result.append(i)
         return result
     
@@ -196,7 +198,7 @@ class ParseInfo(metaclass=ParsePattern):
     def createParentPointers(self):
         for i in self.getItems():
             if isinstance(i[1], ParseInfo):
-                i[1].parent = self
+                i[1].__dict__['parent'] = self
     
     def searchElements(self, *, label=None, element_type = None, value = None, labeledOnly=False):
         '''Returns a list of all elements with the specified search pattern. If labeledOnly is True,
@@ -399,7 +401,7 @@ def parseInfoFunc(cls):
             elif isinstance(t, ParseInfo):
 #                 t.createParentPointers()
                 i = [valuedict.get(id(t)), t]
-                t.label = i[0]
+                t.__dict__['label'] = i[0]
 #                 t.__dict__['name'] = valuedict.get(id(t))
                 result.append(i)
             elif isinstance(t, list):

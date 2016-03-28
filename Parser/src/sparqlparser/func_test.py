@@ -22,7 +22,10 @@ rc2 = rc
 assert rc is rc2
 assert rc2 == r
 assert not rc is r
-# rc.lexical_form = String("'work2'")
+try:
+    rc.lexical_form = String("'work2'")
+except AttributeError as e:
+    assert str(e) == 'Direct setting of attributes not allowed. Try updateWith() instead.', e
 rc.lexical_form.updateWith("'work2'")
 assert rc == rc2
 assert not rc2 == r
