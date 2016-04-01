@@ -30,7 +30,7 @@ def makeParser(operatorClass, keywordClass, terminalClass, nonterminalClass):
              
     class _parser: pass
      
-    parser = _parser()
+    sparqlparser = _parser()
      
     operatorNames = [o for o in operatorClass.__dict__ if not o.startswith('__')]
     keywordNames = [o for o in keywordClass.__dict__ if not o.startswith('__')]
@@ -44,12 +44,12 @@ def makeParser(operatorClass, keywordClass, terminalClass, nonterminalClass):
     for o in terminalNames:
         pass
     for o in nonterminalNames:
-        setattr(parser, o, classify([nonterminalClass.__dict__[o]], NonTerminal_))
+        setattr(sparqlparser, o, classify([nonterminalClass.__dict__[o]], NonTerminal_))
          
-    return parser
+    return sparqlparser
         
-print('making parser')
-parser = makeParser(Operators, Keywords, Terminals, NonTerminals)
+print('making sparqlparser')
+sparqlparser = makeParser(Operators, Keywords, Terminals, NonTerminals)
 print()
 
 # VarOrIri_p = Group(Var_p | iri_p).setName('VarOrIri')
@@ -58,7 +58,7 @@ print()
 
 
  
-new_class = parser.VarOrIri
+new_class = sparqlparser.VarOrIri
   
 l = '$algebra', '<test>', 'az:Xy'
   
