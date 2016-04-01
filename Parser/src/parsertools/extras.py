@@ -4,8 +4,8 @@ Created on 29 mrt. 2016
 @author: jeroenbruijning
 '''
 from pyparsing import delimitedList
-from sparqlparser import do_parseactions
-from sparqlparser.base import ParseInfo
+from parsertools import do_parseactions
+from parsertools.base import ParseInfo
 
 def separatedList(pattern, sep=','):
     '''Similar to a delimited list of instances from a ParseInfo subclass, but includes the separator in its ParseResults. Returns a 
@@ -19,12 +19,15 @@ def separatedList(pattern, sep=','):
         templist = []
         for item in parseresults:
             if isinstance(item, ParseInfo):
-                i = [label, item]
-                item.__dict__['label'] = i[0]
-                templist.append([label, item])
+#                 i = [label, item]
+#                 item.__dict__['label'] = i[0]
+#                 templist.append([label, item])
+                item.__dict__['label'] = label
+                templist.append(item)
             else:
                 assert isinstance(item, str)
-                templist.append([None, item])
+#                 templist.append([None, item])
+                templist.append(item)
         result = []
         result.append(templist[0])
         for p in templist[1:]:

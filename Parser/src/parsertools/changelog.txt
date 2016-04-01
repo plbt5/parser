@@ -1,0 +1,2 @@
+- Framework geimplementeerd. Package structuur gewijzigd. API licht aangepast: Zie "Release notes".
+- Implementatie ParseInfo vereenvoudigd.

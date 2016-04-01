@@ -4,8 +4,9 @@ Created on 23 feb. 2016
 @author: jeroenbruijning
 '''
 
-from sparqlparser.grammar import *
-from pprint import pprint
+from pyparsing import ParseException
+from parsertools.parsers.sparqlparser import sparqlparser as parser
+from parsertools.parsers.sparqlparser import stripComments
 
 actions = {'mf:PositiveSyntaxTest11': [], 'mf:NegativeSyntaxTest11': []}
 
@@ -24,14 +25,14 @@ print('Testing {} positive and {} negative testcases'.format(posNum, negNum))
 for fname in actions['mf:PositiveSyntaxTest11']:
     try:
         s = stripComments(open(fname).readlines())
-        r = QueryUnit(s)
+        r = parser.QueryUnit(s)
     except ParseException as e:
         print('\n*** {} should not raise exception? Check\n'.format(fname))
 
 for fname in actions['mf:NegativeSyntaxTest11']:
     try:
         s = open(fname).read()
-        r = UpdateUnit(s)
+        r = parser.UpdateUnit(s)
         print('\n*** {} should raise exception? Check\n'.format(fname))
     except ParseException as e:
         pass
@@ -44,5 +45,6 @@ testcase test otherwise.
 According to Andy Seaborne, SPARQL 1.1 Editor:
     "The final decision was that : is used as-is in the local part of a prefixed name and isn't escaped (due to tracking changing Turtle)."
 See http://answers.semanticweb.com/questions/19622/special-characters-in-uri-in-sparql.
+
 Conclusion: ignore this fault.
 ''')

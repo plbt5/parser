@@ -1,0 +1,4 @@
+- docstrings nalopen
+- functest nalopen en completeren
+- Implementeer iri check als aparte parser?
+                                

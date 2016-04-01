@@ -4,8 +4,9 @@ Created on 23 feb. 2016
 @author: jeroenbruijning
 '''
 
-from sparqlparser.grammar import *
-from pprint import pprint
+from pyparsing import ParseException
+from parsertools.parsers.sparqlparser import sparqlparser as parser
+from parsertools.parsers.sparqlparser import stripComments
 
 actions = {'mf:PositiveSyntaxTest11': [], 'mf:NegativeSyntaxTest11': []}
 
@@ -25,14 +26,14 @@ print('Testing {} positive and {} negative testcases'.format(posNum, negNum))
 for fname in actions['mf:PositiveSyntaxTest11']:
     try:
         s = stripComments(open(fname).readlines())
-        r = QueryUnit(s)
+        r = parser.QueryUnit(s)
     except ParseException as e:
         print('\n*** {} should not raise exception? Check\n'.format(fname))
 
 for fname in actions['mf:NegativeSyntaxTest11']:
     try:
         s = open(fname).read()
-        r = UpdateUnit(s)
+        r = parser.UpdateUnit(s)
         print('\n*** {} should raise exception? Check\n'.format(fname))
     except ParseException as e:
         pass

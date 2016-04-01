@@ -3,8 +3,9 @@ Created on 23 feb. 2016
 
 @author: jeroenbruijning
 '''
-from sparqlparser.grammar import *
-from pprint import pprint
+from pyparsing import ParseException
+from parsertools.parsers.sparqlparser import sparqlparser as parser
+from parsertools.parsers.sparqlparser import stripComments
 
 actions = {'mf:PositiveUpdateSyntaxTest11': [], 'mf:NegativeUpdateSyntaxTest11': []}
 
@@ -22,14 +23,14 @@ print('Testing {} positive and {} negative testcases'.format(posNum, negNum))
 for fname in actions['mf:PositiveUpdateSyntaxTest11']:
     try:
         s = stripComments(open(fname).readlines())
-        r = UpdateUnit(s)
+        r = parser.UpdateUnit(s)
     except ParseException as e:
         print('\n*** {} should not raise exception? Check'.format(fname))
 
 for fname in actions['mf:NegativeUpdateSyntaxTest11']:
     try:
         s = open(fname).read()
-        r = UpdateUnit(s)
+        r = parser.UpdateUnit(s)
         print('\n*** {} should raise exception? Check'.format(fname))
     except ParseException as e:
         pass
@@ -40,5 +41,6 @@ Note:
 syntax-update-54.ru seems in error. The syntax seems to be OK; the issue is that a bNode label is used across operations,
 which is a separate issue than conformance to the EBNF. 
 Apart from that, the status is dawgt:NotClassified, as opposed to all other testcases which are dawgt:Approved.
+
 Conclusion: ignore this fault.
 ''')

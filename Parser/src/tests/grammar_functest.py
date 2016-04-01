@@ -3,8 +3,8 @@ Created on 24 feb. 2016
 
 @author: jeroenbruijning
 '''
-import sys
-from sparqlparser.grammar import *
+from parsertools.base import ParseResults
+from parsertools.parsers.sparqlparser import sparqlparser as parser
 
 # Next lines are temporary during development, to be deleted as implementions added to .grammar
 # Expression_p << Literal('"*Expression*"')
@@ -21,9 +21,9 @@ from sparqlparser.grammar import *
 
 
 def printResults(l, rule, dump=False):
+    element = eval('parser.' + rule)
     for s in l:
-        rule_p = eval(rule + '_p')
-        r = rule_p.parseString(s, parseAll=True)
+        r = element.pattern.parseString(s, parseAll=True)
         while len(r) == 1 and isinstance(r[0], ParseResults):
             r = r[0]
         rendering = str(r[0])
@@ -482,7 +482,7 @@ if __name__ == '__main__':
     printResults(l, 'PropertyListPath', dump=False)
         
     # [81]    TriplesSameSubjectPath    ::=   VarOrTerm PropertyListPathNotEmpty | TriplesNodePath PropertyListPath 
-    l = ['"work" @en-bf <test> ?path ; <test2> $algebra, ($TriplesNode) ;;', '(($TriplesNodePath) $algebra )', '(($TriplesNodePath) $algebra ) <test> ? ?path']
+    l = ['[] <test> ? ?path', '"work" @en-bf <test> ?path ; <test2> $algebra, ($TriplesNode) ;;', '(($TriplesNodePath) $algebra )', '(($TriplesNodePath) $algebra ) <test> ? ?path']
     printResults(l, 'TriplesSameSubjectPath', dump=False)
     
     # [78]    Verb      ::=   VarOrIri | 'a' 

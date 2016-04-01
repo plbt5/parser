@@ -1,4 +1,0 @@
-- Refactor: splits generieke functies / sparql-specifieke functies in aparte modules
-- Implementeer iri check als aparte parser?
-- Verwijder "label" veld voor strings in ParseInfo items?
-                                

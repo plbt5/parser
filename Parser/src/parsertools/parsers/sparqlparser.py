@@ -4,22 +4,16 @@ Created on 28 mrt. 2016
 @author: jeroenbruijning
 '''
 from pyparsing import *
-from sparqlparser.extras import separatedList
-from sparqlparser.base import ParseInfo, parseInfoFunc
-from sparqlparser import SparqlParserException
+from parsertools.extras import separatedList
+from parsertools.base import ParseInfo, parseInfoFunc, Parser
+from parsertools import SparqlParserException
 
     
-# def sparqlparser.addElement(pattern):
-#     setattr(sparqlparser, pattern.name, type(pattern.name, (ParseInfo,), {'pattern': pattern}))
-#     pattern.setParseAction(parseInfoFunc(getattr(sparqlparser, pattern.name)))
+# def parsertools.addElement(pattern):
+#     setattr(parsertools, pattern.name, type(pattern.name, (ParseInfo,), {'pattern': pattern}))
+#     pattern.setParseAction(parseInfoFunc(getattr(parsertools, pattern.name)))
     
-class Parser:
-    def addElement(self, pattern):
-        setattr(self, pattern.name, type(pattern.name, (ParseInfo,), {'pattern': pattern}))
-        pattern.setParseAction(parseInfoFunc(getattr(self, pattern.name)))
-                           
 sparqlparser = Parser()
-
 
 # Auxiliary functions
 #
