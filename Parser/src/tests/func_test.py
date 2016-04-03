@@ -5,7 +5,7 @@ Created on 31 mrt. 2016
 '''
 from inspect import getmembers
 from pyparsing import *
-from parsertools.parsers.sparqlparser import sparqlparser as parser
+from parsertools.parsers.sparqlparser import parser
 from parsertools.parsers.sparqlparser import stripComments, parseQuery
 
 # setup

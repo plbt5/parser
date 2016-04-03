@@ -4,7 +4,7 @@ Created on 24 feb. 2016
 @author: jeroenbruijning
 '''
 from parsertools.base import ParseResults
-from parsertools.parsers.sparqlparser import sparqlparser as parser
+from parsertools.parsers.sparqlparser import parser
 
 # Next lines are temporary during development, to be deleted as implementions added to .grammar
 # Expression_p << Literal('"*Expression*"')

@@ -5,58 +5,63 @@ Created on 28 mrt. 2016
 '''
 from pyparsing import *
 from parsertools.extras import separatedList
-from parsertools.base import ParseInfo, parseInfoFunc, Parser
+from parsertools.base import Parser
 from parsertools import SparqlParserException
 
-    
-# def parsertools.addElement(pattern):
-#     setattr(parsertools, pattern.name, type(pattern.name, (ParseInfo,), {'pattern': pattern}))
-#     pattern.setParseAction(parseInfoFunc(getattr(parsertools, pattern.name)))
-    
-sparqlparser = Parser()
-
-# Auxiliary functions
 #
-
-def stripComments(text):
-    '''Strips SPARQL-style comments from a multiline string'''
-    if isinstance(text, list):
-        text = '\n'.join(text)
-    Comment = Literal('#') + SkipTo(lineEnd)
-    NormalText = Regex('[^#<\'"]+')    
-    Line = ZeroOrMore(String_p | (IRIREF_p | Literal('<')) | NormalText) + Optional(Comment) + lineEnd
-    Line.ignore(Comment)
-    Line.setParseAction(lambda tokens: ' '.join([t if isinstance(t, str) else t.__str__() for t in tokens]))
-    lines = text.split('\n')
-    return '\n'.join([Line.parseString(l)[0] for l in lines])
-
-def prepareQuery(querystring):
-    '''Used to prepare a string for parsing. See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
-    stripped = stripComments(querystring)
-    # TODO: finish
-    return stripped
-
-def checkQueryResult(r):
-    '''Used to preform additional checks on the parse result. These are conditions that are not covered by the EBNF syntax.
-    See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
-    #TODO: finish
-    return True
-#
-# Main function to call
+# Main function to call. This is a convenience function, adapted to the SPARQL definition.
 #
 
 def parseQuery(querystring):
     '''Entry point to parse any SPARQL query'''
+    
+    def stripComments(text):
+        '''Strips SPARQL-style comments from a multiline string'''
+        if isinstance(text, list):
+            text = '\n'.join(text)
+        Comment = Literal('#') + SkipTo(lineEnd)
+        NormalText = Regex('[^#<\'"]+')    
+        Line = ZeroOrMore(String | (IRIREF | Literal('<')) | NormalText) + Optional(Comment) + lineEnd
+        Line.ignore(Comment)
+        Line.setParseAction(lambda tokens: ' '.join([t if isinstance(t, str) else t.__str__() for t in tokens]))
+        lines = text.split('\n')
+        return '\n'.join([Line.parseString(l)[0] for l in lines])
+    
+    def prepareQuery(querystring):
+        '''Used to prepare a string for parsing. See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
+        strippedQuery = stripComments(querystring)
+        # TODO: finish
+        return strippedQuery
+    
+    def checkQueryResult(r):
+        '''Used to preform additional checks on the parse result. These are conditions that are not covered by the EBNF syntax.
+        See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
+        #TODO: finish
+        return True
+    
     s = prepareQuery(querystring)
+    
+    # In SPARQL, there are two entry points to the grammar: QueryUnit and UpdateUnit. These are tried in order.
+    
     try:
-        result = sparqlparser.QueryUnit(s)
+        result = parser.QueryUnit(s)
     except ParseException:
         try:
-            result = sparqlparser.UpdateUnit(s)
+            result = parser.UpdateUnit(s)
         except ParseException:
             raise SparqlParserException('Query {} cannot be parsed'.format(querystring))
+        
     assert checkQueryResult(result), 'Fault in postprocessing query {}'.format(querystring)
+    
     return result
+
+#
+# Create the parser object
+#
+
+parser = Parser()
+
+#
 # Patterns
 #
 
@@ -65,424 +70,424 @@ def parseQuery(querystring):
 #
 
 
-LPAR_p = Literal('(').setName('LPAR')
-sparqlparser.addElement(LPAR_p)
+LPAR = Literal('(').setName('LPAR')
+parser.addElement(LPAR)
 
-RPAR_p = Literal(')').setName('RPAR')
-sparqlparser.addElement(RPAR_p)
+RPAR = Literal(')').setName('RPAR')
+parser.addElement(RPAR)
 
-LBRACK_p = Literal('[').setName('LBRACK')
-sparqlparser.addElement(LBRACK_p)
+LBRACK = Literal('[').setName('LBRACK')
+parser.addElement(LBRACK)
 
-RBRACK_p = Literal(']').setName('RBRACK')
-sparqlparser.addElement(RBRACK_p)
+RBRACK = Literal(']').setName('RBRACK')
+parser.addElement(RBRACK)
 
-LCURL_p = Literal('{').setName('LCURL')
-sparqlparser.addElement(LCURL_p)
+LCURL = Literal('{').setName('LCURL')
+parser.addElement(LCURL)
 
-RCURL_p = Literal('}').setName('RCURL')
-sparqlparser.addElement(RCURL_p)
+RCURL = Literal('}').setName('RCURL')
+parser.addElement(RCURL)
 
-SEMICOL_p = Literal(';').setName('SEMICOL')
-sparqlparser.addElement(SEMICOL_p)
+SEMICOL = Literal(';').setName('SEMICOL')
+parser.addElement(SEMICOL)
 
-PERIOD_p = Literal('.').setName('PERIOD')
-sparqlparser.addElement(PERIOD_p)
+PERIOD = Literal('.').setName('PERIOD')
+parser.addElement(PERIOD)
 
-COMMA_p = Literal(',').setName('COMMA')
-sparqlparser.addElement(COMMA_p)
+COMMA = Literal(',').setName('COMMA')
+parser.addElement(COMMA)
 
 #
 # Operators
 #
 
-NEGATE_p = Literal('!').setName('NEGATE')
-sparqlparser.addElement(NEGATE_p)
+NEGATE = Literal('!').setName('NEGATE')
+parser.addElement(NEGATE)
 
-PLUS_p = Literal('+').setName('PLUS')
-sparqlparser.addElement(PLUS_p)
+PLUS = Literal('+').setName('PLUS')
+parser.addElement(PLUS)
 
-MINUS_p = Literal('-').setName('MINUS')
-sparqlparser.addElement(MINUS_p)
+MINUS = Literal('-').setName('MINUS')
+parser.addElement(MINUS)
 
-TIMES_p = Literal('*').setName('TIMES')
-sparqlparser.addElement(TIMES_p)
+TIMES = Literal('*').setName('TIMES')
+parser.addElement(TIMES)
 
-DIV_p = Literal('/').setName('DIV')
-sparqlparser.addElement(DIV_p)
+DIV = Literal('/').setName('DIV')
+parser.addElement(DIV)
 
-EQ_p = Literal('=').setName('EQ')
-sparqlparser.addElement(EQ_p)
+EQ = Literal('=').setName('EQ')
+parser.addElement(EQ)
 
-NE_p = Literal('!=').setName('NE')
-sparqlparser.addElement(NE_p)
+NE = Literal('!=').setName('NE')
+parser.addElement(NE)
 
-GT_p = Literal('>').setName('GT')
-sparqlparser.addElement(GT_p)
+GT = Literal('>').setName('GT')
+parser.addElement(GT)
 
-LT_p = Literal('<').setName('LT')
-sparqlparser.addElement(LT_p)
+LT = Literal('<').setName('LT')
+parser.addElement(LT)
 
-GE_p = Literal('>=').setName('GE')
-sparqlparser.addElement(GE_p)
+GE = Literal('>=').setName('GE')
+parser.addElement(GE)
 
-LE_p = Literal('<=').setName('LE')
-sparqlparser.addElement(LE_p)
+LE = Literal('<=').setName('LE')
+parser.addElement(LE)
 
-AND_p = Literal('&&').setName('AND')
-sparqlparser.addElement(AND_p)
+AND = Literal('&&').setName('AND')
+parser.addElement(AND)
 
-OR_p = Literal('||').setName('OR')
-sparqlparser.addElement(OR_p)
+OR = Literal('||').setName('OR')
+parser.addElement(OR)
 
-INVERSE_p = Literal('^').setName('INVERSE')
-sparqlparser.addElement(INVERSE_p)
+INVERSE = Literal('^').setName('INVERSE')
+parser.addElement(INVERSE)
 
 #
 # Keywords
 #
 
-ALL_VALUES_p = Literal('*').setName('ALL_VALUES')
-sparqlparser.addElement(ALL_VALUES_p)
+ALL_VALUES = Literal('*').setName('ALL_VALUES')
+parser.addElement(ALL_VALUES)
 
-TYPE_p = Keyword('a').setName('TYPE')
-sparqlparser.addElement(TYPE_p)
+TYPE = Keyword('a').setName('TYPE')
+parser.addElement(TYPE)
 
-DISTINCT_p = CaselessKeyword('DISTINCT').setName('DISTINCT')
-sparqlparser.addElement(DISTINCT_p)
+DISTINCT = CaselessKeyword('DISTINCT').setName('DISTINCT')
+parser.addElement(DISTINCT)
 
-COUNT_p = CaselessKeyword('COUNT').setName('COUNT')
-sparqlparser.addElement(COUNT_p)
+COUNT = CaselessKeyword('COUNT').setName('COUNT')
+parser.addElement(COUNT)
 
-SUM_p = CaselessKeyword('SUM').setName('SUM')
-sparqlparser.addElement(SUM_p)
+SUM = CaselessKeyword('SUM').setName('SUM')
+parser.addElement(SUM)
 
-MIN_p = CaselessKeyword('MIN').setName('MIN')
-sparqlparser.addElement(MIN_p)
+MIN = CaselessKeyword('MIN').setName('MIN')
+parser.addElement(MIN)
 
-MAX_p = CaselessKeyword('MAX').setName('MAX')
-sparqlparser.addElement(MAX_p)
+MAX = CaselessKeyword('MAX').setName('MAX')
+parser.addElement(MAX)
 
-AVG_p = CaselessKeyword('AVG').setName('AVG')
-sparqlparser.addElement(AVG_p)
+AVG = CaselessKeyword('AVG').setName('AVG')
+parser.addElement(AVG)
 
-SAMPLE_p = CaselessKeyword('SAMPLE').setName('SAMPLE')
-sparqlparser.addElement(SAMPLE_p)
+SAMPLE = CaselessKeyword('SAMPLE').setName('SAMPLE')
+parser.addElement(SAMPLE)
 
-GROUP_CONCAT_p = CaselessKeyword('GROUP_CONCAT').setName('GROUP_CONCAT')
-sparqlparser.addElement(GROUP_CONCAT_p)
+GROUP_CONCAT = CaselessKeyword('GROUP_CONCAT').setName('GROUP_CONCAT')
+parser.addElement(GROUP_CONCAT)
 
-SEPARATOR_p = CaselessKeyword('SEPARATOR').setName('SEPARATOR')
-sparqlparser.addElement(SEPARATOR_p)
+SEPARATOR = CaselessKeyword('SEPARATOR').setName('SEPARATOR')
+parser.addElement(SEPARATOR)
 
-NOT_p = (CaselessKeyword('NOT') + NotAny(CaselessKeyword('EXISTS') | CaselessKeyword('IN'))).setName('NOT')
-sparqlparser.addElement(NOT_p)
+NOT = (CaselessKeyword('NOT') + NotAny(CaselessKeyword('EXISTS') | CaselessKeyword('IN'))).setName('NOT')
+parser.addElement(NOT)
 
-EXISTS_p = CaselessKeyword('EXISTS').setName('EXISTS')
-sparqlparser.addElement(EXISTS_p)
+EXISTS = CaselessKeyword('EXISTS').setName('EXISTS')
+parser.addElement(EXISTS)
 
-NOT_EXISTS_p = (CaselessKeyword('NOT') + CaselessKeyword('EXISTS')).setName('NOT_EXISTS')
-sparqlparser.addElement(NOT_EXISTS_p)
+NOT_EXISTS = (CaselessKeyword('NOT') + CaselessKeyword('EXISTS')).setName('NOT_EXISTS')
+parser.addElement(NOT_EXISTS)
 
-REPLACE_p = CaselessKeyword('REPLACE').setName('REPLACE')
-sparqlparser.addElement(REPLACE_p)
+REPLACE = CaselessKeyword('REPLACE').setName('REPLACE')
+parser.addElement(REPLACE)
 
-SUBSTR_p = CaselessKeyword('SUBSTR').setName('SUBSTR')
-sparqlparser.addElement(SUBSTR_p)
+SUBSTR = CaselessKeyword('SUBSTR').setName('SUBSTR')
+parser.addElement(SUBSTR)
 
-REGEX_p = CaselessKeyword('REGEX').setName('REGEX')
-sparqlparser.addElement(REGEX_p)
+REGEX = CaselessKeyword('REGEX').setName('REGEX')
+parser.addElement(REGEX)
 
-STR_p = CaselessKeyword('STR').setName('STR')
-sparqlparser.addElement(STR_p)
+STR = CaselessKeyword('STR').setName('STR')
+parser.addElement(STR)
 
-LANG_p = CaselessKeyword('LANG').setName('LANG')
-sparqlparser.addElement(LANG_p)
+LANG = CaselessKeyword('LANG').setName('LANG')
+parser.addElement(LANG)
 
-LANGMATCHES_p = CaselessKeyword('LANGMATCHES').setName('LANGMATCHES')
-sparqlparser.addElement(LANGMATCHES_p)
+LANGMATCHES = CaselessKeyword('LANGMATCHES').setName('LANGMATCHES')
+parser.addElement(LANGMATCHES)
 
-DATATYPE_p = CaselessKeyword('DATATYPE').setName('DATATYPE')
-sparqlparser.addElement(DATATYPE_p)
+DATATYPE = CaselessKeyword('DATATYPE').setName('DATATYPE')
+parser.addElement(DATATYPE)
 
-BOUND_p = CaselessKeyword('BOUND').setName('BOUND')
-sparqlparser.addElement(BOUND_p)
+BOUND = CaselessKeyword('BOUND').setName('BOUND')
+parser.addElement(BOUND)
 
-IRI_p = CaselessKeyword('IRI').setName('IRI')
-sparqlparser.addElement(IRI_p)
+IRI = CaselessKeyword('IRI').setName('IRI')
+parser.addElement(IRI)
 
-URI_p = CaselessKeyword('URI').setName('URI')
-sparqlparser.addElement(URI_p)
+URI = CaselessKeyword('URI').setName('URI')
+parser.addElement(URI)
 
-BNODE_p = CaselessKeyword('BNODE').setName('BNODE')
-sparqlparser.addElement(BNODE_p)
+BNODE = CaselessKeyword('BNODE').setName('BNODE')
+parser.addElement(BNODE)
 
-RAND_p = CaselessKeyword('RAND').setName('RAND')
-sparqlparser.addElement(RAND_p)
+RAND = CaselessKeyword('RAND').setName('RAND')
+parser.addElement(RAND)
 
-ABS_p = CaselessKeyword('ABS').setName('ABS')
-sparqlparser.addElement(ABS_p)
+ABS = CaselessKeyword('ABS').setName('ABS')
+parser.addElement(ABS)
 
-CEIL_p = CaselessKeyword('CEIL').setName('CEIL')
-sparqlparser.addElement(CEIL_p)
+CEIL = CaselessKeyword('CEIL').setName('CEIL')
+parser.addElement(CEIL)
 
-FLOOR_p = CaselessKeyword('FLOOR').setName('FLOOR')
-sparqlparser.addElement(FLOOR_p)
+FLOOR = CaselessKeyword('FLOOR').setName('FLOOR')
+parser.addElement(FLOOR)
 
-ROUND_p = CaselessKeyword('ROUND').setName('ROUND')
-sparqlparser.addElement(ROUND_p)
+ROUND = CaselessKeyword('ROUND').setName('ROUND')
+parser.addElement(ROUND)
 
-CONCAT_p = CaselessKeyword('CONCAT').setName('CONCAT')
-sparqlparser.addElement(CONCAT_p)
+CONCAT = CaselessKeyword('CONCAT').setName('CONCAT')
+parser.addElement(CONCAT)
 
-STRLEN_p = CaselessKeyword('STRLEN').setName('STRLEN')
-sparqlparser.addElement(STRLEN_p)
+STRLEN = CaselessKeyword('STRLEN').setName('STRLEN')
+parser.addElement(STRLEN)
 
-UCASE_p = CaselessKeyword('UCASE').setName('UCASE')
-sparqlparser.addElement(UCASE_p)
+UCASE = CaselessKeyword('UCASE').setName('UCASE')
+parser.addElement(UCASE)
 
-LCASE_p = CaselessKeyword('LCASE').setName('LCASE')
-sparqlparser.addElement(LCASE_p)
+LCASE = CaselessKeyword('LCASE').setName('LCASE')
+parser.addElement(LCASE)
 
-ENCODE_FOR_URI_p = CaselessKeyword('ENCODE_FOR_URI').setName('ENCODE_FOR_URI')
-sparqlparser.addElement(ENCODE_FOR_URI_p)
+ENCODE_FOR_URI = CaselessKeyword('ENCODE_FOR_URI').setName('ENCODE_FOR_URI')
+parser.addElement(ENCODE_FOR_URI)
 
-CONTAINS_p = CaselessKeyword('CONTAINS').setName('CONTAINS')
-sparqlparser.addElement(CONTAINS_p)
+CONTAINS = CaselessKeyword('CONTAINS').setName('CONTAINS')
+parser.addElement(CONTAINS)
 
-STRSTARTS_p = CaselessKeyword('STRSTARTS').setName('STRSTARTS')
-sparqlparser.addElement(STRSTARTS_p)
+STRSTARTS = CaselessKeyword('STRSTARTS').setName('STRSTARTS')
+parser.addElement(STRSTARTS)
 
-STRENDS_p = CaselessKeyword('STRENDS').setName('STRENDS')
-sparqlparser.addElement(STRENDS_p)
+STRENDS = CaselessKeyword('STRENDS').setName('STRENDS')
+parser.addElement(STRENDS)
 
-STRBEFORE_p = CaselessKeyword('STRBEFORE').setName('STRBEFORE')
-sparqlparser.addElement(STRBEFORE_p)
+STRBEFORE = CaselessKeyword('STRBEFORE').setName('STRBEFORE')
+parser.addElement(STRBEFORE)
 
-STRAFTER_p = CaselessKeyword('STRAFTER').setName('STRAFTER')
-sparqlparser.addElement(STRAFTER_p)
+STRAFTER = CaselessKeyword('STRAFTER').setName('STRAFTER')
+parser.addElement(STRAFTER)
 
-YEAR_p = CaselessKeyword('YEAR').setName('YEAR')
-sparqlparser.addElement(YEAR_p)
+YEAR = CaselessKeyword('YEAR').setName('YEAR')
+parser.addElement(YEAR)
 
-MONTH_p = CaselessKeyword('MONTH').setName('MONTH')
-sparqlparser.addElement(MONTH_p)
+MONTH = CaselessKeyword('MONTH').setName('MONTH')
+parser.addElement(MONTH)
 
-DAY_p = CaselessKeyword('DAY').setName('DAY')
-sparqlparser.addElement(DAY_p)
+DAY = CaselessKeyword('DAY').setName('DAY')
+parser.addElement(DAY)
 
-HOURS_p = CaselessKeyword('HOURS').setName('HOURS')
-sparqlparser.addElement(HOURS_p)
+HOURS = CaselessKeyword('HOURS').setName('HOURS')
+parser.addElement(HOURS)
 
-MINUTES_p = CaselessKeyword('MINUTES').setName('MINUTES')
-sparqlparser.addElement(MINUTES_p)
+MINUTES = CaselessKeyword('MINUTES').setName('MINUTES')
+parser.addElement(MINUTES)
 
-SECONDS_p = CaselessKeyword('SECONDS').setName('SECONDS')
-sparqlparser.addElement(SECONDS_p)
+SECONDS = CaselessKeyword('SECONDS').setName('SECONDS')
+parser.addElement(SECONDS)
 
-TIMEZONE_p = CaselessKeyword('TIMEZONE').setName('TIMEZONE')
-sparqlparser.addElement(TIMEZONE_p)
+TIMEZONE = CaselessKeyword('TIMEZONE').setName('TIMEZONE')
+parser.addElement(TIMEZONE)
 
-TZ_p = CaselessKeyword('TZ').setName('TZ')
-sparqlparser.addElement(TZ_p)
+TZ = CaselessKeyword('TZ').setName('TZ')
+parser.addElement(TZ)
 
-NOW_p = CaselessKeyword('NOW').setName('NOW')
-sparqlparser.addElement(NOW_p)
+NOW = CaselessKeyword('NOW').setName('NOW')
+parser.addElement(NOW)
 
-UUID_p = CaselessKeyword('UUID').setName('UUID')
-sparqlparser.addElement(UUID_p)
+UUID = CaselessKeyword('UUID').setName('UUID')
+parser.addElement(UUID)
 
-STRUUID_p = CaselessKeyword('STRUUID').setName('STRUUID')
-sparqlparser.addElement(STRUUID_p)
+STRUUID = CaselessKeyword('STRUUID').setName('STRUUID')
+parser.addElement(STRUUID)
 
-MD5_p = CaselessKeyword('MD5').setName('MD5')
-sparqlparser.addElement(MD5_p)
+MD5 = CaselessKeyword('MD5').setName('MD5')
+parser.addElement(MD5)
 
-SHA1_p = CaselessKeyword('SHA1').setName('SHA1')
-sparqlparser.addElement(SHA1_p)
+SHA1 = CaselessKeyword('SHA1').setName('SHA1')
+parser.addElement(SHA1)
 
-SHA256_p = CaselessKeyword('SHA256').setName('SHA256')
-sparqlparser.addElement(SHA256_p)
+SHA256 = CaselessKeyword('SHA256').setName('SHA256')
+parser.addElement(SHA256)
 
-SHA384_p = CaselessKeyword('SHA384').setName('SHA384')
-sparqlparser.addElement(SHA384_p)
+SHA384 = CaselessKeyword('SHA384').setName('SHA384')
+parser.addElement(SHA384)
 
-SHA512_p = CaselessKeyword('SHA512').setName('SHA512')
-sparqlparser.addElement(SHA512_p)
+SHA512 = CaselessKeyword('SHA512').setName('SHA512')
+parser.addElement(SHA512)
 
-COALESCE_p = CaselessKeyword('COALESCE').setName('COALESCE')
-sparqlparser.addElement(COALESCE_p)
+COALESCE = CaselessKeyword('COALESCE').setName('COALESCE')
+parser.addElement(COALESCE)
 
-IF_p = CaselessKeyword('IF').setName('IF')
-sparqlparser.addElement(IF_p)
+IF = CaselessKeyword('IF').setName('IF')
+parser.addElement(IF)
 
-STRLANG_p = CaselessKeyword('STRLANG').setName('STRLANG')
-sparqlparser.addElement(STRLANG_p)
+STRLANG = CaselessKeyword('STRLANG').setName('STRLANG')
+parser.addElement(STRLANG)
 
-STRDT_p = CaselessKeyword('STRDT').setName('STRDT')
-sparqlparser.addElement(STRDT_p)
+STRDT = CaselessKeyword('STRDT').setName('STRDT')
+parser.addElement(STRDT)
 
-sameTerm_p = CaselessKeyword('sameTerm').setName('sameTerm')
-sparqlparser.addElement(sameTerm_p)
+sameTerm = CaselessKeyword('sameTerm').setName('sameTerm')
+parser.addElement(sameTerm)
 
-isIRI_p = CaselessKeyword('isIRI').setName('isIRI')
-sparqlparser.addElement(isIRI_p)
+isIRI = CaselessKeyword('isIRI').setName('isIRI')
+parser.addElement(isIRI)
 
-isURI_p = CaselessKeyword('isURI').setName('isURI')
-sparqlparser.addElement(isURI_p)
+isURI = CaselessKeyword('isURI').setName('isURI')
+parser.addElement(isURI)
 
-isBLANK_p = CaselessKeyword('isBLANK').setName('isBLANK')
-sparqlparser.addElement(isBLANK_p)
+isBLANK = CaselessKeyword('isBLANK').setName('isBLANK')
+parser.addElement(isBLANK)
 
-isLITERAL_p = CaselessKeyword('isLITERAL').setName('isLITERAL')
-sparqlparser.addElement(isLITERAL_p)
+isLITERAL = CaselessKeyword('isLITERAL').setName('isLITERAL')
+parser.addElement(isLITERAL)
 
-isNUMERIC_p = CaselessKeyword('isNUMERIC').setName('isNUMERIC')
-sparqlparser.addElement(isNUMERIC_p)
+isNUMERIC = CaselessKeyword('isNUMERIC').setName('isNUMERIC')
+parser.addElement(isNUMERIC)
 
-IN_p = CaselessKeyword('IN').setName('IN')
-sparqlparser.addElement(IN_p)
+IN = CaselessKeyword('IN').setName('IN')
+parser.addElement(IN)
 
-NOT_IN_p = (CaselessKeyword('NOT') + CaselessKeyword('IN')).setName('NOT_IN')
-sparqlparser.addElement(NOT_IN_p)
+NOT_IN = (CaselessKeyword('NOT') + CaselessKeyword('IN')).setName('NOT_IN')
+parser.addElement(NOT_IN)
 
-FILTER_p = CaselessKeyword('FILTER').setName('FILTER')
-sparqlparser.addElement(FILTER_p)
+FILTER = CaselessKeyword('FILTER').setName('FILTER')
+parser.addElement(FILTER)
 
-UNION_p = CaselessKeyword('UNION').setName('UNION')
-sparqlparser.addElement(UNION_p)
+UNION = CaselessKeyword('UNION').setName('UNION')
+parser.addElement(UNION)
 
-SUBTRACT_p = CaselessKeyword('MINUS').setName('SUBTRACT')
-sparqlparser.addElement(SUBTRACT_p)
+SUBTRACT = CaselessKeyword('MINUS').setName('SUBTRACT')
+parser.addElement(SUBTRACT)
 
-UNDEF_p = CaselessKeyword('UNDEF').setName('UNDEF')
-sparqlparser.addElement(UNDEF_p)
+UNDEF = CaselessKeyword('UNDEF').setName('UNDEF')
+parser.addElement(UNDEF)
 
-VALUES_p = CaselessKeyword('VALUES').setName('VALUES')
-sparqlparser.addElement(VALUES_p)
+VALUES = CaselessKeyword('VALUES').setName('VALUES')
+parser.addElement(VALUES)
 
-BIND_p = CaselessKeyword('BIND').setName('BIND')
-sparqlparser.addElement(BIND_p)
+BIND = CaselessKeyword('BIND').setName('BIND')
+parser.addElement(BIND)
 
-AS_p = CaselessKeyword('AS').setName('AS')
-sparqlparser.addElement(AS_p)
+AS = CaselessKeyword('AS').setName('AS')
+parser.addElement(AS)
 
-SERVICE_p = CaselessKeyword('SERVICE').setName('SERVICE')
-sparqlparser.addElement(SERVICE_p)
+SERVICE = CaselessKeyword('SERVICE').setName('SERVICE')
+parser.addElement(SERVICE)
 
-SILENT_p = CaselessKeyword('SILENT').setName('SILENT')
-sparqlparser.addElement(SILENT_p)
+SILENT = CaselessKeyword('SILENT').setName('SILENT')
+parser.addElement(SILENT)
 
-GRAPH_p = CaselessKeyword('GRAPH').setName('GRAPH')
-sparqlparser.addElement(GRAPH_p)
+GRAPH = CaselessKeyword('GRAPH').setName('GRAPH')
+parser.addElement(GRAPH)
 
-OPTIONAL_p = CaselessKeyword('OPTIONAL').setName('OPTIONAL')
-sparqlparser.addElement(OPTIONAL_p)
+OPTIONAL = CaselessKeyword('OPTIONAL').setName('OPTIONAL')
+parser.addElement(OPTIONAL)
 
-DEFAULT_p = CaselessKeyword('DEFAULT').setName('DEFAULT')
-sparqlparser.addElement(DEFAULT_p)
+DEFAULT = CaselessKeyword('DEFAULT').setName('DEFAULT')
+parser.addElement(DEFAULT)
 
-NAMED_p = CaselessKeyword('NAMED').setName('NAMED')
-sparqlparser.addElement(NAMED_p)
+NAMED = CaselessKeyword('NAMED').setName('NAMED')
+parser.addElement(NAMED)
 
-ALL_p = CaselessKeyword('ALL').setName('ALL')
-sparqlparser.addElement(ALL_p)
+ALL = CaselessKeyword('ALL').setName('ALL')
+parser.addElement(ALL)
 
-USING_p = CaselessKeyword('USING').setName('USING')
-sparqlparser.addElement(USING_p)
+USING = CaselessKeyword('USING').setName('USING')
+parser.addElement(USING)
 
-INSERT_p = CaselessKeyword('INSERT').setName('INSERT')
-sparqlparser.addElement(INSERT_p)
+INSERT = CaselessKeyword('INSERT').setName('INSERT')
+parser.addElement(INSERT)
 
-DELETE_p = CaselessKeyword('DELETE').setName('DELETE')
-sparqlparser.addElement(DELETE_p)
+DELETE = CaselessKeyword('DELETE').setName('DELETE')
+parser.addElement(DELETE)
 
-WITH_p = CaselessKeyword('WITH').setName('WITH')
-sparqlparser.addElement(WITH_p)
+WITH = CaselessKeyword('WITH').setName('WITH')
+parser.addElement(WITH)
 
-WHERE_p = CaselessKeyword('WHERE').setName('WHERE')
-sparqlparser.addElement(WHERE_p)
+WHERE = CaselessKeyword('WHERE').setName('WHERE')
+parser.addElement(WHERE)
 
-DELETE_WHERE_p = (CaselessKeyword('DELETE') + CaselessKeyword('WHERE')).setName('DELETE_WHERE')
-sparqlparser.addElement(DELETE_WHERE_p)
+DELETE_WHERE = (CaselessKeyword('DELETE') + CaselessKeyword('WHERE')).setName('DELETE_WHERE')
+parser.addElement(DELETE_WHERE)
 
-DELETE_DATA_p = (CaselessKeyword('DELETE') + CaselessKeyword('DATA')).setName('DELETE_DATA')
-sparqlparser.addElement(DELETE_DATA_p)
+DELETE_DATA = (CaselessKeyword('DELETE') + CaselessKeyword('DATA')).setName('DELETE_DATA')
+parser.addElement(DELETE_DATA)
 
-INSERT_DATA_p = (CaselessKeyword('INSERT') + CaselessKeyword('DATA')).setName('INSERT_DATA')
-sparqlparser.addElement(INSERT_DATA_p)
+INSERT_DATA = (CaselessKeyword('INSERT') + CaselessKeyword('DATA')).setName('INSERT_DATA')
+parser.addElement(INSERT_DATA)
 
-COPY_p = CaselessKeyword('COPY').setName('COPY')
-sparqlparser.addElement(COPY_p)
+COPY = CaselessKeyword('COPY').setName('COPY')
+parser.addElement(COPY)
 
-MOVE_p = CaselessKeyword('MOVE').setName('MOVE')
-sparqlparser.addElement(MOVE_p)
+MOVE = CaselessKeyword('MOVE').setName('MOVE')
+parser.addElement(MOVE)
 
-ADD_p = CaselessKeyword('ADD').setName('ADD')
-sparqlparser.addElement(ADD_p)
+ADD = CaselessKeyword('ADD').setName('ADD')
+parser.addElement(ADD)
 
-CREATE_p = CaselessKeyword('CREATE').setName('CREATE')
-sparqlparser.addElement(CREATE_p)
+CREATE = CaselessKeyword('CREATE').setName('CREATE')
+parser.addElement(CREATE)
 
-DROP_p = CaselessKeyword('DROP').setName('DROP')
-sparqlparser.addElement(DROP_p)
+DROP = CaselessKeyword('DROP').setName('DROP')
+parser.addElement(DROP)
 
-CLEAR_p = CaselessKeyword('CLEAR').setName('CLEAR')
-sparqlparser.addElement(CLEAR_p)
+CLEAR = CaselessKeyword('CLEAR').setName('CLEAR')
+parser.addElement(CLEAR)
 
-LOAD_p = CaselessKeyword('LOAD').setName('LOAD')
-sparqlparser.addElement(LOAD_p)
+LOAD = CaselessKeyword('LOAD').setName('LOAD')
+parser.addElement(LOAD)
 
-TO_p = CaselessKeyword('TO').setName('TO')
-sparqlparser.addElement(TO_p)
+TO = CaselessKeyword('TO').setName('TO')
+parser.addElement(TO)
 
-INTO_p = CaselessKeyword('INTO').setName('INTO')
-sparqlparser.addElement(INTO_p)
+INTO = CaselessKeyword('INTO').setName('INTO')
+parser.addElement(INTO)
 
-OFFSET_p = CaselessKeyword('OFFSET').setName('OFFSET')
-sparqlparser.addElement(OFFSET_p)
+OFFSET = CaselessKeyword('OFFSET').setName('OFFSET')
+parser.addElement(OFFSET)
 
-LIMIT_p = CaselessKeyword('LIMIT').setName('LIMIT')
-sparqlparser.addElement(LIMIT_p)
+LIMIT = CaselessKeyword('LIMIT').setName('LIMIT')
+parser.addElement(LIMIT)
 
-ASC_p = CaselessKeyword('ASC').setName('ASC')
-sparqlparser.addElement(ASC_p)
+ASC = CaselessKeyword('ASC').setName('ASC')
+parser.addElement(ASC)
 
-DESC_p = CaselessKeyword('DESC').setName('DESC')
-sparqlparser.addElement(DESC_p)
+DESC = CaselessKeyword('DESC').setName('DESC')
+parser.addElement(DESC)
 
-ORDER_BY_p = (CaselessKeyword('ORDER') + CaselessKeyword('BY')).setName('ORDER_BY')
-sparqlparser.addElement(ORDER_BY_p)
+ORDER_BY = (CaselessKeyword('ORDER') + CaselessKeyword('BY')).setName('ORDER_BY')
+parser.addElement(ORDER_BY)
 
-HAVING_p = CaselessKeyword('HAVING').setName('HAVING')
-sparqlparser.addElement(HAVING_p)
+HAVING = CaselessKeyword('HAVING').setName('HAVING')
+parser.addElement(HAVING)
 
-GROUP_BY_p = (CaselessKeyword('GROUP') + CaselessKeyword('BY')).setName('GROUP_BY')
-sparqlparser.addElement(GROUP_BY_p)
+GROUP_BY = (CaselessKeyword('GROUP') + CaselessKeyword('BY')).setName('GROUP_BY')
+parser.addElement(GROUP_BY)
 
-FROM_p = CaselessKeyword('FROM').setName('FROM')
-sparqlparser.addElement(FROM_p)
+FROM = CaselessKeyword('FROM').setName('FROM')
+parser.addElement(FROM)
 
-ASK_p = CaselessKeyword('ASK').setName('ASK')
-sparqlparser.addElement(ASK_p)
+ASK = CaselessKeyword('ASK').setName('ASK')
+parser.addElement(ASK)
 
-DESCRIBE_p = CaselessKeyword('DESCRIBE').setName('DESCRIBE')
-sparqlparser.addElement(DESCRIBE_p)
+DESCRIBE = CaselessKeyword('DESCRIBE').setName('DESCRIBE')
+parser.addElement(DESCRIBE)
 
-CONSTRUCT_p = CaselessKeyword('CONSTRUCT').setName('CONSTRUCT')
-sparqlparser.addElement(CONSTRUCT_p)
+CONSTRUCT = CaselessKeyword('CONSTRUCT').setName('CONSTRUCT')
+parser.addElement(CONSTRUCT)
 
-SELECT_p = CaselessKeyword('SELECT').setName('SELECT')
-sparqlparser.addElement(SELECT_p)
+SELECT = CaselessKeyword('SELECT').setName('SELECT')
+parser.addElement(SELECT)
 
-REDUCED_p = CaselessKeyword('REDUCED').setName('REDUCED')
-sparqlparser.addElement(REDUCED_p)
+REDUCED = CaselessKeyword('REDUCED').setName('REDUCED')
+parser.addElement(REDUCED)
 
-PREFIX_p = CaselessKeyword('PREFIX').setName('PREFIX')
-sparqlparser.addElement(PREFIX_p)
+PREFIX = CaselessKeyword('PREFIX').setName('PREFIX')
+parser.addElement(PREFIX)
 
-BASE_p = CaselessKeyword('BASE').setName('BASE')
-sparqlparser.addElement(BASE_p)
+BASE = CaselessKeyword('BASE').setName('BASE')
+parser.addElement(BASE)
 
 # 
 # Parsers and classes for terminals
@@ -490,232 +495,232 @@ sparqlparser.addElement(BASE_p)
 
 # [173]   PN_LOCAL_ESC      ::=   '\' ( '_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%' ) 
 PN_LOCAL_ESC_e = r'\\[_~.\-!$&\'()*+,;=/?#@%]'
-PN_LOCAL_ESC_p = Regex(PN_LOCAL_ESC_e).setName('PN_LOCAL_ESC')
-sparqlparser.addElement(PN_LOCAL_ESC_p)
+PN_LOCAL_ESC = Regex(PN_LOCAL_ESC_e).setName('PN_LOCAL_ESC')
+parser.addElement(PN_LOCAL_ESC)
 
 
 # [172]   HEX       ::=   [0-9] | [A-F] | [a-f] 
 HEX_e = r'[0-9A-Fa-f]'
-HEX_p = Regex(HEX_e).setName('HEX')
-sparqlparser.addElement(HEX_p)
+HEX = Regex(HEX_e).setName('HEX')
+parser.addElement(HEX)
 
 # [171]   PERCENT   ::=   '%' HEX HEX
 PERCENT_e = r'%({})({})'.format( HEX_e, HEX_e)
-PERCENT_p = Regex(PERCENT_e).setName('PERCENT')
-sparqlparser.addElement(PERCENT_p)
+PERCENT = Regex(PERCENT_e).setName('PERCENT')
+parser.addElement(PERCENT)
 
 # [170]   PLX       ::=   PERCENT | PN_LOCAL_ESC 
 PLX_e = r'({})|({})'.format( PERCENT_e, PN_LOCAL_ESC_e)
-PLX_p = Regex(PLX_e).setName('PLX')
-sparqlparser.addElement(PLX_p)
+PLX = Regex(PLX_e).setName('PLX')
+parser.addElement(PLX)
 
 # [164]   PN_CHARS_BASE     ::=   [A-Z] | [a-z] | [#x00C0-#x00D6] | [#x00D8-#x00F6] | [#x00F8-#x02FF] | [#x0370-#x037D] | [#x037F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF] 
 PN_CHARS_BASE_e = r'[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF]'
-PN_CHARS_BASE_p = Regex(PN_CHARS_BASE_e).setName('PN_CHARS_BASE')
-sparqlparser.addElement(PN_CHARS_BASE_p)
+PN_CHARS_BASE = Regex(PN_CHARS_BASE_e).setName('PN_CHARS_BASE')
+parser.addElement(PN_CHARS_BASE)
 
 # [165]   PN_CHARS_U        ::=   PN_CHARS_BASE | '_' 
 PN_CHARS_U_e = r'({})|({})'.format( PN_CHARS_BASE_e, r'_')
-PN_CHARS_U_p = Regex(PN_CHARS_U_e).setName('PN_CHARS_U')
-sparqlparser.addElement(PN_CHARS_U_p)
+PN_CHARS_U = Regex(PN_CHARS_U_e).setName('PN_CHARS_U')
+parser.addElement(PN_CHARS_U)
 
 # [167]   PN_CHARS          ::=   PN_CHARS_U | '-' | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040] 
 PN_CHARS_e = r'({})|({})|({})|({})|({})|({})'.format( PN_CHARS_U_e, r'\-', r'[0-9]',  r'\u00B7', r'[\u0300-\u036F]', r'[\u203F-\u2040]')
-PN_CHARS_p = Regex(PN_CHARS_e).setName('PN_CHARS')
-sparqlparser.addElement(PN_CHARS_p)
+PN_CHARS = Regex(PN_CHARS_e).setName('PN_CHARS')
+parser.addElement(PN_CHARS)
 
 # [169]   PN_LOCAL          ::=   (PN_CHARS_U | ':' | [0-9] | PLX ) ((PN_CHARS | '.' | ':' | PLX)* (PN_CHARS | ':' | PLX) )?
 PN_LOCAL_e = r'(({})|({})|({})|({}))((({})|({})|({})|({}))*(({})|({})|({})))?'.format( PN_CHARS_U_e, r':', r'[0-9]', PLX_e, PN_CHARS_e, r'\.', r':', PLX_e, PN_CHARS_e, r':', PLX_e) 
-PN_LOCAL_p = Regex(PN_LOCAL_e).setName('PN_LOCAL')
-sparqlparser.addElement(PN_LOCAL_p)
+PN_LOCAL = Regex(PN_LOCAL_e).setName('PN_LOCAL')
+parser.addElement(PN_LOCAL)
             
 # [168]   PN_PREFIX         ::=   PN_CHARS_BASE ((PN_CHARS|'.')* PN_CHARS)?
 PN_PREFIX_e = r'({})((({})|({}))*({}))?'.format( PN_CHARS_BASE_e, PN_CHARS_e, r'\.', PN_CHARS_e)
-PN_PREFIX_p = Regex(PN_PREFIX_e).setName('PN_PREFIX')
-sparqlparser.addElement(PN_PREFIX_p)
+PN_PREFIX = Regex(PN_PREFIX_e).setName('PN_PREFIX')
+parser.addElement(PN_PREFIX)
 
 # [166]   VARNAME   ::=   ( PN_CHARS_U | [0-9] ) ( PN_CHARS_U | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040] )* 
 VARNAME_e = r'(({})|({}))(({})|({})|({})|({})|({}))*'.format( PN_CHARS_U_e, r'[0-9]', PN_CHARS_U_e, r'[0-9]', r'\u00B7', r'[\u0030-036F]', r'[\u0203-\u2040]')
-VARNAME_p = Regex(VARNAME_e).setName('VARNAME')
-sparqlparser.addElement(VARNAME_p)
+VARNAME = Regex(VARNAME_e).setName('VARNAME')
+parser.addElement(VARNAME)
 
 # [163]   ANON      ::=   '[' WS* ']' 
-ANON_p = Group(Literal('[') + Literal(']')).setName('ANON')
-sparqlparser.addElement(ANON_p)
+ANON = Group(Literal('[') + Literal(']')).setName('ANON')
+parser.addElement(ANON)
 
 # [162]   WS        ::=   #x20 | #x9 | #xD | #xA 
 # WS is not used
 # In the SPARQL EBNF this production is used for defining NIL and ANON, but in this pyparsing implementation those are implemented differently
 
 # [161]   NIL       ::=   '(' WS* ')' 
-NIL_p = Group(Literal('(') + Literal(')')).setName('NIL')
-sparqlparser.addElement(NIL_p)
+NIL = Group(Literal('(') + Literal(')')).setName('NIL')
+parser.addElement(NIL)
 
 # [160]   ECHAR     ::=   '\' [tbnrf\"']
 ECHAR_e = r'\\[tbnrf\\"\']'
-ECHAR_p = Regex(ECHAR_e).setName('ECHAR')
-sparqlparser.addElement(ECHAR_p)
+ECHAR = Regex(ECHAR_e).setName('ECHAR')
+parser.addElement(ECHAR)
  
 # [159]   STRING_LITERAL_LONG2      ::=   '"""' ( ( '"' | '""' )? ( [^"\] | ECHAR ) )* '"""'  
 STRING_LITERAL_LONG2_e = r'"""((""|")?(({})|({})))*"""'.format(r'[^"\\]', ECHAR_e)
-STRING_LITERAL_LONG2_p = Regex(STRING_LITERAL_LONG2_e).parseWithTabs().setName('STRING_LITERAL_LONG2')
-sparqlparser.addElement(STRING_LITERAL_LONG2_p)
+STRING_LITERAL_LONG2 = Regex(STRING_LITERAL_LONG2_e).parseWithTabs().setName('STRING_LITERAL_LONG2')
+parser.addElement(STRING_LITERAL_LONG2)
 
 # [158]   STRING_LITERAL_LONG1      ::=   "'''" ( ( "'" | "''" )? ( [^'\] | ECHAR ) )* "'''" 
 STRING_LITERAL_LONG1_e = r"'''(('|'')?(({})|({})))*'''".format(r"[^'\\]", ECHAR_e)
-STRING_LITERAL_LONG1_p = Regex(STRING_LITERAL_LONG1_e).parseWithTabs().setName('STRING_LITERAL_LONG1')
-sparqlparser.addElement(STRING_LITERAL_LONG1_p)
+STRING_LITERAL_LONG1 = Regex(STRING_LITERAL_LONG1_e).parseWithTabs().setName('STRING_LITERAL_LONG1')
+parser.addElement(STRING_LITERAL_LONG1)
 
 # [157]   STRING_LITERAL2   ::=   '"' ( ([^#x22#x5C#xA#xD]) | ECHAR )* '"' 
 STRING_LITERAL2_e = r'"(({})|({}))*"'.format(ECHAR_e, r'[^\u0022\u005C\u000A\u000D]')
-STRING_LITERAL2_p = Regex(STRING_LITERAL2_e).parseWithTabs().setName('STRING_LITERAL2')
-sparqlparser.addElement(STRING_LITERAL2_p)
+STRING_LITERAL2 = Regex(STRING_LITERAL2_e).parseWithTabs().setName('STRING_LITERAL2')
+parser.addElement(STRING_LITERAL2)
                            
 # [156]   STRING_LITERAL1   ::=   "'" ( ([^#x27#x5C#xA#xD]) | ECHAR )* "'" 
 STRING_LITERAL1_e = r"'(({})|({}))*'".format(ECHAR_e, r'[^\u0027\u005C\u000A\u000D]')
-STRING_LITERAL1_p = Regex(STRING_LITERAL1_e).parseWithTabs().setName('STRING_LITERAL1')
-sparqlparser.addElement(STRING_LITERAL1_p)
+STRING_LITERAL1 = Regex(STRING_LITERAL1_e).parseWithTabs().setName('STRING_LITERAL1')
+parser.addElement(STRING_LITERAL1)
                             
 # [155]   EXPONENT          ::=   [eE] [+-]? [0-9]+ 
 EXPONENT_e = r'[eE][+-][0-9]+'
-EXPONENT_p = Regex(EXPONENT_e).setName('EXPONENT')
-sparqlparser.addElement(EXPONENT_p)
+EXPONENT = Regex(EXPONENT_e).setName('EXPONENT')
+parser.addElement(EXPONENT)
 
 # [148]   DOUBLE    ::=   [0-9]+ '.' [0-9]* EXPONENT | '.' ([0-9])+ EXPONENT | ([0-9])+ EXPONENT 
 DOUBLE_e = r'([0-9]+\.[0-9]*({}))|(\.[0-9]+({}))|([0-9]+({}))'.format(EXPONENT_e, EXPONENT_e, EXPONENT_e)
-DOUBLE_p = Regex(DOUBLE_e).setName('DOUBLE')
-sparqlparser.addElement(DOUBLE_p)
+DOUBLE = Regex(DOUBLE_e).setName('DOUBLE')
+parser.addElement(DOUBLE)
 
 # [154]   DOUBLE_NEGATIVE   ::=   '-' DOUBLE 
 DOUBLE_NEGATIVE_e = r'\-({})'.format(DOUBLE_e)
-DOUBLE_NEGATIVE_p = Regex(DOUBLE_NEGATIVE_e).setName('DOUBLE_NEGATIVE')
-sparqlparser.addElement(DOUBLE_NEGATIVE_p)
+DOUBLE_NEGATIVE = Regex(DOUBLE_NEGATIVE_e).setName('DOUBLE_NEGATIVE')
+parser.addElement(DOUBLE_NEGATIVE)
 
 # [151]   DOUBLE_POSITIVE   ::=   '+' DOUBLE 
 DOUBLE_POSITIVE_e = r'\+({})'.format(DOUBLE_e)
-DOUBLE_POSITIVE_p = Regex(DOUBLE_POSITIVE_e).setName('DOUBLE_POSITIVE')
-sparqlparser.addElement(DOUBLE_POSITIVE_p)
+DOUBLE_POSITIVE = Regex(DOUBLE_POSITIVE_e).setName('DOUBLE_POSITIVE')
+parser.addElement(DOUBLE_POSITIVE)
 
 # [147]   DECIMAL   ::=   [0-9]* '.' [0-9]+ 
 DECIMAL_e = r'[0-9]*\.[0-9]+'
-DECIMAL_p = Regex(DECIMAL_e).setName('DECIMAL')
-sparqlparser.addElement(DECIMAL_p)
+DECIMAL = Regex(DECIMAL_e).setName('DECIMAL')
+parser.addElement(DECIMAL)
 
 # [153]   DECIMAL_NEGATIVE          ::=   '-' DECIMAL 
 DECIMAL_NEGATIVE_e = r'\-({})'.format(DECIMAL_e)
-DECIMAL_NEGATIVE_p = Regex(DECIMAL_NEGATIVE_e).setName('DECIMAL_NEGATIVE')
-sparqlparser.addElement(DECIMAL_NEGATIVE_p)
+DECIMAL_NEGATIVE = Regex(DECIMAL_NEGATIVE_e).setName('DECIMAL_NEGATIVE')
+parser.addElement(DECIMAL_NEGATIVE)
 
 # [150]   DECIMAL_POSITIVE          ::=   '+' DECIMAL 
 DECIMAL_POSITIVE_e = r'\+({})'.format(DECIMAL_e)
-DECIMAL_POSITIVE_p = Regex(DECIMAL_POSITIVE_e).setName('DECIMAL_POSITIVE')
-sparqlparser.addElement(DECIMAL_POSITIVE_p)
+DECIMAL_POSITIVE = Regex(DECIMAL_POSITIVE_e).setName('DECIMAL_POSITIVE')
+parser.addElement(DECIMAL_POSITIVE)
 
 # [146]   INTEGER   ::=   [0-9]+ 
 INTEGER_e = r'[0-9]+'
-INTEGER_p = Regex(INTEGER_e).setName('INTEGER')
-sparqlparser.addElement(INTEGER_p)
+INTEGER = Regex(INTEGER_e).setName('INTEGER')
+parser.addElement(INTEGER)
 
 # [152]   INTEGER_NEGATIVE          ::=   '-' INTEGER
 INTEGER_NEGATIVE_e = r'\-({})'.format(INTEGER_e)
-INTEGER_NEGATIVE_p = Regex(INTEGER_NEGATIVE_e).setName('INTEGER_NEGATIVE')
-sparqlparser.addElement(INTEGER_NEGATIVE_p)
+INTEGER_NEGATIVE = Regex(INTEGER_NEGATIVE_e).setName('INTEGER_NEGATIVE')
+parser.addElement(INTEGER_NEGATIVE)
 
 # [149]   INTEGER_POSITIVE          ::=   '+' INTEGER 
 INTEGER_POSITIVE_e = r'\+({})'.format(INTEGER_e)
-INTEGER_POSITIVE_p = Regex(INTEGER_POSITIVE_e).setName('INTEGER_POSITIVE')
-sparqlparser.addElement(INTEGER_POSITIVE_p)
+INTEGER_POSITIVE = Regex(INTEGER_POSITIVE_e).setName('INTEGER_POSITIVE')
+parser.addElement(INTEGER_POSITIVE)
 
 # [145]   LANGTAG   ::=   '@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)* 
 LANGTAG_e = r'@[a-zA-Z]+(\-[a-zA-Z0-9]+)*'
-LANGTAG_p = Regex(LANGTAG_e).setName('LANGTAG')
-sparqlparser.addElement(LANGTAG_p)
+LANGTAG = Regex(LANGTAG_e).setName('LANGTAG')
+parser.addElement(LANGTAG)
 
 # [144]   VAR2      ::=   '$' VARNAME 
 VAR2_e = r'\$({})'.format(VARNAME_e)
-VAR2_p = Regex(VAR2_e).setName('VAR2')
-sparqlparser.addElement(VAR2_p)
+VAR2 = Regex(VAR2_e).setName('VAR2')
+parser.addElement(VAR2)
 
 # [143]   VAR1      ::=   '?' VARNAME 
 VAR1_e = r'\?({})'.format(VARNAME_e)
-VAR1_p = Regex(VAR1_e).setName('VAR1')
-sparqlparser.addElement(VAR1_p)
+VAR1 = Regex(VAR1_e).setName('VAR1')
+parser.addElement(VAR1)
 
 # [142]   BLANK_NODE_LABEL          ::=   '_:' ( PN_CHARS_U | [0-9] ) ((PN_CHARS|'.')* PN_CHARS)?
 BLANK_NODE_LABEL_e = r'_:(({})|[0-9])((({})|\.)*({}))?'.format(PN_CHARS_U_e, PN_CHARS_e, PN_CHARS_e)
-BLANK_NODE_LABEL_p = Regex(BLANK_NODE_LABEL_e).setName('BLANK_NODE_LABEL')
-sparqlparser.addElement(BLANK_NODE_LABEL_p)
+BLANK_NODE_LABEL = Regex(BLANK_NODE_LABEL_e).setName('BLANK_NODE_LABEL')
+parser.addElement(BLANK_NODE_LABEL)
 
 # [140]   PNAME_NS          ::=   PN_PREFIX? ':'
 PNAME_NS_e = r'({})?:'.format(PN_PREFIX_e)
-PNAME_NS_p = Regex(PNAME_NS_e).setName('PNAME_NS')
-sparqlparser.addElement(PNAME_NS_p)
+PNAME_NS = Regex(PNAME_NS_e).setName('PNAME_NS')
+parser.addElement(PNAME_NS)
 
 # [141]   PNAME_LN          ::=   PNAME_NS PN_LOCAL 
 PNAME_LN_e = r'({})({})'.format(PNAME_NS_e, PN_LOCAL_e)
-PNAME_LN_p = Regex(PNAME_LN_e).setName('PNAME_LN')
-sparqlparser.addElement(PNAME_LN_p)
+PNAME_LN = Regex(PNAME_LN_e).setName('PNAME_LN')
+parser.addElement(PNAME_LN)
 
 # [139]   IRIREF    ::=   '<' ([^<>"{}|^`\]-[#x00-#x20])* '>' 
 IRIREF_e = r'<[^<>"{}|^`\\\\\u0000-\u0020]*>'
-IRIREF_p = Regex(IRIREF_e).setName('IRIREF')
-sparqlparser.addElement(IRIREF_p)
+IRIREF = Regex(IRIREF_e).setName('IRIREF')
+parser.addElement(IRIREF)
 
 #
 # Parsers and classes for non-terminals
 #
 
 # [138]   BlankNode         ::=   BLANK_NODE_LABEL | ANON 
-BlankNode_p = Group(BLANK_NODE_LABEL_p | ANON_p).setName('BlankNode')
-sparqlparser.addElement(BlankNode_p)
+BlankNode = Group(BLANK_NODE_LABEL | ANON).setName('BlankNode')
+parser.addElement(BlankNode)
 
 # [137]   PrefixedName      ::=   PNAME_LN | PNAME_NS 
-PrefixedName_p = Group(PNAME_LN_p ^ PNAME_NS_p).setName('PrefixedName')
-sparqlparser.addElement(PrefixedName_p)
+PrefixedName = Group(PNAME_LN | PNAME_NS).setName('PrefixedName')
+parser.addElement(PrefixedName)
 
 # [136]   iri       ::=   IRIREF | PrefixedName 
-iri_p = Group(IRIREF_p ^ PrefixedName_p).setName('iri')
-sparqlparser.addElement(iri_p)
+iri = Group(IRIREF | PrefixedName).setName('iri')
+parser.addElement(iri)
 
 # [135]   String    ::=   STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2 
-String_p = Group(STRING_LITERAL1_p ^ STRING_LITERAL2_p ^ STRING_LITERAL_LONG1_p ^ STRING_LITERAL_LONG2_p).setName('String')
-sparqlparser.addElement(String_p)
+String = Group(STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2 | STRING_LITERAL1 | STRING_LITERAL2).setName('String')
+parser.addElement(String)
  
 # [134]   BooleanLiteral    ::=   'true' | 'false' 
-BooleanLiteral_p = Group(Literal('true') | Literal('false')).setName('BooleanLiteral')
-sparqlparser.addElement(BooleanLiteral_p)
+BooleanLiteral = Group(Literal('true') | Literal('false')).setName('BooleanLiteral')
+parser.addElement(BooleanLiteral)
  
 # [133]   NumericLiteralNegative    ::=   INTEGER_NEGATIVE | DECIMAL_NEGATIVE | DOUBLE_NEGATIVE 
-NumericLiteralNegative_p = Group(INTEGER_NEGATIVE_p ^ DECIMAL_NEGATIVE_p ^ DOUBLE_NEGATIVE_p).setName('NumericLiteralNegative')
-sparqlparser.addElement(NumericLiteralNegative_p)
+NumericLiteralNegative = Group(DOUBLE_NEGATIVE | DECIMAL_NEGATIVE | INTEGER_NEGATIVE).setName('NumericLiteralNegative')
+parser.addElement(NumericLiteralNegative)
  
 # [132]   NumericLiteralPositive    ::=   INTEGER_POSITIVE | DECIMAL_POSITIVE | DOUBLE_POSITIVE 
-NumericLiteralPositive_p = Group(INTEGER_POSITIVE_p ^ DECIMAL_POSITIVE_p ^ DOUBLE_POSITIVE_p).setName('NumericLiteralPositive')
-sparqlparser.addElement(NumericLiteralPositive_p)
+NumericLiteralPositive = Group(DOUBLE_POSITIVE | DECIMAL_POSITIVE | INTEGER_POSITIVE).setName('NumericLiteralPositive')
+parser.addElement(NumericLiteralPositive)
  
 # [131]   NumericLiteralUnsigned    ::=   INTEGER | DECIMAL | DOUBLE 
-NumericLiteralUnsigned_p = Group(INTEGER_p ^ DECIMAL_p ^ DOUBLE_p).setName('NumericLiteralUnsigned')
-sparqlparser.addElement(NumericLiteralUnsigned_p)
+NumericLiteralUnsigned = Group(DOUBLE | DECIMAL | INTEGER).setName('NumericLiteralUnsigned')
+parser.addElement(NumericLiteralUnsigned)
 
 # # [130]   NumericLiteral    ::=   NumericLiteralUnsigned | NumericLiteralPositive | NumericLiteralNegative 
-NumericLiteral_p = Group(NumericLiteralUnsigned_p | NumericLiteralPositive_p | NumericLiteralNegative_p).setName('NumericLiteral')
-sparqlparser.addElement(NumericLiteral_p)
+NumericLiteral = Group(NumericLiteralUnsigned | NumericLiteralPositive | NumericLiteralNegative).setName('NumericLiteral')
+parser.addElement(NumericLiteral)
 
 # [129]   RDFLiteral        ::=   String ( LANGTAG | ( '^^' iri ) )? 
-RDFLiteral_p = Group(String_p('lexical_form') + Optional(Group ((LANGTAG_p('langtag') ^ ('^^' + iri_p('datatype_uri')))))).setName('RDFLiteral')
-sparqlparser.addElement(RDFLiteral_p)
+RDFLiteral = Group(String('lexical_form') + Optional(Group ((LANGTAG('langtag') | ('^^' + iri('datatype_uri')))))).setName('RDFLiteral')
+parser.addElement(RDFLiteral)
 
-Expression_p = Forward().setName('Expression')
-sparqlparser.addElement(Expression_p)
+Expression = Forward().setName('Expression')
+parser.addElement(Expression)
 
 # [71]    ArgList   ::=   NIL | '(' 'DISTINCT'? Expression ( ',' Expression )* ')' 
-ArgList_p = Group((NIL_p('nil')) | (LPAR_p + Optional(DISTINCT_p)('distinct') + separatedList(Expression_p)('argument') + RPAR_p)).setName('ArgList')
-sparqlparser.addElement(ArgList_p)
+ArgList = Group((NIL('nil')) | (LPAR + Optional(DISTINCT)('distinct') + separatedList(Expression)('argument') + RPAR)).setName('ArgList')
+parser.addElement(ArgList)
 
 
 # [128]   iriOrFunction     ::=   iri ArgList? 
-iriOrFunction_p = Group(iri_p('iri') + Optional(ArgList_p)('argList')).setName('iriOrFunction')
-sparqlparser.addElement(iriOrFunction_p)
+iriOrFunction = Group(iri('iri') + Optional(ArgList)('argList')).setName('iriOrFunction')
+parser.addElement(iriOrFunction)
 
 # [127]   Aggregate         ::=     'COUNT' '(' 'DISTINCT'? ( '*' | Expression ) ')' 
 #             | 'SUM' '(' 'DISTINCT'? Expression ')' 
@@ -724,44 +729,44 @@ sparqlparser.addElement(iriOrFunction_p)
 #             | 'AVG' '(' 'DISTINCT'? Expression ')' 
 #             | 'SAMPLE' '(' 'DISTINCT'? Expression ')' 
 #             | 'GROUP_CONCAT' '(' 'DISTINCT'? Expression ( ';' 'SEPARATOR' '=' String )? ')' 
-Aggregate_p = Group((COUNT_p('count') + LPAR_p + Optional(DISTINCT_p('distinct')) + ( ALL_VALUES_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( SUM_p('sum') + LPAR_p + Optional(DISTINCT_p('distinct')) + ( ALL_VALUES_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( MIN_p('min') + LPAR_p + Optional(DISTINCT_p('distinct')) + ( ALL_VALUES_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( MAX_p('max') + LPAR_p + Optional(DISTINCT_p('distinct')) + ( ALL_VALUES_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( AVG_p('avg') + LPAR_p + Optional(DISTINCT_p('distinct')) + ( ALL_VALUES_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( SAMPLE_p('sample') + LPAR_p + Optional(DISTINCT_p('distinct')) + ( ALL_VALUES_p('all') ^ Expression_p('expression') ) + RPAR_p ) | \
-            ( GROUP_CONCAT_p('group_concat') + LPAR_p + Optional(DISTINCT_p('distinct')) + Expression_p('expression') + Optional( SEMICOL_p + SEPARATOR_p + '=' + String_p('separator') ) + RPAR_p)).setName('Aggregate')
-sparqlparser.addElement(Aggregate_p)
+Aggregate = Group((COUNT('count') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
+            ( SUM('sum') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
+            ( MIN('min') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
+            ( MAX('max') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
+            ( AVG('avg') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
+            ( SAMPLE('sample') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
+            ( GROUP_CONCAT('group_concat') + LPAR + Optional(DISTINCT('distinct')) + Expression('expression') + Optional( SEMICOL + SEPARATOR + '=' + String('separator') ) + RPAR)).setName('Aggregate')
+parser.addElement(Aggregate)
 
-GroupGraphPattern_p = Forward().setName('GroupGraphPattern')
-sparqlparser.addElement(GroupGraphPattern_p)
+GroupGraphPattern = Forward().setName('GroupGraphPattern')
+parser.addElement(GroupGraphPattern)
  
 # [126]   NotExistsFunc     ::=   'NOT' 'EXISTS' GroupGraphPattern 
-NotExistsFunc_p = Group(NOT_EXISTS_p + GroupGraphPattern_p('groupgraph')).setName('NotExistsFunc')
-sparqlparser.addElement(NotExistsFunc_p)
+NotExistsFunc = Group(NOT_EXISTS + GroupGraphPattern('groupgraph')).setName('NotExistsFunc')
+parser.addElement(NotExistsFunc)
  
 # [125]   ExistsFunc        ::=   'EXISTS' GroupGraphPattern 
-ExistsFunc_p = Group(EXISTS_p + GroupGraphPattern_p('groupgraph')).setName('ExistsFunc')
-sparqlparser.addElement(ExistsFunc_p)
+ExistsFunc = Group(EXISTS + GroupGraphPattern('groupgraph')).setName('ExistsFunc')
+parser.addElement(ExistsFunc)
  
 # [124]   StrReplaceExpression      ::=   'REPLACE' '(' Expression ',' Expression ',' Expression ( ',' Expression )? ')' 
-StrReplaceExpression_p = Group(REPLACE_p + LPAR_p + Expression_p('arg') + COMMA_p + Expression_p('pattern') + COMMA_p + Expression_p('replacement') + Optional(COMMA_p + Expression_p('flags')) + RPAR_p).setName('StrReplaceExpression')
-sparqlparser.addElement(StrReplaceExpression_p)
+StrReplaceExpression = Group(REPLACE + LPAR + Expression('arg') + COMMA + Expression('pattern') + COMMA + Expression('replacement') + Optional(COMMA + Expression('flags')) + RPAR).setName('StrReplaceExpression')
+parser.addElement(StrReplaceExpression)
  
 # [123]   SubstringExpression       ::=   'SUBSTR' '(' Expression ',' Expression ( ',' Expression )? ')' 
-SubstringExpression_p = Group(SUBSTR_p + LPAR_p + Expression_p('source') + COMMA_p + Expression_p('startloc') + Optional(COMMA_p + Expression_p('length')) + RPAR_p).setName('SubstringExpression')
-sparqlparser.addElement(SubstringExpression_p)
+SubstringExpression = Group(SUBSTR + LPAR + Expression('source') + COMMA + Expression('startloc') + Optional(COMMA + Expression('length')) + RPAR).setName('SubstringExpression')
+parser.addElement(SubstringExpression)
  
 # [122]   RegexExpression   ::=   'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')' 
-RegexExpression_p = Group(REGEX_p + LPAR_p + Expression_p('text') + COMMA_p + Expression_p('pattern') + Optional(COMMA_p + Expression_p('flags')) + RPAR_p).setName('RegexExpression')
-sparqlparser.addElement(RegexExpression_p)
+RegexExpression = Group(REGEX + LPAR + Expression('text') + COMMA + Expression('pattern') + Optional(COMMA + Expression('flags')) + RPAR).setName('RegexExpression')
+parser.addElement(RegexExpression)
 
 # [108]   Var       ::=   VAR1 | VAR2 
-Var_p = Group(VAR1_p | VAR2_p).setName('Var')
-sparqlparser.addElement(Var_p)
+Var = Group(VAR1 | VAR2).setName('Var')
+parser.addElement(Var)
 
-ExpressionList_p = Forward().setName('ExpressionList')
-sparqlparser.addElement(ExpressionList_p)
+ExpressionList = Forward().setName('ExpressionList')
+parser.addElement(ExpressionList)
 
 
 # [121]   BuiltInCall       ::=     Aggregate 
@@ -819,568 +824,562 @@ sparqlparser.addElement(ExpressionList_p)
 #             | RegexExpression 
 #             | ExistsFunc 
 #             | NotExistsFunc 
-BuiltInCall_p = Group(Aggregate_p | \
-                STR_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                LANG_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                LANGMATCHES_p + LPAR_p + Expression_p('language-tag') + COMMA_p + Expression_p('language-range') + RPAR_p    | \
-                DATATYPE_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                BOUND_p + LPAR_p + Var_p('var') + RPAR_p    | \
-                IRI_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                URI_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                BNODE_p + (LPAR_p + Expression_p('expression') + RPAR_p | NIL_p)    | \
-                RAND_p + NIL_p    | \
-                ABS_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                CEIL_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                FLOOR_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                ROUND_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                CONCAT_p + ExpressionList_p('expressionList')    | \
-                SubstringExpression_p   | \
-                STRLEN_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                StrReplaceExpression_p  | \
-                UCASE_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                LCASE_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                ENCODE_FOR_URI_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                CONTAINS_p + LPAR_p + Expression_p('arg1') + COMMA_p + Expression_p('arg2') + RPAR_p    | \
-                STRSTARTS_p + LPAR_p + Expression_p('arg1') + COMMA_p + Expression_p('arg2') + RPAR_p    | \
-                STRENDS_p + LPAR_p + Expression_p('arg1') + COMMA_p + Expression_p('arg2') + RPAR_p    | \
-                STRBEFORE_p + LPAR_p + Expression_p('arg1') + COMMA_p + Expression_p('arg2') + RPAR_p    | \
-                STRAFTER_p + LPAR_p + Expression_p('arg1') + COMMA_p + Expression_p('arg2') + RPAR_p    | \
-                YEAR_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                MONTH_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                DAY_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                HOURS_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                MINUTES_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                SECONDS_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                TIMEZONE_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                TZ_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                NOW_p + NIL_p    | \
-                UUID_p + NIL_p    | \
-                STRUUID_p + NIL_p    | \
-                MD5_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                SHA1_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                SHA256_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                SHA384_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                SHA512_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                COALESCE_p + ExpressionList_p('expressionList')    | \
-                IF_p + LPAR_p + Expression_p('expression1') + COMMA_p + Expression_p('expression2') + COMMA_p + Expression_p('expression3') + RPAR_p    | \
-                STRLANG_p + LPAR_p + Expression_p('lexicalForm') + COMMA_p + Expression_p('langTag') + RPAR_p    | \
-                STRDT_p + LPAR_p + Expression_p('lexicalForm') + COMMA_p + Expression_p('datatypeIRI') + RPAR_p    | \
-                sameTerm_p + LPAR_p + Expression_p('term1') + COMMA_p + Expression_p('term2') + RPAR_p    | \
-                isIRI_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                isURI_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                isBLANK_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                isLITERAL_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                isNUMERIC_p + LPAR_p + Expression_p('expression') + RPAR_p    | \
-                RegexExpression_p | \
-                ExistsFunc_p | \
-                NotExistsFunc_p ).setName('BuiltInCall')
-sparqlparser.addElement(BuiltInCall_p)
+BuiltInCall = Group(Aggregate | \
+                STR + LPAR + Expression('expression') + RPAR    | \
+                LANG + LPAR + Expression('expression') + RPAR    | \
+                LANGMATCHES + LPAR + Expression('language-tag') + COMMA + Expression('language-range') + RPAR    | \
+                DATATYPE + LPAR + Expression('expression') + RPAR    | \
+                BOUND + LPAR + Var('var') + RPAR    | \
+                IRI + LPAR + Expression('expression') + RPAR    | \
+                URI + LPAR + Expression('expression') + RPAR    | \
+                BNODE + (LPAR + Expression('expression') + RPAR | NIL)    | \
+                RAND + NIL    | \
+                ABS + LPAR + Expression('expression') + RPAR    | \
+                CEIL + LPAR + Expression('expression') + RPAR    | \
+                FLOOR + LPAR + Expression('expression') + RPAR    | \
+                ROUND + LPAR + Expression('expression') + RPAR    | \
+                CONCAT + ExpressionList('expressionList')    | \
+                SubstringExpression   | \
+                STRLEN + LPAR + Expression('expression') + RPAR    | \
+                StrReplaceExpression  | \
+                UCASE + LPAR + Expression('expression') + RPAR    | \
+                LCASE + LPAR + Expression('expression') + RPAR    | \
+                ENCODE_FOR_URI + LPAR + Expression('expression') + RPAR    | \
+                CONTAINS + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | \
+                STRSTARTS + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | \
+                STRENDS + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | \
+                STRBEFORE + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | \
+                STRAFTER + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | \
+                YEAR + LPAR + Expression('expression') + RPAR    | \
+                MONTH + LPAR + Expression('expression') + RPAR    | \
+                DAY + LPAR + Expression('expression') + RPAR    | \
+                HOURS + LPAR + Expression('expression') + RPAR    | \
+                MINUTES + LPAR + Expression('expression') + RPAR    | \
+                SECONDS + LPAR + Expression('expression') + RPAR    | \
+                TIMEZONE + LPAR + Expression('expression') + RPAR    | \
+                TZ + LPAR + Expression('expression') + RPAR    | \
+                NOW + NIL    | \
+                UUID + NIL    | \
+                STRUUID + NIL    | \
+                MD5 + LPAR + Expression('expression') + RPAR    | \
+                SHA1 + LPAR + Expression('expression') + RPAR    | \
+                SHA256 + LPAR + Expression('expression') + RPAR    | \
+                SHA384 + LPAR + Expression('expression') + RPAR    | \
+                SHA512 + LPAR + Expression('expression') + RPAR    | \
+                COALESCE + ExpressionList('expressionList')    | \
+                IF + LPAR + Expression('expression1') + COMMA + Expression('expression2') + COMMA + Expression('expression3') + RPAR    | \
+                STRLANG + LPAR + Expression('lexicalForm') + COMMA + Expression('langTag') + RPAR    | \
+                STRDT + LPAR + Expression('lexicalForm') + COMMA + Expression('datatypeIRI') + RPAR    | \
+                sameTerm + LPAR + Expression('term1') + COMMA + Expression('term2') + RPAR    | \
+                isIRI + LPAR + Expression('expression') + RPAR    | \
+                isURI + LPAR + Expression('expression') + RPAR    | \
+                isBLANK + LPAR + Expression('expression') + RPAR    | \
+                isLITERAL + LPAR + Expression('expression') + RPAR    | \
+                isNUMERIC + LPAR + Expression('expression') + RPAR    | \
+                RegexExpression | \
+                ExistsFunc | \
+                NotExistsFunc ).setName('BuiltInCall')
+parser.addElement(BuiltInCall)
 
 # [120]   BrackettedExpression      ::=   '(' Expression ')' 
-BracketedExpression_p = Group(LPAR_p + Expression_p('expression') + RPAR_p).setName('BracketedExpression')
-sparqlparser.addElement(BracketedExpression_p)
+BracketedExpression = Group(LPAR + Expression('expression') + RPAR).setName('BracketedExpression')
+parser.addElement(BracketedExpression)
 
 # [119]   PrimaryExpression         ::=   BrackettedExpression | BuiltInCall | iriOrFunction | RDFLiteral | NumericLiteral | BooleanLiteral | Var 
-PrimaryExpression_p = Group(BracketedExpression_p | BuiltInCall_p | iriOrFunction_p('iriOrFunction') | RDFLiteral_p | NumericLiteral_p | BooleanLiteral_p | Var_p).setName('PrimaryExpression')
-sparqlparser.addElement(PrimaryExpression_p)
+PrimaryExpression = Group(BracketedExpression | BuiltInCall | iriOrFunction('iriOrFunction') | RDFLiteral | NumericLiteral | BooleanLiteral | Var).setName('PrimaryExpression')
+parser.addElement(PrimaryExpression)
 
 # [118]   UnaryExpression   ::=     '!' PrimaryExpression 
 #             | '+' PrimaryExpression 
 #             | '-' PrimaryExpression 
 #             | PrimaryExpression 
-UnaryExpression_p = Group(NEGATE_p + PrimaryExpression_p | PLUS_p + PrimaryExpression_p | MINUS_p + PrimaryExpression_p | PrimaryExpression_p).setName('UnaryExpression')
-sparqlparser.addElement(UnaryExpression_p)
+UnaryExpression = Group(NEGATE + PrimaryExpression | PLUS + PrimaryExpression | MINUS + PrimaryExpression | PrimaryExpression).setName('UnaryExpression')
+parser.addElement(UnaryExpression)
 
 # [117]   MultiplicativeExpression          ::=   UnaryExpression ( '*' UnaryExpression | '/' UnaryExpression )* 
-MultiplicativeExpression_p = Group(UnaryExpression_p + ZeroOrMore( TIMES_p + UnaryExpression_p | DIV_p + UnaryExpression_p )).setName('MultiplicativeExpression')
-sparqlparser.addElement(MultiplicativeExpression_p)
+MultiplicativeExpression = Group(UnaryExpression + ZeroOrMore( TIMES + UnaryExpression | DIV + UnaryExpression )).setName('MultiplicativeExpression')
+parser.addElement(MultiplicativeExpression)
 
 # [116]   AdditiveExpression        ::=   MultiplicativeExpression ( '+' MultiplicativeExpression | '-' MultiplicativeExpression | ( NumericLiteralPositive | NumericLiteralNegative ) ( ( '*' UnaryExpression ) | ( '/' UnaryExpression ) )* )* 
-AdditiveExpression_p = Group(MultiplicativeExpression_p + ZeroOrMore (PLUS_p + MultiplicativeExpression_p | MINUS_p  + MultiplicativeExpression_p | (NumericLiteralPositive_p | NumericLiteralNegative_p) + ZeroOrMore (TIMES_p + UnaryExpression_p | DIV_p + UnaryExpression_p))).setName('AdditiveExpression')
-sparqlparser.addElement(AdditiveExpression_p)
+AdditiveExpression = Group(MultiplicativeExpression + ZeroOrMore (PLUS + MultiplicativeExpression | MINUS  + MultiplicativeExpression | (NumericLiteralPositive | NumericLiteralNegative) + ZeroOrMore (TIMES + UnaryExpression | DIV + UnaryExpression))).setName('AdditiveExpression')
+parser.addElement(AdditiveExpression)
 
 # [115]   NumericExpression         ::=   AdditiveExpression 
-NumericExpression_p = Group(AdditiveExpression_p + Empty()).setName('NumericExpression')
-sparqlparser.addElement(NumericExpression_p)
+NumericExpression = Group(AdditiveExpression + Empty()).setName('NumericExpression')
+parser.addElement(NumericExpression)
 
 # [114]   RelationalExpression      ::=   NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT' 'IN' ExpressionList )? 
-RelationalExpression_p = Group(NumericExpression_p + Optional( EQ_p + NumericExpression_p | \
-                                                         NE_p + NumericExpression_p | \
-                                                         LT_p + NumericExpression_p | \
-                                                         GT_p + NumericExpression_p | \
-                                                         LE_p + NumericExpression_p | \
-                                                         GE_p + NumericExpression_p | \
-                                                         IN_p + ExpressionList_p | \
-                                                         NOT_IN_p + ExpressionList_p) ).setName('RelationalExpression')
-sparqlparser.addElement(RelationalExpression_p)
+RelationalExpression = Group(NumericExpression + Optional( EQ + NumericExpression | \
+                                                         NE + NumericExpression | \
+                                                         LT + NumericExpression | \
+                                                         GT + NumericExpression | \
+                                                         LE + NumericExpression | \
+                                                         GE + NumericExpression | \
+                                                         IN + ExpressionList | \
+                                                         NOT_IN + ExpressionList) ).setName('RelationalExpression')
+parser.addElement(RelationalExpression)
 
 # [113]   ValueLogical      ::=   RelationalExpression 
-ValueLogical_p = Group(RelationalExpression_p + Empty()).setName('ValueLogical')
-sparqlparser.addElement(ValueLogical_p)
+ValueLogical = Group(RelationalExpression + Empty()).setName('ValueLogical')
+parser.addElement(ValueLogical)
 
 # [112]   ConditionalAndExpression          ::=   ValueLogical ( '&&' ValueLogical )* 
-ConditionalAndExpression_p = Group(ValueLogical_p + ZeroOrMore(AND_p + ValueLogical_p)).setName('ConditionalAndExpression')
-sparqlparser.addElement(ConditionalAndExpression_p)
+ConditionalAndExpression = Group(ValueLogical + ZeroOrMore(AND + ValueLogical)).setName('ConditionalAndExpression')
+parser.addElement(ConditionalAndExpression)
 
 # [111]   ConditionalOrExpression   ::=   ConditionalAndExpression ( '||' ConditionalAndExpression )* 
-ConditionalOrExpression_p = Group(ConditionalAndExpression_p + ZeroOrMore(OR_p + ConditionalAndExpression_p)).setName('ConditionalOrExpression')
-sparqlparser.addElement(ConditionalOrExpression_p)
+ConditionalOrExpression = Group(ConditionalAndExpression + ZeroOrMore(OR + ConditionalAndExpression)).setName('ConditionalOrExpression')
+parser.addElement(ConditionalOrExpression)
 
 # [110]   Expression        ::=   ConditionalOrExpression 
-Expression_p << Group(ConditionalOrExpression_p + Empty())
+Expression << Group(ConditionalOrExpression + Empty())
 
 # [109]   GraphTerm         ::=   iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | NIL 
-GraphTerm_p =   Group(iri_p | \
-                RDFLiteral_p | \
-                NumericLiteral_p | \
-                BooleanLiteral_p | \
-                BlankNode_p | \
-                NIL_p ).setName('GraphTerm')
-sparqlparser.addElement(GraphTerm_p)
+GraphTerm =   Group(iri | \
+                RDFLiteral | \
+                NumericLiteral | \
+                BooleanLiteral | \
+                BlankNode | \
+                NIL ).setName('GraphTerm')
+parser.addElement(GraphTerm)
                 
 # [107]   VarOrIri          ::=   Var | iri 
-VarOrIri_p = Group(Var_p | iri_p).setName('VarOrIri')
-sparqlparser.addElement(VarOrIri_p)
+VarOrIri = Group(Var | iri).setName('VarOrIri')
+parser.addElement(VarOrIri)
 
 # [106]   VarOrTerm         ::=   Var | GraphTerm 
-VarOrTerm_p = Group(Var_p | GraphTerm_p).setName('VarOrTerm')
-sparqlparser.addElement(VarOrTerm_p)
+VarOrTerm = Group(Var | GraphTerm).setName('VarOrTerm')
+parser.addElement(VarOrTerm)
 
-TriplesNodePath_p = Forward().setName('TriplesNodePath')
-sparqlparser.addElement(TriplesNodePath_p)
+TriplesNodePath = Forward().setName('TriplesNodePath')
+parser.addElement(TriplesNodePath)
 
 # [105]   GraphNodePath     ::=   VarOrTerm | TriplesNodePath 
-GraphNodePath_p = Group(VarOrTerm_p ^ TriplesNodePath_p ).setName('GraphNodePath')
-sparqlparser.addElement(GraphNodePath_p)
+GraphNodePath = Group(VarOrTerm | TriplesNodePath ).setName('GraphNodePath')
+parser.addElement(GraphNodePath)
 
-TriplesNode_p = Forward().setName('TriplesNode')
-sparqlparser.addElement(TriplesNode_p)
+TriplesNode = Forward().setName('TriplesNode')
+parser.addElement(TriplesNode)
 
 # [104]   GraphNode         ::=   VarOrTerm | TriplesNode 
-GraphNode_p = Group(VarOrTerm_p ^ TriplesNode_p).setName('GraphNode')
-sparqlparser.addElement(GraphNode_p)
+GraphNode = Group(VarOrTerm | TriplesNode).setName('GraphNode')
+parser.addElement(GraphNode)
 
 # [103]   CollectionPath    ::=   '(' GraphNodePath+ ')' 
-CollectionPath_p = Group(LPAR_p + OneOrMore(GraphNodePath_p) + RPAR_p).setName('CollectionPath')
-sparqlparser.addElement(CollectionPath_p)
+CollectionPath = Group(LPAR + OneOrMore(GraphNodePath) + RPAR).setName('CollectionPath')
+parser.addElement(CollectionPath)
 
 # [102]   Collection        ::=   '(' GraphNode+ ')' 
-Collection_p = Group(LPAR_p + OneOrMore(GraphNode_p) + RPAR_p).setName('Collection')
-sparqlparser.addElement(Collection_p)
+Collection = Group(LPAR + OneOrMore(GraphNode) + RPAR).setName('Collection')
+parser.addElement(Collection)
 
-PropertyListPathNotEmpty_p = Forward().setName('PropertyListPathNotEmpty')
-sparqlparser.addElement(PropertyListPathNotEmpty_p)
+PropertyListPathNotEmpty = Forward().setName('PropertyListPathNotEmpty')
+parser.addElement(PropertyListPathNotEmpty)
 
 # [101]   BlankNodePropertyListPath         ::=   '[' PropertyListPathNotEmpty ']'
-BlankNodePropertyListPath_p = Group(LBRACK_p + PropertyListPathNotEmpty_p + RBRACK_p ).setName('BlankNodePropertyListPath')
-sparqlparser.addElement(BlankNodePropertyListPath_p)
+BlankNodePropertyListPath = Group(LBRACK + PropertyListPathNotEmpty + RBRACK ).setName('BlankNodePropertyListPath')
+parser.addElement(BlankNodePropertyListPath)
 
 # [100]   TriplesNodePath   ::=   CollectionPath | BlankNodePropertyListPath 
-TriplesNodePath_p << Group(CollectionPath_p | BlankNodePropertyListPath_p)
+TriplesNodePath << Group(CollectionPath | BlankNodePropertyListPath)
 
-PropertyListNotEmpty_p = Forward().setName('PropertyListNotEmpty')
-sparqlparser.addElement(PropertyListNotEmpty_p)
+PropertyListNotEmpty = Forward().setName('PropertyListNotEmpty')
+parser.addElement(PropertyListNotEmpty)
 
 # [99]    BlankNodePropertyList     ::=   '[' PropertyListNotEmpty ']' 
-BlankNodePropertyList_p = Group(LBRACK_p + PropertyListNotEmpty_p + RBRACK_p ).setName('BlankNodePropertyList')
-sparqlparser.addElement(BlankNodePropertyList_p)
+BlankNodePropertyList = Group(LBRACK + PropertyListNotEmpty + RBRACK ).setName('BlankNodePropertyList')
+parser.addElement(BlankNodePropertyList)
 
 # [98]    TriplesNode       ::=   Collection | BlankNodePropertyList 
-TriplesNode_p << Group(Collection_p | BlankNodePropertyList_p)
+TriplesNode << Group(Collection | BlankNodePropertyList)
 
 # [97]    Integer   ::=   INTEGER 
-Integer_p = Group(INTEGER_p + Empty()).setName('Integer')
-sparqlparser.addElement(Integer_p)
+Integer = Group(INTEGER + Empty()).setName('Integer')
+parser.addElement(Integer)
 
 # [96]    PathOneInPropertySet      ::=   iri | 'a' | '^' ( iri | 'a' ) 
-PathOneInPropertySet_p = Group(iri_p | TYPE_p | (INVERSE_p  + ( iri_p | TYPE_p ))).setName('PathOneInPropertySet')
-sparqlparser.addElement(PathOneInPropertySet_p)
+PathOneInPropertySet = Group(iri | TYPE | (INVERSE  + ( iri | TYPE ))).setName('PathOneInPropertySet')
+parser.addElement(PathOneInPropertySet)
 
 # [95]    PathNegatedPropertySet    ::=   PathOneInPropertySet | '(' ( PathOneInPropertySet ( '|' PathOneInPropertySet )* )? ')' 
-PathNegatedPropertySet_p = Group(PathOneInPropertySet_p | (LPAR_p + Group(Optional(separatedList(PathOneInPropertySet_p, sep='|'))('pathinonepropertyset')) + RPAR_p)).setName('PathNegatedPropertySet')
-sparqlparser.addElement(PathNegatedPropertySet_p)
+PathNegatedPropertySet = Group(PathOneInPropertySet | (LPAR + Group(Optional(separatedList(PathOneInPropertySet, sep='|'))('pathinonepropertyset')) + RPAR)).setName('PathNegatedPropertySet')
+parser.addElement(PathNegatedPropertySet)
 
-Path_p = Forward().setName('Path')
-sparqlparser.addElement(Path_p)
+Path = Forward().setName('Path')
+parser.addElement(Path)
 
 # [94]    PathPrimary       ::=   iri | 'a' | '!' PathNegatedPropertySet | '(' Path ')' 
-PathPrimary_p = Group(iri_p | TYPE_p | (NEGATE_p + PathNegatedPropertySet_p) | (LPAR_p + Path_p + RPAR_p)).setName('PathPrimary')
-sparqlparser.addElement(PathPrimary_p)
+PathPrimary = Group(iri | TYPE | (NEGATE + PathNegatedPropertySet) | (LPAR + Path + RPAR)).setName('PathPrimary')
+parser.addElement(PathPrimary)
 
 # [93]    PathMod   ::=   '?' | '*' | '+' 
-PathMod_p = Group((~VAR1_p + Literal('?')) | Literal('*') | Literal('+')).setName('PathMod')
-sparqlparser.addElement(PathMod_p)
+PathMod = Group((~VAR1 + Literal('?')) | Literal('*') | Literal('+')).setName('PathMod')
+parser.addElement(PathMod)
 
 # [91]    PathElt   ::=   PathPrimary PathMod? 
-PathElt_p = Group(PathPrimary_p + Optional(PathMod_p) ).setName('PathElt')
-sparqlparser.addElement(PathElt_p)
+PathElt = Group(PathPrimary + Optional(PathMod) ).setName('PathElt')
+parser.addElement(PathElt)
 
 # [92]    PathEltOrInverse          ::=   PathElt | '^' PathElt 
-PathEltOrInverse_p = Group(PathElt_p | (INVERSE_p + PathElt_p)).setName('PathEltOrInverse')
-sparqlparser.addElement(PathEltOrInverse_p)
+PathEltOrInverse = Group(PathElt | (INVERSE + PathElt)).setName('PathEltOrInverse')
+parser.addElement(PathEltOrInverse)
 
 # [90]    PathSequence      ::=   PathEltOrInverse ( '/' PathEltOrInverse )* 
-PathSequence_p = Group(separatedList(PathEltOrInverse_p, sep='/')).setName('PathSequence')
-sparqlparser.addElement(PathSequence_p)
+PathSequence = Group(separatedList(PathEltOrInverse, sep='/')).setName('PathSequence')
+parser.addElement(PathSequence)
 
 # [89]    PathAlternative   ::=   PathSequence ( '|' PathSequence )* 
-PathAlternative_p = Group(separatedList(PathSequence_p, sep='|')).setName('PathAlternative')
-sparqlparser.addElement(PathAlternative_p)
+PathAlternative = Group(separatedList(PathSequence, sep='|')).setName('PathAlternative')
+parser.addElement(PathAlternative)
  
 # [88]    Path      ::=   PathAlternative
-Path_p << Group(PathAlternative_p + Empty())
+Path << Group(PathAlternative + Empty())
 
 # [87]    ObjectPath        ::=   GraphNodePath 
-ObjectPath_p = Group(GraphNodePath_p + Empty() ).setName('ObjectPath')
-sparqlparser.addElement(ObjectPath_p)
+ObjectPath = Group(GraphNodePath + Empty() ).setName('ObjectPath')
+parser.addElement(ObjectPath)
 
 # [86]    ObjectListPath    ::=   ObjectPath ( ',' ObjectPath )* 
-ObjectListPath_p = Group(separatedList(ObjectPath_p)).setName('ObjectListPath')
-sparqlparser.addElement(ObjectListPath_p)
+ObjectListPath = Group(separatedList(ObjectPath)).setName('ObjectListPath')
+parser.addElement(ObjectListPath)
 
 # [85]    VerbSimple        ::=   Var 
-VerbSimple_p = Group(Var_p + Empty() ).setName('VerbSimple')
-sparqlparser.addElement(VerbSimple_p)
+VerbSimple = Group(Var + Empty() ).setName('VerbSimple')
+parser.addElement(VerbSimple)
 
 # [84]    VerbPath          ::=   Path
-VerbPath_p = Group(Path_p + Empty() ).setName('VerbPath')
-sparqlparser.addElement(VerbPath_p)
+VerbPath = Group(Path + Empty() ).setName('VerbPath')
+parser.addElement(VerbPath)
 
 # [80]    Object    ::=   GraphNode 
-Object_p = Group(GraphNode_p + Empty() ).setName('Object')
-sparqlparser.addElement(Object_p)
+Object = Group(GraphNode + Empty() ).setName('Object')
+parser.addElement(Object)
  
 # [79]    ObjectList        ::=   Object ( ',' Object )* 
-ObjectList_p = Group(separatedList(Object_p)).setName('ObjectList')
-sparqlparser.addElement(ObjectList_p)
+ObjectList = Group(separatedList(Object)).setName('ObjectList')
+parser.addElement(ObjectList)
 
 # [83]    PropertyListPathNotEmpty          ::=   ( VerbPath | VerbSimple ) ObjectListPath ( ';' ( ( VerbPath | VerbSimple ) ObjectList )? )* 
-PropertyListPathNotEmpty_p << Group((VerbPath_p | VerbSimple_p) + ObjectListPath_p +  ZeroOrMore(SEMICOL_p + Optional(( VerbPath_p | VerbSimple_p) + ObjectList_p)))
+PropertyListPathNotEmpty << Group((VerbPath | VerbSimple) + ObjectListPath +  ZeroOrMore(SEMICOL + Optional(( VerbPath | VerbSimple) + ObjectList)))
 
 # [82]    PropertyListPath          ::=   PropertyListPathNotEmpty? 
-PropertyListPath_p = Group(Optional(PropertyListPathNotEmpty_p)).setName('PropertyListPath')
-sparqlparser.addElement(PropertyListPath_p)
+PropertyListPath = Group(Optional(PropertyListPathNotEmpty)).setName('PropertyListPath')
+parser.addElement(PropertyListPath)
 
 # [81]    TriplesSameSubjectPath    ::=   VarOrTerm PropertyListPathNotEmpty | TriplesNodePath PropertyListPath 
-TriplesSameSubjectPath_p = Group((VarOrTerm_p + PropertyListPathNotEmpty_p) | (TriplesNodePath_p + PropertyListPath_p)).setName('TriplesSameSubjectPath')
-sparqlparser.addElement(TriplesSameSubjectPath_p)
+TriplesSameSubjectPath = Group((VarOrTerm + PropertyListPathNotEmpty) | (TriplesNodePath + PropertyListPath)).setName('TriplesSameSubjectPath')
+parser.addElement(TriplesSameSubjectPath)
 
 # [78]    Verb      ::=   VarOrIri | 'a' 
-Verb_p = Group(VarOrIri_p | TYPE_p).setName('Verb')
-sparqlparser.addElement(Verb_p)
+Verb = Group(VarOrIri | TYPE).setName('Verb')
+parser.addElement(Verb)
 
 # [77]    PropertyListNotEmpty      ::=   Verb ObjectList ( ';' ( Verb ObjectList )? )* 
-PropertyListNotEmpty_p << Group(Verb_p + ObjectList_p + ZeroOrMore(SEMICOL_p + Optional(Verb_p + ObjectList_p)))
+PropertyListNotEmpty << Group(Verb + ObjectList + ZeroOrMore(SEMICOL + Optional(Verb + ObjectList)))
 
 # [76]    PropertyList      ::=   PropertyListNotEmpty?
-PropertyList_p = Group(Optional(PropertyListNotEmpty_p) ).setName('PropertyList')
-sparqlparser.addElement(PropertyList_p)
+PropertyList = Group(Optional(PropertyListNotEmpty) ).setName('PropertyList')
+parser.addElement(PropertyList)
 
 # [75]    TriplesSameSubject        ::=   VarOrTerm PropertyListNotEmpty | TriplesNode PropertyList
-TriplesSameSubject_p = Group((VarOrTerm_p + PropertyListNotEmpty_p) | (TriplesNode_p + PropertyList_p) ).setName('TriplesSameSubject')
-sparqlparser.addElement(TriplesSameSubject_p)
+TriplesSameSubject = Group((VarOrTerm + PropertyListNotEmpty) | (TriplesNode + PropertyList) ).setName('TriplesSameSubject')
+parser.addElement(TriplesSameSubject)
 
 # [74]    ConstructTriples          ::=   TriplesSameSubject ( '.' ConstructTriples? )? 
-ConstructTriples_p = Group(separatedList(TriplesSameSubject_p, sep='.') + Optional(PERIOD_p)).setName('ConstructTriples')
-sparqlparser.addElement(ConstructTriples_p)
+ConstructTriples = Group(separatedList(TriplesSameSubject, sep='.') + Optional(PERIOD)).setName('ConstructTriples')
+parser.addElement(ConstructTriples)
 
 # [73]    ConstructTemplate         ::=   '{' ConstructTriples? '}'
-ConstructTemplate_p = Group(LCURL_p + Optional(ConstructTriples_p) + RCURL_p ).setName('ConstructTemplate')
-sparqlparser.addElement(ConstructTemplate_p)
+ConstructTemplate = Group(LCURL + Optional(ConstructTriples) + RCURL ).setName('ConstructTemplate')
+parser.addElement(ConstructTemplate)
 
 # [72]    ExpressionList    ::=   NIL | '(' Expression ( ',' Expression )* ')' 
-ExpressionList_p << Group(NIL_p | (LPAR_p + separatedList(Expression_p) + RPAR_p))
+ExpressionList << Group(NIL | (LPAR + separatedList(Expression) + RPAR))
 
 # [70]    FunctionCall      ::=   iri ArgList 
-FunctionCall_p = Group(iri_p + ArgList_p).setName('FunctionCall')
-sparqlparser.addElement(FunctionCall_p)
+FunctionCall = Group(iri + ArgList).setName('FunctionCall')
+parser.addElement(FunctionCall)
 
 # [69]    Constraint        ::=   BrackettedExpression | BuiltInCall | FunctionCall 
-Constraint_p = Group(BracketedExpression_p | BuiltInCall_p | FunctionCall_p).setName('Constraint')
-sparqlparser.addElement(Constraint_p)
+Constraint = Group(BracketedExpression | BuiltInCall | FunctionCall).setName('Constraint')
+parser.addElement(Constraint)
 
 # [68]    Filter    ::=   'FILTER' Constraint
-Filter_p = Group(FILTER_p + Constraint_p ).setName('Filter')
-sparqlparser.addElement(Filter_p)
+Filter = Group(FILTER + Constraint ).setName('Filter')
+parser.addElement(Filter)
 
 # [67]    GroupOrUnionGraphPattern          ::=   GroupGraphPattern ( 'UNION' GroupGraphPattern )* 
-GroupOrUnionGraphPattern_p = Group(GroupGraphPattern_p + ZeroOrMore(UNION_p + GroupGraphPattern_p) ).setName('GroupOrUnionGraphPattern')
-sparqlparser.addElement(GroupOrUnionGraphPattern_p)
+GroupOrUnionGraphPattern = Group(GroupGraphPattern + ZeroOrMore(UNION + GroupGraphPattern) ).setName('GroupOrUnionGraphPattern')
+parser.addElement(GroupOrUnionGraphPattern)
 
 # [66]    MinusGraphPattern         ::=   'MINUS' GroupGraphPattern
-MinusGraphPattern_p = Group(SUBTRACT_p + GroupGraphPattern_p ).setName('MinusGraphPattern')
-sparqlparser.addElement(MinusGraphPattern_p)
+MinusGraphPattern = Group(SUBTRACT + GroupGraphPattern ).setName('MinusGraphPattern')
+parser.addElement(MinusGraphPattern)
 
 # [65]    DataBlockValue    ::=   iri | RDFLiteral | NumericLiteral | BooleanLiteral | 'UNDEF' 
-DataBlockValue_p = Group(iri_p | RDFLiteral_p | NumericLiteral_p | BooleanLiteral_p | UNDEF_p).setName('DataBlockValue')
-sparqlparser.addElement(DataBlockValue_p)
+DataBlockValue = Group(iri | RDFLiteral | NumericLiteral | BooleanLiteral | UNDEF).setName('DataBlockValue')
+parser.addElement(DataBlockValue)
 
 # [64]    InlineDataFull    ::=   ( NIL | '(' Var* ')' ) '{' ( '(' DataBlockValue* ')' | NIL )* '}' 
-InlineDataFull_p = Group(( NIL_p | (LPAR_p + ZeroOrMore(Var_p) + RPAR_p)) + LCURL_p +  ZeroOrMore((LPAR_p + ZeroOrMore(DataBlockValue_p) + RPAR_p) | NIL_p) + RCURL_p ).setName('InlineDataFull')
-sparqlparser.addElement(InlineDataFull_p)
+InlineDataFull = Group(( NIL | (LPAR + ZeroOrMore(Var) + RPAR)) + LCURL +  ZeroOrMore((LPAR + ZeroOrMore(DataBlockValue) + RPAR) | NIL) + RCURL ).setName('InlineDataFull')
+parser.addElement(InlineDataFull)
 
 # [63]    InlineDataOneVar          ::=   Var '{' DataBlockValue* '}' 
-InlineDataOneVar_p = Group(Var_p + LCURL_p + ZeroOrMore(DataBlockValue_p) + RCURL_p ).setName('InlineDataOneVar')
-sparqlparser.addElement(InlineDataOneVar_p)
+InlineDataOneVar = Group(Var + LCURL + ZeroOrMore(DataBlockValue) + RCURL ).setName('InlineDataOneVar')
+parser.addElement(InlineDataOneVar)
 
 # [62]    DataBlock         ::=   InlineDataOneVar | InlineDataFull 
-DataBlock_p = Group(InlineDataOneVar_p | InlineDataFull_p).setName('DataBlock')
-sparqlparser.addElement(DataBlock_p)
+DataBlock = Group(InlineDataOneVar | InlineDataFull).setName('DataBlock')
+parser.addElement(DataBlock)
 
 # [61]    InlineData        ::=   'VALUES' DataBlock 
-InlineData_p = Group(VALUES_p + DataBlock_p ).setName('InlineData')
-sparqlparser.addElement(InlineData_p)
+InlineData = Group(VALUES + DataBlock ).setName('InlineData')
+parser.addElement(InlineData)
 
 # [60]    Bind      ::=   'BIND' '(' Expression 'AS' Var ')' 
-Bind_p = Group(BIND_p + LPAR_p + Expression_p + AS_p + Var_p + RPAR_p ).setName('Bind')
-sparqlparser.addElement(Bind_p)
+Bind = Group(BIND + LPAR + Expression + AS + Var + RPAR ).setName('Bind')
+parser.addElement(Bind)
 
 # [59]    ServiceGraphPattern       ::=   'SERVICE' 'SILENT'? VarOrIri GroupGraphPattern 
-ServiceGraphPattern_p = Group(SERVICE_p + Optional(SILENT_p) + VarOrIri_p + GroupGraphPattern_p ).setName('ServiceGraphPattern')
-sparqlparser.addElement(ServiceGraphPattern_p)
+ServiceGraphPattern = Group(SERVICE + Optional(SILENT) + VarOrIri + GroupGraphPattern ).setName('ServiceGraphPattern')
+parser.addElement(ServiceGraphPattern)
 
 # [58]    GraphGraphPattern         ::=   'GRAPH' VarOrIri GroupGraphPattern 
-GraphGraphPattern_p = Group(GRAPH_p + VarOrIri_p + GroupGraphPattern_p ).setName('GraphGraphPattern')
-sparqlparser.addElement(GraphGraphPattern_p)
+GraphGraphPattern = Group(GRAPH + VarOrIri + GroupGraphPattern ).setName('GraphGraphPattern')
+parser.addElement(GraphGraphPattern)
 
 # [57]    OptionalGraphPattern      ::=   'OPTIONAL' GroupGraphPattern 
-OptionalGraphPattern_p = Group(OPTIONAL_p + GroupGraphPattern_p ).setName('OptionalGraphPattern')
-sparqlparser.addElement(OptionalGraphPattern_p)
+OptionalGraphPattern = Group(OPTIONAL + GroupGraphPattern ).setName('OptionalGraphPattern')
+parser.addElement(OptionalGraphPattern)
 
 # [56]    GraphPatternNotTriples    ::=   GroupOrUnionGraphPattern | OptionalGraphPattern | MinusGraphPattern | GraphGraphPattern | ServiceGraphPattern | Filter | Bind | InlineData 
-GraphPatternNotTriples_p = Group(GroupOrUnionGraphPattern_p | OptionalGraphPattern_p | MinusGraphPattern_p | GraphGraphPattern_p | ServiceGraphPattern_p | Filter_p | Bind_p | InlineData_p ).setName('GraphPatternNotTriples')
-sparqlparser.addElement(GraphPatternNotTriples_p)
+GraphPatternNotTriples = Group(GroupOrUnionGraphPattern | OptionalGraphPattern | MinusGraphPattern | GraphGraphPattern | ServiceGraphPattern | Filter | Bind | InlineData ).setName('GraphPatternNotTriples')
+parser.addElement(GraphPatternNotTriples)
                                            
 # [55]    TriplesBlock      ::=   TriplesSameSubjectPath ( '.' TriplesBlock? )? 
-TriplesBlock_p = Group(separatedList(TriplesSameSubjectPath_p, sep='.')('subjpath') + Optional(PERIOD_p)).setName('TriplesBlock')
-sparqlparser.addElement(TriplesBlock_p)
+TriplesBlock = Group(separatedList(TriplesSameSubjectPath, sep='.')('subjpath') + Optional(PERIOD)).setName('TriplesBlock')
+parser.addElement(TriplesBlock)
 
 # [54]    GroupGraphPatternSub      ::=   TriplesBlock? ( GraphPatternNotTriples '.'? TriplesBlock? )* 
-GroupGraphPatternSub_p = Group(Optional(TriplesBlock_p) + ZeroOrMore(GraphPatternNotTriples_p + Optional(PERIOD_p) + Optional(TriplesBlock_p)) ).setName('GroupGraphPatternSub')
-sparqlparser.addElement(GroupGraphPatternSub_p)
+GroupGraphPatternSub = Group(Optional(TriplesBlock) + ZeroOrMore(GraphPatternNotTriples + Optional(PERIOD) + Optional(TriplesBlock)) ).setName('GroupGraphPatternSub')
+parser.addElement(GroupGraphPatternSub)
 
-SubSelect_p = Forward().setName('SubSelect')
-sparqlparser.addElement(SubSelect_p)
+SubSelect = Forward().setName('SubSelect')
+parser.addElement(SubSelect)
 
 # [53]    GroupGraphPattern         ::=   '{' ( SubSelect | GroupGraphPatternSub ) '}' 
-GroupGraphPattern_p << Group(LCURL_p + (SubSelect_p | GroupGraphPatternSub_p)('pattern') + RCURL_p)
+GroupGraphPattern << Group(LCURL + (SubSelect | GroupGraphPatternSub)('pattern') + RCURL)
 
 # [52]    TriplesTemplate   ::=   TriplesSameSubject ( '.' TriplesTemplate? )? 
-TriplesTemplate_p = Group(separatedList(TriplesSameSubject_p, sep='.') + Optional(PERIOD_p)).setName('TriplesTemplate')
-sparqlparser.addElement(TriplesTemplate_p)
+TriplesTemplate = Group(separatedList(TriplesSameSubject, sep='.') + Optional(PERIOD)).setName('TriplesTemplate')
+parser.addElement(TriplesTemplate)
 
 # [51]    QuadsNotTriples   ::=   'GRAPH' VarOrIri '{' TriplesTemplate? '}' 
-QuadsNotTriples_p = Group(GRAPH_p + VarOrIri_p + LCURL_p + Optional(TriplesTemplate_p) + RCURL_p ).setName('QuadsNotTriples')
-sparqlparser.addElement(QuadsNotTriples_p)
+QuadsNotTriples = Group(GRAPH + VarOrIri + LCURL + Optional(TriplesTemplate) + RCURL ).setName('QuadsNotTriples')
+parser.addElement(QuadsNotTriples)
 
 # [50]    Quads     ::=   TriplesTemplate? ( QuadsNotTriples '.'? TriplesTemplate? )* 
-Quads_p = Group(Optional(TriplesTemplate_p) + ZeroOrMore(QuadsNotTriples_p + Optional(PERIOD_p) + Optional(TriplesTemplate_p)) ).setName('Quads')
-sparqlparser.addElement(Quads_p)
+Quads = Group(Optional(TriplesTemplate) + ZeroOrMore(QuadsNotTriples + Optional(PERIOD) + Optional(TriplesTemplate)) ).setName('Quads')
+parser.addElement(Quads)
 
 # [49]    QuadData          ::=   '{' Quads '}' 
-QuadData_p = Group(LCURL_p + Quads_p + RCURL_p ).setName('QuadData')
-sparqlparser.addElement(QuadData_p)
+QuadData = Group(LCURL + Quads + RCURL ).setName('QuadData')
+parser.addElement(QuadData)
 
 # [48]    QuadPattern       ::=   '{' Quads '}' 
-QuadPattern_p = Group(LCURL_p + Quads_p + RCURL_p ).setName('QuadPattern')
-sparqlparser.addElement(QuadPattern_p)
+QuadPattern = Group(LCURL + Quads + RCURL ).setName('QuadPattern')
+parser.addElement(QuadPattern)
 
 # [46]    GraphRef          ::=   'GRAPH' iri 
-GraphRef_p = Group(GRAPH_p + iri_p ).setName('GraphRef')
-sparqlparser.addElement(GraphRef_p)
+GraphRef = Group(GRAPH + iri ).setName('GraphRef')
+parser.addElement(GraphRef)
 
 # [47]    GraphRefAll       ::=   GraphRef | 'DEFAULT' | 'NAMED' | 'ALL' 
-GraphRefAll_p = Group(GraphRef_p | DEFAULT_p | NAMED_p | ALL_p ).setName('GraphRefAll')
-sparqlparser.addElement(GraphRefAll_p)
+GraphRefAll = Group(GraphRef | DEFAULT | NAMED | ALL ).setName('GraphRefAll')
+parser.addElement(GraphRefAll)
 
 # [45]    GraphOrDefault    ::=   'DEFAULT' | 'GRAPH'? iri 
-GraphOrDefault_p = Group(DEFAULT_p | (Optional(GRAPH_p) + iri_p) ).setName('GraphOrDefault')
-sparqlparser.addElement(GraphOrDefault_p)
+GraphOrDefault = Group(DEFAULT | (Optional(GRAPH) + iri) ).setName('GraphOrDefault')
+parser.addElement(GraphOrDefault)
 
 # [44]    UsingClause       ::=   'USING' ( iri | 'NAMED' iri ) 
-UsingClause_p = Group(USING_p + (iri_p | (NAMED_p + iri_p)) ).setName('UsingClause')
-sparqlparser.addElement(UsingClause_p)
+UsingClause = Group(USING + (iri | (NAMED + iri)) ).setName('UsingClause')
+parser.addElement(UsingClause)
 
 # [43]    InsertClause      ::=   'INSERT' QuadPattern 
-InsertClause_p = Group(INSERT_p + QuadPattern_p ).setName('InsertClause')
-sparqlparser.addElement(InsertClause_p)
+InsertClause = Group(INSERT + QuadPattern ).setName('InsertClause')
+parser.addElement(InsertClause)
 
 # [42]    DeleteClause      ::=   'DELETE' QuadPattern 
-DeleteClause_p = Group(DELETE_p + QuadPattern_p ).setName('DeleteClause')
-sparqlparser.addElement(DeleteClause_p)
+DeleteClause = Group(DELETE + QuadPattern ).setName('DeleteClause')
+parser.addElement(DeleteClause)
 
 # [41]    Modify    ::=   ( 'WITH' iri )? ( DeleteClause InsertClause? | InsertClause ) UsingClause* 'WHERE' GroupGraphPattern 
-Modify_p = Group(Optional(WITH_p + iri_p) + ( (DeleteClause_p + Optional(InsertClause_p) ) | InsertClause_p ) + ZeroOrMore(UsingClause_p) + WHERE_p + GroupGraphPattern_p ).setName('Modify')
-sparqlparser.addElement(Modify_p)
+Modify = Group(Optional(WITH + iri) + ( (DeleteClause + Optional(InsertClause) ) | InsertClause ) + ZeroOrMore(UsingClause) + WHERE + GroupGraphPattern ).setName('Modify')
+parser.addElement(Modify)
 
 # [40]    DeleteWhere       ::=   'DELETE WHERE' QuadPattern 
-DeleteWhere_p = Group(DELETE_WHERE_p + QuadPattern_p ).setName('DeleteWhere')
-sparqlparser.addElement(DeleteWhere_p)
+DeleteWhere = Group(DELETE_WHERE + QuadPattern ).setName('DeleteWhere')
+parser.addElement(DeleteWhere)
 
 # [39]    DeleteData        ::=   'DELETE DATA' QuadData 
-DeleteData_p = Group(DELETE_DATA_p + QuadData_p ).setName('DeleteData')
-sparqlparser.addElement(DeleteData_p)
+DeleteData = Group(DELETE_DATA + QuadData ).setName('DeleteData')
+parser.addElement(DeleteData)
 
 # [38]    InsertData        ::=   'INSERT DATA' QuadData 
-InsertData_p = Group(INSERT_DATA_p + QuadData_p ).setName('InsertData')
-sparqlparser.addElement(InsertData_p)
+InsertData = Group(INSERT_DATA + QuadData ).setName('InsertData')
+parser.addElement(InsertData)
 
 # [37]    Copy      ::=   'COPY' 'SILENT'? GraphOrDefault 'TO' GraphOrDefault 
-Copy_p = Group(COPY_p + Optional(SILENT_p) + GraphOrDefault_p + TO_p + GraphOrDefault_p ).setName('Copy')
-sparqlparser.addElement(Copy_p)
+Copy = Group(COPY + Optional(SILENT) + GraphOrDefault + TO + GraphOrDefault ).setName('Copy')
+parser.addElement(Copy)
 
 # [36]    Move      ::=   'MOVE' 'SILENT'? GraphOrDefault 'TO' GraphOrDefault 
-Move_p = Group(MOVE_p + Optional(SILENT_p) + GraphOrDefault_p + TO_p + GraphOrDefault_p ).setName('Move')
-sparqlparser.addElement(Move_p)
+Move = Group(MOVE + Optional(SILENT) + GraphOrDefault + TO + GraphOrDefault ).setName('Move')
+parser.addElement(Move)
 
 # [35]    Add       ::=   'ADD' 'SILENT'? GraphOrDefault 'TO' GraphOrDefault 
-Add_p = Group(ADD_p + Optional(SILENT_p) + GraphOrDefault_p + TO_p + GraphOrDefault_p ).setName('Add')
-sparqlparser.addElement(Add_p)
+Add = Group(ADD + Optional(SILENT) + GraphOrDefault + TO + GraphOrDefault ).setName('Add')
+parser.addElement(Add)
 
 # [34]    Create    ::=   'CREATE' 'SILENT'? GraphRef 
-Create_p = Group(CREATE_p + Optional(SILENT_p) + GraphRef_p).setName('Create')
-sparqlparser.addElement(Create_p)
+Create = Group(CREATE + Optional(SILENT) + GraphRef).setName('Create')
+parser.addElement(Create)
 
 # [33]    Drop      ::=   'DROP' 'SILENT'? GraphRefAll 
-Drop_p = Group(DROP_p + Optional(SILENT_p) + GraphRefAll_p).setName('Drop')
-sparqlparser.addElement(Drop_p)
+Drop = Group(DROP + Optional(SILENT) + GraphRefAll).setName('Drop')
+parser.addElement(Drop)
 
 # [32]    Clear     ::=   'CLEAR' 'SILENT'? GraphRefAll 
-Clear_p = Group(CLEAR_p + Optional(SILENT_p) + GraphRefAll_p ).setName('Clear')
-sparqlparser.addElement(Clear_p)
+Clear = Group(CLEAR + Optional(SILENT) + GraphRefAll ).setName('Clear')
+parser.addElement(Clear)
 
 # [31]    Load      ::=   'LOAD' 'SILENT'? iri ( 'INTO' GraphRef )? 
-Load_p = Group(LOAD_p + Optional(SILENT_p) + iri_p  + Optional(INTO_p + GraphRef_p)).setName('Load')
-sparqlparser.addElement(Load_p)
+Load = Group(LOAD + Optional(SILENT) + iri  + Optional(INTO + GraphRef)).setName('Load')
+parser.addElement(Load)
 
 # [30]    Update1   ::=   Load | Clear | Drop | Add | Move | Copy | Create | InsertData | DeleteData | DeleteWhere | Modify 
-Update1_p = Group(Load_p | Clear_p | Drop_p | Add_p | Move_p | Copy_p | Create_p | InsertData_p | DeleteData_p | DeleteWhere_p | Modify_p ).setName('Update1')
-sparqlparser.addElement(Update1_p)
+Update1 = Group(Load | Clear | Drop | Add | Move | Copy | Create | InsertData | DeleteData | DeleteWhere | Modify ).setName('Update1')
+parser.addElement(Update1)
 
-Prologue_p = Forward().setName('Prologue')
-sparqlparser.addElement(Prologue_p)
+Prologue = Forward().setName('Prologue')
+parser.addElement(Prologue)
 
-Update_p = Forward().setName('Update')
-sparqlparser.addElement(Update_p)
+Update = Forward().setName('Update')
+parser.addElement(Update)
 
 # [29]    Update    ::=   Prologue ( Update1 ( ';' Update )? )? 
-Update_p << Group(Prologue_p + Optional(Update1_p + Optional(SEMICOL_p + Update_p)))
+Update << Group(Prologue + Optional(Update1 + Optional(SEMICOL + Update)))
 
 # [28]    ValuesClause      ::=   ( 'VALUES' DataBlock )? 
-ValuesClause_p = Group(Optional(VALUES_p + DataBlock_p) ).setName('ValuesClause')
-sparqlparser.addElement(ValuesClause_p)
+ValuesClause = Group(Optional(VALUES + DataBlock) ).setName('ValuesClause')
+parser.addElement(ValuesClause)
 
 # [27]    OffsetClause      ::=   'OFFSET' INTEGER 
-OffsetClause_p = Group(OFFSET_p + INTEGER_p ).setName('OffsetClause')
-sparqlparser.addElement(OffsetClause_p)
+OffsetClause = Group(OFFSET + INTEGER ).setName('OffsetClause')
+parser.addElement(OffsetClause)
 
 # [26]    LimitClause       ::=   'LIMIT' INTEGER 
-LimitClause_p = Group(LIMIT_p + INTEGER_p ).setName('LimitClause')
-sparqlparser.addElement(LimitClause_p)
+LimitClause = Group(LIMIT + INTEGER ).setName('LimitClause')
+parser.addElement(LimitClause)
 
 # [25]    LimitOffsetClauses        ::=   LimitClause OffsetClause? | OffsetClause LimitClause? 
-LimitOffsetClauses_p = Group((LimitClause_p + Optional(OffsetClause_p)) | (OffsetClause_p + Optional(LimitClause_p))).setName('LimitOffsetClauses')
-sparqlparser.addElement(LimitOffsetClauses_p)
+LimitOffsetClauses = Group((LimitClause + Optional(OffsetClause)) | (OffsetClause + Optional(LimitClause))).setName('LimitOffsetClauses')
+parser.addElement(LimitOffsetClauses)
 
 # [24]    OrderCondition    ::=   ( ( 'ASC' | 'DESC' ) BrackettedExpression ) | ( Constraint | Var ) 
-OrderCondition_p =   Group(((ASC_p | DESC_p) + BracketedExpression_p) | (Constraint_p | Var_p)).setName('OrderCondition')
-sparqlparser.addElement(OrderCondition_p)
+OrderCondition =   Group(((ASC | DESC) + BracketedExpression) | (Constraint | Var)).setName('OrderCondition')
+parser.addElement(OrderCondition)
 
 # [23]    OrderClause       ::=   'ORDER' 'BY' OrderCondition+ 
-OrderClause_p = Group(ORDER_BY_p + OneOrMore(OrderCondition_p) ).setName('OrderClause')
-sparqlparser.addElement(OrderClause_p)
+OrderClause = Group(ORDER_BY + OneOrMore(OrderCondition) ).setName('OrderClause')
+parser.addElement(OrderClause)
 
 # [22]    HavingCondition   ::=   Constraint 
-HavingCondition_p = Group(Constraint_p).setName('HavingCondition')
-sparqlparser.addElement(HavingCondition_p)
+HavingCondition = Group(Constraint).setName('HavingCondition')
+parser.addElement(HavingCondition)
 
 # [21]    HavingClause      ::=   'HAVING' HavingCondition+ 
-HavingClause_p = Group(HAVING_p + OneOrMore(HavingCondition_p) ).setName('HavingClause')
-sparqlparser.addElement(HavingClause_p)
+HavingClause = Group(HAVING + OneOrMore(HavingCondition) ).setName('HavingClause')
+parser.addElement(HavingClause)
 
 # [20]    GroupCondition    ::=   BuiltInCall | FunctionCall | '(' Expression ( 'AS' Var )? ')' | Var 
-GroupCondition_p = Group(BuiltInCall_p | FunctionCall_p | (LPAR_p + Expression_p + Optional(AS_p + Var_p) + RPAR_p) | Var_p ).setName('GroupCondition')
-sparqlparser.addElement(GroupCondition_p)
+GroupCondition = Group(BuiltInCall | FunctionCall | (LPAR + Expression + Optional(AS + Var) + RPAR) | Var ).setName('GroupCondition')
+parser.addElement(GroupCondition)
 
 # [19]    GroupClause       ::=   'GROUP' 'BY' GroupCondition+ 
-GroupClause_p = Group(GROUP_BY_p + OneOrMore(GroupCondition_p) ).setName('GroupClause')
-sparqlparser.addElement(GroupClause_p)
+GroupClause = Group(GROUP_BY + OneOrMore(GroupCondition) ).setName('GroupClause')
+parser.addElement(GroupClause)
 
 # [18]    SolutionModifier          ::=   GroupClause? HavingClause? OrderClause? LimitOffsetClauses? 
-SolutionModifier_p = Group(Optional(GroupClause_p) + Optional(HavingClause_p) + Optional(OrderClause_p) + Optional(LimitOffsetClauses_p) ).setName('SolutionModifier')
-sparqlparser.addElement(SolutionModifier_p)
+SolutionModifier = Group(Optional(GroupClause) + Optional(HavingClause) + Optional(OrderClause) + Optional(LimitOffsetClauses) ).setName('SolutionModifier')
+parser.addElement(SolutionModifier)
 
 # [17]    WhereClause       ::=   'WHERE'? GroupGraphPattern 
-WhereClause_p = Group(Optional(WHERE_p) + GroupGraphPattern_p ).setName('WhereClause')
-sparqlparser.addElement(WhereClause_p)
+WhereClause = Group(Optional(WHERE) + GroupGraphPattern ).setName('WhereClause')
+parser.addElement(WhereClause)
 
 # [16]    SourceSelector    ::=   iri 
-SourceSelector_p = Group(iri_p).setName('SourceSelector')
-sparqlparser.addElement(SourceSelector_p)
+SourceSelector = Group(iri).setName('SourceSelector')
+parser.addElement(SourceSelector)
 
 # [15]    NamedGraphClause          ::=   'NAMED' SourceSelector 
-NamedGraphClause_p = Group(NAMED_p + SourceSelector_p ).setName('NamedGraphClause')
-sparqlparser.addElement(NamedGraphClause_p)
+NamedGraphClause = Group(NAMED + SourceSelector ).setName('NamedGraphClause')
+parser.addElement(NamedGraphClause)
 
 # [14]    DefaultGraphClause        ::=   SourceSelector 
-DefaultGraphClause_p = Group(SourceSelector_p).setName('DefaultGraphClause')
-sparqlparser.addElement(DefaultGraphClause_p)
+DefaultGraphClause = Group(SourceSelector).setName('DefaultGraphClause')
+parser.addElement(DefaultGraphClause)
 
 # [13]    DatasetClause     ::=   'FROM' ( DefaultGraphClause | NamedGraphClause ) 
-DatasetClause_p = Group(FROM_p + (DefaultGraphClause_p | NamedGraphClause_p) ).setName('DatasetClause')
-sparqlparser.addElement(DatasetClause_p)
+DatasetClause = Group(FROM + (DefaultGraphClause | NamedGraphClause) ).setName('DatasetClause')
+parser.addElement(DatasetClause)
 
 # [12]    AskQuery          ::=   'ASK' DatasetClause* WhereClause SolutionModifier 
-AskQuery_p = Group(ASK_p + ZeroOrMore(DatasetClause_p) + WhereClause_p + SolutionModifier_p ).setName('AskQuery')
-sparqlparser.addElement(AskQuery_p)
+AskQuery = Group(ASK + ZeroOrMore(DatasetClause) + WhereClause + SolutionModifier ).setName('AskQuery')
+parser.addElement(AskQuery)
 
 # [11]    DescribeQuery     ::=   'DESCRIBE' ( VarOrIri+ | '*' ) DatasetClause* WhereClause? SolutionModifier 
-DescribeQuery_p = Group(DESCRIBE_p + (OneOrMore(VarOrIri_p) | ALL_VALUES_p) + ZeroOrMore(DatasetClause_p) + Optional(WhereClause_p) + SolutionModifier_p ).setName('DescribeQuery')
-sparqlparser.addElement(DescribeQuery_p)
+DescribeQuery = Group(DESCRIBE + (OneOrMore(VarOrIri) | ALL_VALUES) + ZeroOrMore(DatasetClause) + Optional(WhereClause) + SolutionModifier ).setName('DescribeQuery')
+parser.addElement(DescribeQuery)
 
 # [10]    ConstructQuery    ::=   'CONSTRUCT' ( ConstructTemplate DatasetClause* WhereClause SolutionModifier | DatasetClause* 'WHERE' '{' TriplesTemplate? '}' SolutionModifier ) 
-ConstructQuery_p = Group(CONSTRUCT_p + ((ConstructTemplate_p + ZeroOrMore(DatasetClause_p) + WhereClause_p + SolutionModifier_p) | \
-                                      (ZeroOrMore(DatasetClause_p) + WHERE_p + LCURL_p +  Optional(TriplesTemplate_p) + RCURL_p + SolutionModifier_p))).setName('ConstructQuery')
-sparqlparser.addElement(ConstructQuery_p)
+ConstructQuery = Group(CONSTRUCT + ((ConstructTemplate + ZeroOrMore(DatasetClause) + WhereClause + SolutionModifier) | \
+                                      (ZeroOrMore(DatasetClause) + WHERE + LCURL +  Optional(TriplesTemplate) + RCURL + SolutionModifier))).setName('ConstructQuery')
+parser.addElement(ConstructQuery)
 
 # [9]     SelectClause      ::=   'SELECT' ( 'DISTINCT' | 'REDUCED' )? ( ( Var | ( '(' Expression 'AS' Var ')' ) )+ | '*' ) 
-SelectClause_p = Group(SELECT_p + Optional(DISTINCT_p | REDUCED_p) + ( OneOrMore(Var_p | (LPAR_p + Expression_p + AS_p + Var_p + RPAR_p)) | ALL_VALUES_p ) ).setName('SelectClause')
-sparqlparser.addElement(SelectClause_p)
+SelectClause = Group(SELECT + Optional(DISTINCT | REDUCED) + ( OneOrMore(Var | (LPAR + Expression + AS + Var + RPAR)) | ALL_VALUES ) ).setName('SelectClause')
+parser.addElement(SelectClause)
 
 # [8]     SubSelect         ::=   SelectClause WhereClause SolutionModifier ValuesClause 
-SubSelect_p << Group(SelectClause_p + WhereClause_p + SolutionModifier_p + ValuesClause_p)
+SubSelect << Group(SelectClause + WhereClause + SolutionModifier + ValuesClause)
 
 # [7]     SelectQuery       ::=   SelectClause DatasetClause* WhereClause SolutionModifier 
-SelectQuery_p = Group(SelectClause_p + ZeroOrMore(DatasetClause_p) + WhereClause_p + SolutionModifier_p ).setName('SelectQuery')
-sparqlparser.addElement(SelectQuery_p)
+SelectQuery = Group(SelectClause + ZeroOrMore(DatasetClause) + WhereClause + SolutionModifier ).setName('SelectQuery')
+parser.addElement(SelectQuery)
 
 # [6]     PrefixDecl        ::=   'PREFIX' PNAME_NS IRIREF 
-PrefixDecl_p = Group(PREFIX_p + PNAME_NS_p + IRIREF_p ).setName('PrefixDecl')
-sparqlparser.addElement(PrefixDecl_p)
+PrefixDecl = Group(PREFIX + PNAME_NS + IRIREF ).setName('PrefixDecl')
+parser.addElement(PrefixDecl)
 
 # [5]     BaseDecl          ::=   'BASE' IRIREF 
-BaseDecl_p = Group(BASE_p + IRIREF_p ).setName('BaseDecl')
-sparqlparser.addElement(BaseDecl_p)
+BaseDecl = Group(BASE + IRIREF ).setName('BaseDecl')
+parser.addElement(BaseDecl)
 
 # [4]     Prologue          ::=   ( BaseDecl | PrefixDecl )* 
-Prologue_p << Group(ZeroOrMore(BaseDecl_p | PrefixDecl_p))
+Prologue << Group(ZeroOrMore(BaseDecl | PrefixDecl))
 
 # [3]     UpdateUnit        ::=   Update 
-UpdateUnit_p = Group(Update_p ).setName('UpdateUnit')
-sparqlparser.addElement(UpdateUnit_p)
+UpdateUnit = Group(Update ).setName('UpdateUnit')
+parser.addElement(UpdateUnit)
 
 # [2]     Query     ::=   Prologue ( SelectQuery | ConstructQuery | DescribeQuery | AskQuery ) ValuesClause 
-Query_p = Group(Prologue_p + ( SelectQuery_p | ConstructQuery_p | DescribeQuery_p | AskQuery_p ) + ValuesClause_p ).setName('Query')
-sparqlparser.addElement(Query_p)
+Query = Group(Prologue + ( SelectQuery | ConstructQuery | DescribeQuery | AskQuery ) + ValuesClause ).setName('Query')
+parser.addElement(Query)
 
 # [1]     QueryUnit         ::=   Query 
-QueryUnit_p = Group(Query_p).setName('QueryUnit')
-sparqlparser.addElement(QueryUnit_p)
+QueryUnit = Group(Query).setName('QueryUnit')
+parser.addElement(QueryUnit)
  
-if __name__ == '__main__':
-    s = '"work"@en-bf'
-    r = RDFLiteral_p.parseString(s)[0]
-    print(r.dump())
-    r = sparqlparser.RDFLiteral(s)
-    print(r.dump())
-    pass
+

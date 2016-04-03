@@ -4,7 +4,7 @@ Created on 23 feb. 2016
 @author: jeroenbruijning
 '''
 from pyparsing import ParseException
-from parsertools.parsers.sparqlparser import sparqlparser as parser
+from parsertools.parsers.sparqlparser import parser
 from parsertools.parsers.sparqlparser import stripComments
 
 actions = {'mf:PositiveUpdateSyntaxTest11': [], 'mf:NegativeUpdateSyntaxTest11': []}
