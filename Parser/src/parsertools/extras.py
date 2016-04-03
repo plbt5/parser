@@ -4,21 +4,20 @@ Created on 29 mrt. 2016
 @author: jeroenbruijning
 '''
 from pyparsing import delimitedList
-from parsertools import do_parseactions
-from parsertools.base import ParseInfo
+from parsertools.base import ParseStruct
 
 def separatedList(pattern, sep=','):
-    '''Similar to a delimited list of instances from a ParseInfo subclass, but includes the separator in its ParseResults. Returns a 
+    '''Similar to a delimited list of instances from a ParseStruct subclass, but includes the separator in its ParseResults. Returns a 
     ParseResults object containing a simple list of matched tokens separated by the separator.'''
       
     def makeList(parseresults):
         assert len(parseresults) > 0, 'internal error'
         assert len(list((parseresults.keys()))) <= 1, 'internal error, got more than one key: {}'.format(list(parseresults.keys()))
         label = list(parseresults.keys())[0] if len(list(parseresults.keys())) == 1 else None
-        assert all([p.__class__.pattern == pattern for p in parseresults if isinstance(p, ParseInfo)]), 'internal error: pattern mismatch ({}, {})'.format(p.__class__.pattern, pattern)
+        assert all([p.__class__.pattern == pattern for p in parseresults if isinstance(p, ParseStruct)]), 'internal error: pattern mismatch ({}, {})'.format(p.__class__.pattern, pattern)
         templist = []
         for item in parseresults:
-            if isinstance(item, ParseInfo):
+            if isinstance(item, ParseStruct):
 #                 i = [label, item]
 #                 item.__dict__['label'] = i[0]
 #                 templist.append([label, item])
@@ -37,6 +36,5 @@ def separatedList(pattern, sep=','):
   
       
     result = delimitedList(pattern, sep)
-    if do_parseactions:
-        result.setParseAction(makeList)
+    result.setParseAction(makeList)
     return result

@@ -15,29 +15,7 @@ from parsertools import SparqlParserException
 def parseQuery(querystring):
     '''Entry point to parse any SPARQL query'''
     
-    def stripComments(text):
-        '''Strips SPARQL-style comments from a multiline string'''
-        if isinstance(text, list):
-            text = '\n'.join(text)
-        Comment = Literal('#') + SkipTo(lineEnd)
-        NormalText = Regex('[^#<\'"]+')    
-        Line = ZeroOrMore(String | (IRIREF | Literal('<')) | NormalText) + Optional(Comment) + lineEnd
-        Line.ignore(Comment)
-        Line.setParseAction(lambda tokens: ' '.join([t if isinstance(t, str) else t.__str__() for t in tokens]))
-        lines = text.split('\n')
-        return '\n'.join([Line.parseString(l)[0] for l in lines])
-    
-    def prepareQuery(querystring):
-        '''Used to prepare a string for parsing. See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
-        strippedQuery = stripComments(querystring)
-        # TODO: finish
-        return strippedQuery
-    
-    def checkQueryResult(r):
-        '''Used to preform additional checks on the parse result. These are conditions that are not covered by the EBNF syntax.
-        See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
-        #TODO: finish
-        return True
+
     
     s = prepareQuery(querystring)
     
@@ -54,6 +32,34 @@ def parseQuery(querystring):
     assert checkQueryResult(result), 'Fault in postprocessing query {}'.format(querystring)
     
     return result
+
+#
+# Utility functions
+#
+
+def stripComments(text):
+    '''Strips SPARQL-style comments from a multiline string'''
+    if isinstance(text, list):
+        text = '\n'.join(text)
+    Comment = Literal('#') + SkipTo(lineEnd)
+    NormalText = Regex('[^#<\'"]+')    
+    Line = ZeroOrMore(String | (IRIREF | Literal('<')) | NormalText) + Optional(Comment) + lineEnd
+    Line.ignore(Comment)
+    Line.setParseAction(lambda tokens: ' '.join([t if isinstance(t, str) else t.__str__() for t in tokens]))
+    lines = text.split('\n')
+    return '\n'.join([Line.parseString(l)[0] for l in lines])
+
+def prepareQuery(querystring):
+    '''Used to prepare a string for parsing. See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
+    strippedQuery = stripComments(querystring)
+    # TODO: finish
+    return strippedQuery
+
+def checkQueryResult(r):
+    '''Used to preform additional checks on the parse result. These are conditions that are not covered by the EBNF syntax.
+    See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
+    #TODO: finish
+    return True
 
 #
 # Create the parser object

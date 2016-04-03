@@ -6,42 +6,44 @@ Created on 3 mrt. 2016
 from pyparsing import *
 from parsertools import SparqlParserException
 
-class ParseInfo:
-    '''Parent class for all ParseInfo subclasses. These subclasses correspond to productions in the SPARQL EBNF grammar.'''
+class ParseStruct:
+    '''Parent class for all ParseStruct subclasses. These subclasses correspond to productions in the SPARQL EBNF grammar.'''
+    
     def __init__(self, *args):
-        '''A ParseInfo object can be initialized wih either a valid string for the subclass concerned,
+        '''A ParseStruct object can be initialized wih either a valid string for the subclass concerned,
         using its own pattern attribute to parse it, or it can be initialized with a label and a list of items
-        which together form an existing and valid parse result. The latter option is only meant to be
+        which together form a valid parse result. The latter option is only meant to be
         used by internal parser processes. The normal use case is to feed it with a string.
         Each of the items is a pair consisting of a label and either
         - a string
-        - another ParseInfo object.
-        Only in the latter case the label can be other than None.
-        This nested list is the basic internal structure for the class and contains all parsing information.'''
+        - another ParseStruct object.
+        This nested list is the basic internal structure for the class and contains all relevant parsing information.
+        In addition to the above, this includes a parent pointer in case the element is part of a larger ParseStruct instance.'''
         
-#         print('ParseInfo in   :', args)
         self.__dict__['label'] = None
         self.__dict__['parent'] = None
+        
         if len(args) == 2:
-#             self.__dict__['name'] = args[0] 
-#             self.__dict__['name'] = None
             self.__dict__['items'] = args[1] 
         else:
             assert len(args) == 1 and isinstance(args[0], str)
-#             self.__dict__['name'] = None
             self.__dict__['items'] = self.__getPattern().parseString(args[0], parseAll=True)[0].items
-        self.createParentPointers()
+        self.__createParentPointers()
                 
     def __eq__(self, other):
-        '''Compares the items part of both instances (of the same class) for equality, recursively.
+        '''Compares the instances for equality of:
+        - class
+        - string representation.
         This means that the labels  and parent pointers are not taken into account. This is because
-        these are a form of annotation, separate from the parse tree in terms of
-        encountered production rules. Equality means that all productions are identical.'''
-        return self.__class__ == other.__class__ and self.items == other.items
+        these are a form of annotation, separate from the parse tree in terms of resolved production rules.'''
+        
+        return self.__class__ == other.__class__ and str(self) == str(other)
     
     def __getattr__(self, att):
-        '''Retrieves the attribute concerned, if it exists. Otherwise, it returns the unique element corresponding to the label (non-recursive) if that exists.
+        '''Retrieves the attribute concerned, if it exists as a normal attribute. Otherwise, it returns the unique, direct subelement corresponding 
+        having a label with that name, if it exists.
         Raises an exception if zero, or more than one values exist for that label.'''
+        
         if att in self.__dict__:
             return self.__dict__[att]
         if att in self.getLabels():
@@ -53,31 +55,25 @@ class ParseInfo:
 #         
     def __setattr__(self, label, value):
         '''Raises exception when trying to set attributes directly.Elements are to be changed using "updateWith()".'''
+        
         raise AttributeError('Direct setting of attributes not allowed. To change a labeled element, try updateWith() instead.')
     
     def __repr__(self):
         return self.__class__.__name__ + '("' + str(self) + '")'
     
     def __str__(self):
-        '''Generates the string corresponding to the object. Except for whitespace variations, 
+        '''Generates the string corresponding to the object. Except for possible whitespace variation, 
         this is identical to the string that was used to create the object.'''
+        
         sep = ' '
         result = []
         for t in self.items:
             if isinstance(t, str):
                 result.append(t) 
             else:
-                if not isinstance(t, ParseInfo):
-                    print()
-                assert isinstance(t, ParseInfo), '__str__: found value {} of type {} instead of ParseInfo instance'.format(t, type(t))
+                assert isinstance(t, ParseStruct), '__str__: found value {} of type {} instead of ParseStruct instance'.format(t, type(t))
                 result.append(str(t))
         return sep.join([r for r in result if r != ''])
-   
-#     def __isLabelConsistent(self):
-#         '''Checks if for labels are only not None for pairs [label, value] where value is a ParseInfo instance, and in those cases label must be equal to value.name.
-#         This is for internal use only.'''
-#         return all([i[0] == i[1].label if isinstance(i[1], ParseInfo) else i[0] == None if isinstance(i[1], str) else False for i in self.getItems()]) and \
-#                 all([i[1].__isLabelConsistent() if isinstance(i[1], ParseInfo) else i[0] == None for i in self.getItems()])
 
     def __getPattern(self):
         '''Returns the pattern used to parse expressions for this class.'''
@@ -90,16 +86,14 @@ class ParseInfo:
         return result
     
     def __getElements(self, labeledOnly = True):
-        '''For internal use. Returns a flat list of all enmbedded ParseInfo instances (inclusing itself),
+        '''Returns a flat list of all enmbedded ParseStruct instances (inclusing itself),
         at any depth of recursion.
         If labeledOnly is True, then in addition label may not be None.'''
         
         def flattenElement(p):
             result = []
-            if isinstance(p, ParseInfo):
+            if isinstance(p, ParseStruct):
                 result.extend(p.__getElements(labeledOnly=labeledOnly))
-#             elif isinstance (p[1], list):
-#                 result.extend(flattenList(p[1]))
             else:
                 assert isinstance(p, str), type(p)
             return result
@@ -116,9 +110,9 @@ class ParseInfo:
         result.extend(flattenList(self.getItems()))
         return result  
     
-    def createParentPointers(self):
+    def __createParentPointers(self):
         for i in self.getItems():
-            if isinstance(i, ParseInfo):
+            if isinstance(i, ParseStruct):
                 i.__dict__['parent'] = self
     
     def searchElements(self, *, label=None, element_type = None, value = None, labeledOnly=False):
@@ -151,6 +145,7 @@ class ParseInfo:
         '''Replaces the items attribute with the items attribute of a freshly parsed new_content, which must be a string.
         The parsing is done with the pattern of the element being updated.
         This is the core function to change elements in place.'''
+        
         assert isinstance(new_content, str), 'UpdateFrom function needs a string'
         try:
             other = self.pattern.parseString(new_content)[0]
@@ -174,36 +169,28 @@ class ParseInfo:
         return self.yieldsValidExpression() and self.isValid()
 
     def getLabel(self):
-        '''Returns name attribute (non-recursive).'''
+        '''Returns name attribute.'''
         return self.label
 
     def getItems(self):
-        '''Returns items attribute (non-recursive).'''
+        '''Returns items attribute.'''
         return self.items
-    
-    def getValues(self):
-        '''Returns list of all values from items attribute (non-recursive).'''
-        return [i[1] for i in self.getItems()]
-     
-    def getLabels(self):
-        '''Returns list of all labels from items attribute (non-recursive).'''
-        return(filter(None, [i.getLabel() for i in self.getItems() if isinstance(i, ParseInfo)]))
-    
+
     def hasLabel(self, k):
         '''True if k present as label (non-recursive).'''
         return k in self.getLabels()
+     
+    def getLabels(self):
+        '''Returns list of all labels from items attribute (non-recursive).'''
+        return(filter(None, [i.getLabel() for i in self.getItems() if isinstance(i, ParseStruct)]))
     
     def getValuesForLabel(self, k):
         '''Returns list of all values for label. (Non-recursive).'''
-        return [i for i in self.getItems() if isinstance(i, ParseInfo) and i.label == k]
-    
-#     def getItemsForLabel(self, k):
-#         '''Returns list of items with given label. (Non-recursive).'''
-#         return [i for i in self.getItems() if isinstance(i, ParseInfo) and i.label == k]
+        return [i for i in self.getItems() if isinstance(i, ParseStruct) and i.label == k]
     
     def getChildren(self):
         '''Returns a list of all its child elements.'''
-        return [i for i in self.getItems() if isinstance(i, ParseInfo)]
+        return [i for i in self.getItems() if isinstance(i, ParseStruct)]
     
     def getParent(self):
         '''Returns a list of its parent element, which is the first element encountered when going up in the parse tree.
@@ -224,7 +211,7 @@ class ParseInfo:
         return len(self.getItems()) > 1
             
     def isAtom(self):
-        '''Test whether the node has no ParseInfo subnode, but instead contains a string.'''
+        '''Test whether the node has no ParseStruct subnode, but instead contains a string.'''
         return len(self.getItems()) == 1 and isinstance(self.items[0], str)
     
     def descend(self):
@@ -245,10 +232,8 @@ class ParseInfo:
             for i in items:
                 if isinstance(i, str):
                     result += dumpString(i, indent+step, step)
-#                 elif isinstance(v, list):
-#                     dumpItems(v, indent+step, step)
                 else:
-                    assert isinstance(i, ParseInfo) 
+                    assert isinstance(i, ParseStruct) 
                     result += i.dump(indent+step, step)
             return result       
        
@@ -256,33 +241,6 @@ class ParseInfo:
         result += dumpItems(self.items, indent, step)
         
         return result
-
-#     def __str__(self):
-#         '''Generates the string corresponding to the object. Except for whitespace variations, 
-#         this is identical to the string that was used to create the object.'''
-#         sep = ' '
-# #         def renderList(l):
-# #             resultList = []
-# #             for i in l:
-# #                 if isinstance(i, str):
-# #                     resultList.append(i)
-# #                     continue
-# #                 if isinstance(i, ParseInfo):
-# #                     resultList.append(i.__str__())
-# #                     continue
-# #                 if isinstance(i, list):
-# #                     resultList.append(renderList(i))
-# #             return sep.join(resultList)
-#         result = []
-#         for t in self.items:
-#             if isinstance(t[1], str):
-#                 result.append(t[1]) 
-# #             elif isinstance(t[1], list):
-# #                 result.append(renderList(t[1]))
-#             else:
-#                 assert isinstance(t[1], ParseInfo), type(t[1])
-#                 result.append(t[1].__str__())
-#         return sep.join([r for r in result if r != ''])
     
     def render(self):
         print(self.__str__())
@@ -299,19 +257,18 @@ class ParseInfo:
     def isValid(self):
         '''Returns True if the object is equal to the result of re-parsing its own rendering.
         This should normally be the case.'''
-        return self.getItems() == self.__getPattern().parseString(self.__str__())[0].getItems()
+        return self == self.__getPattern().parseString(self.__str__())[0]
     
     
 def parseInfoFunc(cls):
-    '''Returns the function that converts a ParseResults object to a ParseInfo object of class "cls", with label set to None, and
+    '''Returns the function that converts a ParseResults object to a ParseStruct object of class "cls", with label set to None, and
     items set to a recursive list of [None, value] pairs (see below).
     The function returned is used to set a parseAction for a pattern.'''
             
     def labeledList(parseresults):
         '''For internal use. Converts a ParseResults object to a recursive structure consisting of a list of pairs [None, obj],
-        obj either a string, a ParseInfo object, or again a similar list.'''
-#         print(cls)
-#         print('LabeledList in :', parseresults)
+        obj either a string, a ParseStruct object, or again a similar list.'''
+        
         while len(parseresults) == 1 and isinstance(parseresults[0], ParseResults):
             parseresults = parseresults[0]
         valuedict = dict((id(t), k) for (k, t) in parseresults.items())
@@ -319,14 +276,8 @@ def parseInfoFunc(cls):
         result = []
         for t in parseresults:
             if isinstance(t, str):
-#                 i = [None, t]
-#                 result.append(i)
                 result.append(t)
-            elif isinstance(t, ParseInfo):
-#                 t.createParentPointers()
-#                 i = [valuedict.get(id(t)), t]
-#                 t.__dict__['label'] = i[0]
-#                 result.append(i)
+            elif isinstance(t, ParseStruct):
                 if t.__dict__['label'] == None:
                     t.__dict__['label'] = valuedict.get(id(t))
                 result.append(t)
@@ -334,25 +285,22 @@ def parseInfoFunc(cls):
                 result.append(t)
             else:
                 assert isinstance(t, ParseResults), type(t)
-#                 if not valuedict.get(id(t)) == None:
-#                     print()
-#                 if valuedict.get(id(t)) != None:
-#                     print('\n*** label {} found for compound expression {}'.format(valuedict.get(id(t)), t.__str__()))
                 assert valuedict.get(id(t)) == None, 'Error: found label ({}) for compound expression {}, remove'.format(valuedict.get(id(t)), t.__str__())
                 result.extend(labeledList(t))
-#         print('LabeledList uit:', result)
         return result
     
     def makeparseinfo(parseresults):
         '''The function to be returned.'''
-        assert ParseInfo in cls.__bases__
+        assert ParseStruct in cls.__bases__
         assert isinstance(parseresults, ParseResults)
         return cls(None, labeledList(parseresults))  
     
     return makeparseinfo
 
 class Parser:
+    '''The main class for clients to use when parsing (sub)expressions of the language.'''
+    
     def addElement(self, pattern):
-        setattr(self, pattern.name, type(pattern.name, (ParseInfo,), {'pattern': pattern}))
+        setattr(self, pattern.name, type(pattern.name, (ParseStruct,), {'pattern': pattern}))
         pattern.setParseAction(parseInfoFunc(getattr(self, pattern.name)))
                            
