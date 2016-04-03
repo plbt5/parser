@@ -1342,15 +1342,15 @@ DatasetClause = Group(FROM + (DefaultGraphClause | NamedGraphClause) ).setName('
 parser.addElement(DatasetClause)
 
 # [12]    AskQuery          ::=   'ASK' DatasetClause* WhereClause SolutionModifier 
-AskQuery = Group(ASK + ZeroOrMore(DatasetClause) + WhereClause + SolutionModifier ).setName('AskQuery')
+AskQuery = Group(ASK + ZeroOrMore(DatasetClause) + WhereClause('where') + SolutionModifier ).setName('AskQuery')
 parser.addElement(AskQuery)
 
 # [11]    DescribeQuery     ::=   'DESCRIBE' ( VarOrIri+ | '*' ) DatasetClause* WhereClause? SolutionModifier 
-DescribeQuery = Group(DESCRIBE + (OneOrMore(VarOrIri) | ALL_VALUES) + ZeroOrMore(DatasetClause) + Optional(WhereClause) + SolutionModifier ).setName('DescribeQuery')
+DescribeQuery = Group(DESCRIBE + (OneOrMore(VarOrIri) | ALL_VALUES) + ZeroOrMore(DatasetClause) + Optional(WhereClause('where')) + SolutionModifier ).setName('DescribeQuery')
 parser.addElement(DescribeQuery)
 
 # [10]    ConstructQuery    ::=   'CONSTRUCT' ( ConstructTemplate DatasetClause* WhereClause SolutionModifier | DatasetClause* 'WHERE' '{' TriplesTemplate? '}' SolutionModifier ) 
-ConstructQuery = Group(CONSTRUCT + ((ConstructTemplate + ZeroOrMore(DatasetClause) + WhereClause + SolutionModifier) | \
+ConstructQuery = Group(CONSTRUCT + ((ConstructTemplate + ZeroOrMore(DatasetClause) + WhereClause('where') + SolutionModifier) | \
                                       (ZeroOrMore(DatasetClause) + WHERE + LCURL +  Optional(TriplesTemplate) + RCURL + SolutionModifier))).setName('ConstructQuery')
 parser.addElement(ConstructQuery)
 
@@ -1359,10 +1359,10 @@ SelectClause = Group(SELECT + Optional(DISTINCT | REDUCED) + ( OneOrMore(Var | (
 parser.addElement(SelectClause)
 
 # [8]     SubSelect         ::=   SelectClause WhereClause SolutionModifier ValuesClause 
-SubSelect << Group(SelectClause + WhereClause + SolutionModifier + ValuesClause)
+SubSelect << Group(SelectClause + WhereClause('where') + SolutionModifier + ValuesClause)
 
 # [7]     SelectQuery       ::=   SelectClause DatasetClause* WhereClause SolutionModifier 
-SelectQuery = Group(SelectClause + ZeroOrMore(DatasetClause) + WhereClause + SolutionModifier ).setName('SelectQuery')
+SelectQuery = Group(SelectClause + ZeroOrMore(DatasetClause) + WhereClause('where') + SolutionModifier ).setName('SelectQuery')
 parser.addElement(SelectQuery)
 
 # [6]     PrefixDecl        ::=   'PREFIX' PNAME_NS IRIREF 

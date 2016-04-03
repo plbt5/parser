@@ -1,10 +1,15 @@
-Versie 0.2
+Version 0.2
 
-Package heet nu parsertools.
+Package now called parsertools.
 
-De structuur is als volgt:
-- parsertools.base: basistoolset, taalonafhankelijk
-- parsertools.extras: utilityfuncties ten behoeve van het specificeren van grammatica's. In deze release alleen separatedList.
-- parsertools.parsers: package die geimplementeerde parsers bevat. In deze release alleen een SPARQL parser.
+The structure is as follows:
+- parsertools.base: basic toolset, language independent
+- parsertools.extras: utility functions for helping with specifying grammars. In this release: separatedList.
+- parsertools.parsers: package containing parsers implemented. In this release SPARQL only.
 
-Een voorbeeld van gebruik is te vinden als example.py.
+A usage example is given in example.py.
+
+Version 0.2.1
+
+- Internal: code cleanup
+- External: example.py extended

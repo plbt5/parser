@@ -1,4 +1,2 @@
-- Framework geimplementeerd. Package structuur gewijzigd. API licht aangepast: Zie "Release notes".
-- Implementatie ParseInfo vereenvoudigd.
-- Alle "^" in patterns gewijzigd naar "|", volgorde in enkele patterns aangepast
-- code cleanup en docstrings aangepast in base en sparqlparser 
+- cleanup functest
+- examples uitgebreid

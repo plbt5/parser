@@ -8,13 +8,13 @@ from pyparsing import *
 from parsertools.parsers.sparqlparser import parser
 from parsertools.parsers.sparqlparser import stripComments, parseQuery
 
-# setup
+# basic parse
  
 s = "'work' ^^<work>"
 r = parser.RDFLiteral(s)
 assert r.check()
   
-  
+
 # check copy 
   
 rc = r.copy()
@@ -22,6 +22,8 @@ rc2 = rc
 assert rc is rc2
 assert rc2 == r
 assert not rc is r
+
+# test "dot" access label with copy
 try:
     rc.lexical_form = parser.String("'work2'")
 except AttributeError as e:
@@ -38,43 +40,43 @@ q = p.copy()
 assert r.__str__() == "'work' ^^ <work>" 
  
    
-# check dot access (read)
+# check dot access (read), and isBranch/isAtom methods
    
-assert r.lexical_form.__str__() == "'work'"
+assert str(r.lexical_form) == "'work'"
 assert r.isBranch()
 assert not r.isAtom()
-  
-# check dot access (write)
-   
-# p.lexical_form = STRING_LITERAL1("'work'")
+     
+# test updateWith in combination with copy
+
 p.lexical_form.updateWith("'work'")
-assert p.lexical_form.__str__() == "'work'"
-assert p.__str__() == "'work' ^^ <work>"
+assert str(p.lexical_form) == "'work'"
+assert str(p) == "'work' ^^ <work>"
 assert p.yieldsValidExpression()
 assert p.check()
 assert r == p
    
 p.lexical_form.updateWith("'work2'")
-assert p.lexical_form.__str__() == "'work2'"
-assert p.__str__() == "'work2' ^^ <work>"
+assert str(p.lexical_form) == "'work2'"
+assert str(p) == "'work2' ^^ <work>"
 assert p.yieldsValidExpression()
 assert p.check()
    
 q.lexical_form.updateWith("'work'")
-assert q.lexical_form.__str__() == "'work'"
-assert q.__str__() == "'work' ^^ <work>"
+assert str(q.lexical_form) == "'work'"
+assert str(q) == "'work' ^^ <work>"
 assert q.yieldsValidExpression()
 assert q.check()
 assert r == q
-#  
+
 s = '(DISTINCT "*Expression*",  "*Expression*",   "*Expression*" )'
 p = parser.ArgList(s)
 
+# test hasLabel
+
 assert p.hasLabel('distinct')
-# p.expression_list.updateWith('"*Expression*"')
 assert p.yieldsValidExpression()
  
-# check util.stripComments()
+# check stripComments
  
 s1 = """
 <check#22?> ( $var, ?var )
@@ -90,30 +92,31 @@ s2 = """
 
 assert stripComments(s1) == s2
  
-# check ParseInfo.searchElements()
-
 s = '<check#22?> ( $var, ?var )'
    
 r = parser.PrimaryExpression(s)
+
+# test repeated dot access
+
 assert r.iriOrFunction.iri == parser.iri('<check#22?>')
 
-# print(r.dump())
+# check searchElements
  
 found = r.searchElements()
- 
 assert len(found) == 32, len(found)
+
 found = r.searchElements(labeledOnly=False)
 assert len(found) == 32, len(found)
+
 found = r.searchElements(labeledOnly=True)
-print(r.dump())
 assert len(found) == 4, len(found)
+
 found = r.searchElements(value='<check#22?>')
+
 assert len(found) == 2, len(found)
 assert type(found[0]) == parser.iri
 assert found[0].getLabel() == 'iri'
 assert found[0].__str__() == '<check#22?>'
- 
- 
  
 # check ParseInfo.updateWith()
  
@@ -126,15 +129,14 @@ assert len(found) == 0
  
 found = r.searchElements(element_type=parser.ArgList)
 assert len(found) == 1, len(found)
+
+# test getChilder, getAncestors
+
 arglist = found[0]
-# print(arglist.dump())
- 
 assert(len(arglist.getChildren())) == 4, len(arglist.getChildren())
-   
  
 ancestors = arglist.getAncestors()
 assert str(ancestors) == '[iriOrFunction("<9xx9!> ( $var , ?var )"), PrimaryExpression("<9xx9!> ( $var , ?var )")]'
- 
  
 # Test parseQuery
  
@@ -143,26 +145,27 @@ parseQuery(s)
  
 s = 'BASE <prologue:22> PREFIX prologue: <prologue:33> LOAD <testIri> ; BASE <prologue:22> PREFIX prologue: <prologue:33>'
 parseQuery(s)
- 
-# check ParseInfo.__repr__ and ParseInfo.__str__
- 
+  
+# test isAtom, isBranch
+  
 s = '<check#22?> ( $var, ?var )'
    
 r = parser.PrimaryExpression(s)
- 
-# print(r.dump())
-  
+   
 branch = r.descend()
 assert branch.isBranch()
 assert len(branch.getChildren()) > 0
-# print('branch:', type(branch))
 a = branch
 while len(a.getChildren()) > 0:
     a = a.getChildren()[0]
 assert a.isAtom()
+
+# test str
  
 assert r == eval('parser.' + repr(r))
 assert str(r) == '<check#22?> ( $var , ?var )'
+
+# test dump
  
 s = '(DISTINCT "*Expression*",  "*Expression*",   "*Expression*" )'
  
@@ -233,14 +236,13 @@ r = parser.ArgList(s)
 assert r.dump() == s_dump
 assert r.descend() == r
  
+# misc
+
 v = r.searchElements(element_type=parser.STRING_LITERAL2)
-# print('STRING_LITERAL2 elements:', v)
 assert v[0].isAtom()
 assert not v[0].isBranch()
  
 e = r.searchElements(element_type=parser.Expression)[0]
- 
-# print(e, '\n', e.dump())
  
 d = e.descend()
  

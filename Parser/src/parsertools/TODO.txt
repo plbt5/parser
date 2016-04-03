@@ -1,4 +1,2 @@
-- functest nalopen en completeren
-- example uitbreiden
 - Implementeer iri check als aparte parser
                                 
