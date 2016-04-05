@@ -6,7 +6,7 @@ Created on 28 mrt. 2016
 from pyparsing import *
 from parsertools.extras import separatedList
 from parsertools.base import Parser
-from parsertools import SparqlParserException
+from parsertools import ParsertoolsException
 
 #
 # Main function to call. This is a convenience function, adapted to the SPARQL definition.
@@ -27,7 +27,7 @@ def parseQuery(querystring):
         try:
             result = parser.UpdateUnit(s)
         except ParseException:
-            raise SparqlParserException('Query {} cannot be parsed'.format(querystring))
+            raise ParsertoolsException('Query {} cannot be parsed'.format(querystring))
         
     assert checkQueryResult(result), 'Fault in postprocessing query {}'.format(querystring)
     

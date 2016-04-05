@@ -4,10 +4,11 @@ Created on 3 mrt. 2016
 @author: jeroenbruijning
 '''
 from pyparsing import *
-from parsertools import SparqlParserException
+from parsertools import ParsertoolsException
 
 class ParseStruct:
-    '''Parent class for all ParseStruct subclasses. These subclasses correspond to productions in the SPARQL EBNF grammar.'''
+    '''Parent class for all ParseStruct subclasses. These subclasses will typically correspond to productions in a given grammar,
+    e.g. an EBNF grammar.'''
     
     def __init__(self, *args):
         '''A ParseStruct object can be initialized wih either a valid string for the subclass concerned,
@@ -150,7 +151,7 @@ class ParseStruct:
         try:
             other = self.pattern.parseString(new_content)[0]
         except ParseException:
-            raise SparqlParserException('{} is not a valid string for {} element'.format(new_content, self.__class__.__name__))        
+            raise ParsertoolsException('{} is not a valid string for {} element'.format(new_content, self.__class__.__name__))        
         self.__dict__['items'] = other.__dict__['items']
         assert self.isValid()
     
@@ -262,7 +263,7 @@ class ParseStruct:
     
 def parseInfoFunc(cls):
     '''Returns the function that converts a ParseResults object to a ParseStruct object of class "cls", with label set to None, and
-    items set to a recursive list of [None, value] pairs (see below).
+    items set to a recursive list of objects, each of which is either a string or a further ParseStruct object.
     The function returned is used to set a parseAction for a pattern.'''
             
     def labeledList(parseresults):
