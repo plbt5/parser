@@ -267,8 +267,8 @@ def parseInfoFunc(cls):
     The function returned is used to set a parseAction for a pattern.'''
             
     def labeledList(parseresults):
-        '''For internal use. Converts a ParseResults object to a recursive structure consisting of a list of pairs [None, obj],
-        obj either a string, a ParseStruct object, or again a similar list.'''
+        '''For internal use. Converts a ParseResults object to a recursive structure consisting of a list of objects,
+        which will serve as the items attribute of a ParseStruct object.'''
         
         while len(parseresults) == 1 and isinstance(parseresults[0], ParseResults):
             parseresults = parseresults[0]
@@ -286,7 +286,7 @@ def parseInfoFunc(cls):
                 result.append(t)
             else:
                 assert isinstance(t, ParseResults), type(t)
-                assert valuedict.get(id(t)) == None, 'Error: found label ({}) for compound expression {}, remove'.format(valuedict.get(id(t)), t.__str__())
+                assert valuedict.get(id(t)) == None, 'Error: found label ({}) for compound expression {}'.format(valuedict.get(id(t)), t.__str__())
                 result.extend(labeledList(t))
         return result
     
