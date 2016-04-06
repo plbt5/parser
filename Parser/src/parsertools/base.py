@@ -266,7 +266,7 @@ def parseInfoFunc(cls):
     items set to a recursive list of objects, each of which is either a string or a further ParseStruct object.
     The function returned is used to set a parseAction for a pattern.'''
             
-    def labeledList(parseresults):
+    def itemList(parseresults):
         '''For internal use. Converts a ParseResults object to a recursive structure consisting of a list of objects,
         which will serve as the items attribute of a ParseStruct object.'''
         
@@ -287,20 +287,19 @@ def parseInfoFunc(cls):
             else:
                 assert isinstance(t, ParseResults), type(t)
                 assert valuedict.get(id(t)) == None, 'Error: found label ({}) for compound expression {}'.format(valuedict.get(id(t)), t.__str__())
-                result.extend(labeledList(t))
+                result.extend(itemList(t))
         return result
     
     def makeparseinfo(parseresults):
         '''The function to be returned.'''
         assert ParseStruct in cls.__bases__
         assert isinstance(parseresults, ParseResults)
-        return cls(None, labeledList(parseresults))  
+        return cls(None, itemList(parseresults))  
     
     return makeparseinfo
 
 class Parser:
     '''The main class for clients to use when parsing (sub)expressions of the language.'''
-    
     def addElement(self, pattern):
         setattr(self, pattern.name, type(pattern.name, (ParseStruct,), {'pattern': pattern}))
         pattern.setParseAction(parseInfoFunc(getattr(self, pattern.name)))

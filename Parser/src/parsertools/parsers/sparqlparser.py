@@ -56,7 +56,7 @@ def prepareQuery(querystring):
     return strippedQuery
 
 def checkQueryResult(r):
-    '''Used to preform additional checks on the parse result. These are conditions that are not covered by the EBNF syntax.
+    '''Used to perform additional checks on the parse result. These are conditions that are not covered by the EBNF syntax.
     See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
     #TODO: finish
     return True
