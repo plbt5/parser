@@ -1,2 +1,3 @@
 - cleanup functest
 - examples uitgebreid
+- meer labels toegevoegd

@@ -1,3 +1,12 @@
+Version 0.2.2
+
+- Labels added for BASE, PREFIX, WHERE and Constraint occurrences
+
+Version 0.2.1
+
+- Internal: code cleanup
+- External: example.py extended
+
 Version 0.2
 
 Package now called parsertools.
@@ -8,8 +17,3 @@ The structure is as follows:
 - parsertools.parsers: package containing parsers implemented. In this release SPARQL only.
 
 A usage example is given in example.py.
-
-Version 0.2.1
-
-- Internal: code cleanup
-- External: example.py extended

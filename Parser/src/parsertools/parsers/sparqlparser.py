@@ -1111,7 +1111,7 @@ Constraint = Group(BracketedExpression | BuiltInCall | FunctionCall).setName('Co
 parser.addElement(Constraint)
 
 # [68]    Filter    ::=   'FILTER' Constraint
-Filter = Group(FILTER + Constraint ).setName('Filter')
+Filter = Group(FILTER + Constraint('constraint')).setName('Filter')
 parser.addElement(Filter)
 
 # [67]    GroupOrUnionGraphPattern          ::=   GroupGraphPattern ( 'UNION' GroupGraphPattern )* 
@@ -1294,7 +1294,7 @@ LimitOffsetClauses = Group((LimitClause + Optional(OffsetClause)) | (OffsetClaus
 parser.addElement(LimitOffsetClauses)
 
 # [24]    OrderCondition    ::=   ( ( 'ASC' | 'DESC' ) BrackettedExpression ) | ( Constraint | Var ) 
-OrderCondition =   Group(((ASC | DESC) + BracketedExpression) | (Constraint | Var)).setName('OrderCondition')
+OrderCondition =   Group(((ASC | DESC) + BracketedExpression) | (Constraint('constraint') | Var)).setName('OrderCondition')
 parser.addElement(OrderCondition)
 
 # [23]    OrderClause       ::=   'ORDER' 'BY' OrderCondition+ 
@@ -1302,7 +1302,7 @@ OrderClause = Group(ORDER_BY + OneOrMore(OrderCondition) ).setName('OrderClause'
 parser.addElement(OrderClause)
 
 # [22]    HavingCondition   ::=   Constraint 
-HavingCondition = Group(Constraint).setName('HavingCondition')
+HavingCondition = Group(Constraint('constraint')).setName('HavingCondition')
 parser.addElement(HavingCondition)
 
 # [21]    HavingClause      ::=   'HAVING' HavingCondition+ 
@@ -1366,7 +1366,7 @@ SelectQuery = Group(SelectClause + ZeroOrMore(DatasetClause) + WhereClause('wher
 parser.addElement(SelectQuery)
 
 # [6]     PrefixDecl        ::=   'PREFIX' PNAME_NS IRIREF 
-PrefixDecl = Group(PREFIX + PNAME_NS + IRIREF ).setName('PrefixDecl')
+PrefixDecl = Group(PREFIX('prefix') + PNAME_NS + IRIREF ).setName('PrefixDecl')
 parser.addElement(PrefixDecl)
 
 # [5]     BaseDecl          ::=   'BASE' IRIREF 
@@ -1374,7 +1374,7 @@ BaseDecl = Group(BASE + IRIREF ).setName('BaseDecl')
 parser.addElement(BaseDecl)
 
 # [4]     Prologue          ::=   ( BaseDecl | PrefixDecl )* 
-Prologue << Group(ZeroOrMore(BaseDecl | PrefixDecl))
+Prologue << Group(ZeroOrMore(BaseDecl('base') | PrefixDecl('prefix')))
 
 # [3]     UpdateUnit        ::=   Update 
 UpdateUnit = Group(Update ).setName('UpdateUnit')
