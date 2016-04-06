@@ -1275,7 +1275,7 @@ Update = Forward().setName('Update')
 parser.addElement(Update)
 
 # [29]    Update    ::=   Prologue ( Update1 ( ';' Update )? )? 
-Update << Group(Prologue + Optional(Update1 + Optional(SEMICOL + Update)))
+Update << Group(Prologue('prologue') + Optional(Update1 + Optional(SEMICOL + Update)))
 
 # [28]    ValuesClause      ::=   ( 'VALUES' DataBlock )? 
 ValuesClause = Group(Optional(VALUES + DataBlock) ).setName('ValuesClause')
@@ -1377,11 +1377,11 @@ parser.addElement(BaseDecl)
 Prologue << Group(ZeroOrMore(BaseDecl('base') | PrefixDecl('prefix')))
 
 # [3]     UpdateUnit        ::=   Update 
-UpdateUnit = Group(Update ).setName('UpdateUnit')
+UpdateUnit = Group(Update('update')).setName('UpdateUnit')
 parser.addElement(UpdateUnit)
 
 # [2]     Query     ::=   Prologue ( SelectQuery | ConstructQuery | DescribeQuery | AskQuery ) ValuesClause 
-Query = Group(Prologue + ( SelectQuery | ConstructQuery | DescribeQuery | AskQuery ) + ValuesClause ).setName('Query')
+Query = Group(Prologue('prologue') + ( SelectQuery | ConstructQuery | DescribeQuery | AskQuery ) + ValuesClause ).setName('Query')
 parser.addElement(Query)
 
 # [1]     QueryUnit         ::=   Query 

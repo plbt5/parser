@@ -148,6 +148,15 @@ r = parseQuery(s)
   
 print(r.dump())
 
+print(r)
+print()
+print(r.update)
+print()
+print(r.update.prologue)
+print()
+r.update.prologue.base.updateWith('BASE <niets:niks>')
+print(r.update.prologue.dump())
+
 # test isAtom, isBranch
   
 s = '<check#22?> ( $var, ?var )'
