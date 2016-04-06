@@ -414,13 +414,13 @@ parser.addElement(WITH)
 WHERE = CaselessKeyword('WHERE').setName('WHERE')
 parser.addElement(WHERE)
 
-DELETE_WHERE = (CaselessKeyword('DELETE') + CaselessKeyword('WHERE')).setName('DELETE_WHERE')
+DELETE_WHERE = Combine(CaselessKeyword('DELETE') + CaselessKeyword('WHERE'), joinString=' ', adjacent=False).setName('DELETE_WHERE')
 parser.addElement(DELETE_WHERE)
 
-DELETE_DATA = (CaselessKeyword('DELETE') + CaselessKeyword('DATA')).setName('DELETE_DATA')
+DELETE_DATA = Combine(CaselessKeyword('DELETE') + CaselessKeyword('DATA'), joinString=' ', adjacent=False).setName('DELETE_DATA')
 parser.addElement(DELETE_DATA)
 
-INSERT_DATA = (CaselessKeyword('INSERT') + CaselessKeyword('DATA')).setName('INSERT_DATA')
+INSERT_DATA = Combine(CaselessKeyword('INSERT') + CaselessKeyword('DATA'), joinString=' ', adjacent=False).setName('INSERT_DATA')
 parser.addElement(INSERT_DATA)
 
 COPY = CaselessKeyword('COPY').setName('COPY')
@@ -462,13 +462,13 @@ parser.addElement(ASC)
 DESC = CaselessKeyword('DESC').setName('DESC')
 parser.addElement(DESC)
 
-ORDER_BY = (CaselessKeyword('ORDER') + CaselessKeyword('BY')).setName('ORDER_BY')
+ORDER_BY = Combine(CaselessKeyword('ORDER') + CaselessKeyword('BY'), joinString=' ', adjacent=False).setName('ORDER_BY')
 parser.addElement(ORDER_BY)
 
 HAVING = CaselessKeyword('HAVING').setName('HAVING')
 parser.addElement(HAVING)
 
-GROUP_BY = (CaselessKeyword('GROUP') + CaselessKeyword('BY')).setName('GROUP_BY')
+GROUP_BY = Combine(CaselessKeyword('GROUP') + CaselessKeyword('BY'), joinString=' ', adjacent=False).setName('GROUP_BY')
 parser.addElement(GROUP_BY)
 
 FROM = CaselessKeyword('FROM').setName('FROM')
