@@ -192,7 +192,7 @@ parser.addElement(NOT)
 EXISTS = CaselessKeyword('EXISTS').setName('EXISTS')
 parser.addElement(EXISTS)
 
-NOT_EXISTS = (CaselessKeyword('NOT') + CaselessKeyword('EXISTS')).setName('NOT_EXISTS')
+NOT_EXISTS = Combine(CaselessKeyword('NOT') + CaselessKeyword('EXISTS'), joinString=' ', adjacent=False).setName('NOT_EXISTS')
 parser.addElement(NOT_EXISTS)
 
 REPLACE = CaselessKeyword('REPLACE').setName('REPLACE')
@@ -354,7 +354,7 @@ parser.addElement(isNUMERIC)
 IN = CaselessKeyword('IN').setName('IN')
 parser.addElement(IN)
 
-NOT_IN = (CaselessKeyword('NOT') + CaselessKeyword('IN')).setName('NOT_IN')
+NOT_IN = Combine(CaselessKeyword('NOT') + CaselessKeyword('IN'), joinString=' ', adjacent=False).setName('NOT_IN')
 parser.addElement(NOT_IN)
 
 FILTER = CaselessKeyword('FILTER').setName('FILTER')
@@ -551,7 +551,7 @@ VARNAME = Regex(VARNAME_e).setName('VARNAME')
 parser.addElement(VARNAME)
 
 # [163]   ANON      ::=   '[' WS* ']' 
-ANON = Group(Literal('[') + Literal(']')).setName('ANON')
+ANON = Combine(Literal('[') + Literal(']'), joinString=' ', adjacent=False).setName('ANON')
 parser.addElement(ANON)
 
 # [162]   WS        ::=   #x20 | #x9 | #xD | #xA 
@@ -559,7 +559,7 @@ parser.addElement(ANON)
 # In the SPARQL EBNF this production is used for defining NIL and ANON, but in this pyparsing implementation those are implemented differently
 
 # [161]   NIL       ::=   '(' WS* ')' 
-NIL = Group(Literal('(') + Literal(')')).setName('NIL')
+NIL = Combine(Literal('(') + Literal(')'), joinString=' ', adjacent=False).setName('NIL')
 parser.addElement(NIL)
 
 # [160]   ECHAR     ::=   '\' [tbnrf\"']

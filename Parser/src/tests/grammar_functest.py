@@ -699,7 +699,7 @@ if __name__ == '__main__':
     
     # [24]    OrderCondition    ::=   ( ( 'ASC' | 'DESC' ) BrackettedExpression )  | ( Constraint | Var ) 
     l = ['ASC ("*Expression*")', 'DESC ("*Expression*")', 'isBLANK ("*Expression*")', '$var']
-    printResults(l, 'OrderCondition', dump=True)
+    printResults(l, 'OrderCondition', dump=False)
     
     # [23]    OrderClause       ::=   'ORDER' 'BY' OrderCondition+ 
     l = ['ORDER BY $var']
