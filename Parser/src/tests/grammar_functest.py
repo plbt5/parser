@@ -4,7 +4,10 @@ Created on 24 feb. 2016
 @author: jeroenbruijning
 '''
 from parsertools.base import ParseResults
-from parsertools.parsers.sparqlparser import parser
+from parsertools.parsers.sparqlparser import parser, checkIri
+from sympy.solvers.ode import checkinfsol
+from parsertools import NoPrefixError
+import warnings
 
 # Next lines are temporary during development, to be deleted as implementions added to .grammar
 # Expression_p << Literal('"*Expression*"')
@@ -27,6 +30,10 @@ def printResults(l, rule, dump=False):
         while len(r) == 1 and isinstance(r[0], ParseResults):
             r = r[0]
         rendering = str(r[0])
+        try:
+            checkIri(r[0])
+        except NoPrefixError:
+            warnings.warn('No prefix declaration found for prefix, ignoring')
         assert ''.join(r[0].__str__().upper().split()) == ''.join(s.upper().split()), 'Parsed expression: "{}" conflicts with original: "{}"'.format(r[0].__str__(), s)
         if s != rendering:
             print()
