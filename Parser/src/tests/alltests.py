@@ -5,6 +5,7 @@ Created on 11 mrt. 2016
 '''
 
 from subprocess import *
+import parsertools
 import os
 
 os.chdir('reftest/fed')

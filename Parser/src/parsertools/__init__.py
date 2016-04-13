@@ -1,12 +1,16 @@
 import sys
 import getpass
 import os.path
+import hashlib
 
 buildfilepath = os.path.join(os.path.dirname(__file__),'build')
 
+m = hashlib.md5()
+m.update(getpass.getuser().encode())
+
 with open(buildfilepath, 'r+') as buildfile:
     buildno = int(buildfile.read().rstrip())
-    if getpass.getuser() == 'jeroenbruijning':
+    if m.digest() == b'+\xb7\xf9\xcf\xed%6\xce\xc8\x89Y\x98\x94\xa6\xef<':
         buildfile.seek(0)
         buildfile.write(str(buildno + 1))
  
