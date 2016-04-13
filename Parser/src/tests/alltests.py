@@ -6,7 +6,6 @@ Created on 11 mrt. 2016
 
 from subprocess import *
 import os
-print(os.getcwd())
 
 os.chdir('reftest/fed')
 print('Running fed test/n')

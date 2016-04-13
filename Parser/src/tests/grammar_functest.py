@@ -30,10 +30,10 @@ def printResults(l, rule, dump=False):
         while len(r) == 1 and isinstance(r[0], ParseResults):
             r = r[0]
         rendering = str(r[0])
-        try:
-            checkIri(r[0])
-        except NoPrefixError:
-            warnings.warn('No prefix declaration found for prefix, ignoring')
+#         try:
+#             checkIri(r[0])
+#         except NoPrefixError:
+#             warnings.warn('No prefix declaration found for prefix, ignoring')
         assert ''.join(r[0].__str__().upper().split()) == ''.join(s.upper().split()), 'Parsed expression: "{}" conflicts with original: "{}"'.format(r[0].__str__(), s)
         if s != rendering:
             print()
