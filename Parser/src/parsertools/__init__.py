@@ -10,7 +10,7 @@ m.update(getpass.getuser().encode())
 
 with open(buildfilepath, 'r+') as buildfile:
     buildno = int(buildfile.read().rstrip())
-    if m.digest() == b'+\xb7\xf9\xcf\xed%6\xce\xc8\x89Y\x98\x94\xa6\xef<':
+    if m.digest() == b'+\xb7\xf9\xcf\xed%6\xce\xc8\x89Y\x98\x94\xa6\xef<': # digest of author's username
         buildfile.seek(0)
         buildfile.write(str(buildno + 1))
  
