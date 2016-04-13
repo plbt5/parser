@@ -1,8 +1,8 @@
 import sys
 import getpass
+import os.path
 
-
-buildfilepath = __file__.rsplit('/', maxsplit=1)[0] + '/build'
+buildfilepath = os.path.join(os.path.dirname(__file__),'build')
 
 with open(buildfilepath, 'r+') as buildfile:
     buildno = int(buildfile.read().rstrip())
