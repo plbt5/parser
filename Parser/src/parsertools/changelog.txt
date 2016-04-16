@@ -1,3 +1,4 @@
-- cleanup functest
-- examples uitgebreid
-- meer labels toegevoegd
+- separatedList van extras naar base
+- extras.py verwijderd
+- attributen van ParseStruct en SparqlStruct beginnen nu met '_' om name clash met labels te voorkomen
+- attributen '_prefixes' en '_base' toegevoegd aan SparqlStruct, houden nu per element de van kracht zijnde prefixes en base bij

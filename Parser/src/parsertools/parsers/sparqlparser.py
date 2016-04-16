@@ -4,8 +4,8 @@ Created on 28 mrt. 2016
 @author: jeroenbruijning
 '''
 from pyparsing import *
-from parsertools.extras import separatedList
-from parsertools.base import Parser
+# from parsertools.extras import separatedList
+from parsertools.base import ParseStruct, Parser, separatedList
 from parsertools import ParsertoolsException, NoPrefixError
 import rfc3987
 
@@ -66,50 +66,53 @@ def checkQueryResult(r):
     return True
 
 def checkIri(r):
-    
-    # "
-    # "Text matched by the IRIREF production and PrefixedName (after prefix expansion) production, after escape processing,
-    # "must conform to the generic syntax of IRI references in section 2.2 of RFC 3987 "ABNF for IRI References and IRIs" [RFC3987].
-    # "For example, the IRIREF <abc#def> may occur in a SPARQL query string, but the IRIREF <abc##def> must not.
-    # "
-    
-    # IRIREF's must match
-    
-    IRIREFs = r.searchElements(element_type=parser.IRIREF) 
-    for t in IRIREFs:
-        assert rfc3987.match(str(t)[1:-1]), 'IRIREF "{}" does not conform to RFC 3987'.format(str(t)[1:-1])
-        
-    # PrefixedNames must match after prefix expansion and escape processing
-    
-    prefixDict = {}
-    prefixDecls = r.searchElements(element_type=parser.PrefixDecl)
-    for p in prefixDecls:
-#         print('p.prefix = {}, prefixDict = {}'.format(p.prefix, prefixDict))
-        assert str(p.prefix) not in prefixDict
-        prefixDict[str(p.prefix)[:-1]] = str(p.namespace)[1:-1]
-#     print('checkIri: created prefixDict', prefixDict)
-    bases = r.searchElements(element_type=parser.BaseDecl)
-    assert len(bases) <= 1, 'bases: {}'.format(bases)
-    if len(bases) == 0:
-        base = ''
-    else:
-        base = bases[0][1:-1]
-#     print('checkIri: created base', base)
-    
-    PrefixedNames = r.searchElements(element_type=parser.PrefixedName)
-    for t in PrefixedNames:
-        parts = str(t).split(':')
-        assert(len(parts) == 2)
-        p, n = parts
-        if p == '':
-            fullName = base + n
-        else:
-            try:
-                fullName = prefixDict[p] + n
-            except KeyError:
-                raise NoPrefixError('Unknow prefix "{}"'.format(p))
-        unescapedName = unescape(fullName)
-        assert rfc3987.match(unescapedName), 'PrefixedName token "{}" does not conform to RFC 3987 after expansion to "{}"'.format(t, unescapedName)  
+    pass
+
+# def checkIri(r):
+#     
+#     # "
+#     # "Text matched by the IRIREF production and PrefixedName (after prefix expansion) production, after escape processing,
+#     # "must conform to the generic syntax of IRI references in section 2.2 of RFC 3987 "ABNF for IRI References and IRIs" [RFC3987].
+#     # "For example, the IRIREF <abc#def> may occur in a SPARQL query string, but the IRIREF <abc##def> must not.
+#     # "
+#     
+#     # IRIREF's must match
+#     
+#     IRIREFs = r.searchElements(element_type=parser.IRIREF) 
+#     for t in IRIREFs:
+#         assert rfc3987.match(str(t)[1:-1]), 'IRIREF "{}" does not conform to RFC 3987'.format(str(t)[1:-1])
+#         
+#     # PrefixedNames must match after prefix expansion and escape processing
+#     
+#     prefixDict = {}
+#     prefixDecls = r.searchElements(element_type=parser.PrefixDecl)
+#     for p in prefixDecls:
+# #         print('p.prefix = {}, prefixDict = {}'.format(p.prefix, prefixDict))
+#         assert str(p.prefix) not in prefixDict
+#         prefixDict[str(p.prefix)[:-1]] = str(p.namespace)[1:-1]
+# #     print('checkIri: created prefixDict', prefixDict)
+#     bases = r.searchElements(element_type=parser.BaseDecl)
+#     assert len(bases) <= 1, 'bases: {}'.format(bases)
+#     if len(bases) == 0:
+#         base = ''
+#     else:
+#         base = bases[0][1:-1]
+# #     print('checkIri: created base', base)
+#     
+#     PrefixedNames = r.searchElements(element_type=parser.PrefixedName)
+#     for t in PrefixedNames:
+#         parts = str(t).split(':')
+#         assert(len(parts) == 2)
+#         p, n = parts
+#         if p == '':
+#             fullName = base + n
+#         else:
+#             try:
+#                 fullName = prefixDict[p] + n
+#             except KeyError:
+#                 raise NoPrefixError('Unknow prefix "{}"'.format(p))
+#         unescapedName = unescape(fullName)
+#         assert rfc3987.match(unescapedName), 'PrefixedName token "{}" does not conform to RFC 3987 after expansion to "{}"'.format(t, unescapedName)  
 
 def unescape(s):
     s = s.replace(r'\t', '\u0009')   
@@ -121,11 +124,41 @@ def unescape(s):
     s = s.replace(r"\'", '\u0027')   
     s = s.replace(r'\\', '\u005C')
     return s
+
+#
+# Define the SPARQLStruct class
+#
+
+class SPARQLStruct(ParseStruct):
+    
+    def applyPrefixesAndBase(self, prefixes={}, baseiri=''):
+        self.__dict__['_prefixes'] = prefixes
+        self.__dict__['_baseiri'] = baseiri
+        prefixes = prefixes.copy()
+        for elt in self.getChildren():
+            if isinstance(elt, parser.Prologue):
+                for decl in elt.getChildren():
+                    if isinstance(decl, parser.PrefixDecl):
+                        assert str(decl.prefix) not in prefixes
+                        prefixes[str(decl.prefix)] = str(decl.namespace)
+                    else:
+                        assert isinstance(decl, parser.BaseDecl)
+                        baseiri = baseiri + str(decl.baseiri)[1:-1] 
+                prefixes = prefixes.copy()
+            elt.applyPrefixesAndBase(prefixes, baseiri)
+    
+    def getPrefixes(self):
+        return self._prefixes
+    
+    def getBaseiri(self):
+        return self._baseiri
+                       
+    
 #
 # Create the parser object
 #
 
-parser = Parser()
+parser = Parser(SPARQLStruct)
 
 #
 # Patterns
@@ -1430,11 +1463,11 @@ PrefixDecl = Group(PREFIX + PNAME_NS('prefix') + IRIREF('namespace')).setName('P
 parser.addElement(PrefixDecl)
 
 # [5]     BaseDecl          ::=   'BASE' IRIREF 
-BaseDecl = Group(BASE + IRIREF ).setName('BaseDecl')
+BaseDecl = Group(BASE + IRIREF('baseiri')).setName('BaseDecl')
 parser.addElement(BaseDecl)
 
 # [4]     Prologue          ::=   ( BaseDecl | PrefixDecl )* 
-Prologue << Group(ZeroOrMore(BaseDecl('base') | PrefixDecl('prefix')))
+Prologue << Group(ZeroOrMore(BaseDecl | PrefixDecl))
 
 # [3]     UpdateUnit        ::=   Update 
 UpdateUnit = Group(Update('update')).setName('UpdateUnit')

@@ -21,7 +21,7 @@ def separatedList(pattern, sep=','):
 #                 i = [label, item]
 #                 item.__dict__['label'] = i[0]
 #                 templist.append([label, item])
-                item.__dict__['label'] = label
+                item.__dict__['_label'] = label
                 templist.append(item)
             else:
                 assert isinstance(item, str)

@@ -5,31 +5,39 @@ Created on 3 mrt. 2016
 '''
 from pyparsing import *
 from parsertools import ParsertoolsException
+from test.inspect_fodder2 import cls82
 
 class ParseStruct:
     '''Parent class for all ParseStruct subclasses. These subclasses will typically correspond to productions in a given grammar,
     e.g. an EBNF grammar.'''
     
-    def __init__(self, *args):
+    def __init__(self, expr=None):
         '''A ParseStruct object can be initialized wih either a valid string for the subclass concerned,
-        using its own pattern attribute to parse it, or it can be initialized with a label and a list of items
-        which together form a valid parse result. The latter option is only meant to be
+        using its own pattern attribute to parse it, or it can be initialized with a list of items
+        which together form a valid parse result, together with a dictionary containing the prefixes in force at the subexpression with their
+        values, and a string containing the active base. This latter option is only meant to be
         used by internal parser processes. The normal use case is to feed it with a string.
-        Each of the items is a pair consisting of a label and either
+        Each of the items is either
         - a string
         - another ParseStruct object.
         This nested list is the basic internal structure for the class and contains all relevant parsing information.
-        In addition to the above, this includes a parent pointer in case the element is part of a larger ParseStruct instance.'''
+        In addition to the above, this includes a parent pointer in case the element is part of a larger ParseStruct instance,
+        and a label which contains the "resultsName" of the parsed subexpression, if any. Furthermore, a dictionary containing 
+        the prefixes in force at the subexpression with their values, and a string containing the active base.'''
         
-        self.__dict__['label'] = None
-        self.__dict__['parent'] = None
+        self.__dict__['_items'] = None
+        self.__dict__['_label'] = None
+        self.__dict__['_parent'] = None
         
-        if len(args) == 2:
-            self.__dict__['items'] = args[1] 
-        else:
-            assert len(args) == 1 and isinstance(args[0], str)
-            self.__dict__['items'] = self.__getPattern().parseString(args[0], parseAll=True)[0].items
-        self.__createParentPointers()
+        if expr:
+            assert isinstance(expr, str), type(expr)
+#             self.__dict__['items'] = self.__getPattern().parseString(expr, parseAll=True)[0].items
+            other = self.__getPattern().parseString(expr, parseAll=True)[0]
+            for attr in other.__dict__:
+                self.__dict__[attr] = other.__dict__[attr]
+#         self.createParentPointers()
+#         self.__createPrefixes()
+#         self.__createBase()
                 
     def __eq__(self, other):
         '''Compares the instances for equality of:
@@ -41,18 +49,15 @@ class ParseStruct:
         return self.__class__ == other.__class__ and str(self) == str(other)
     
     def __getattr__(self, att):
-        '''Retrieves the attribute concerned, if it exists as a normal attribute. Otherwise, it returns the unique, direct subelement corresponding 
-        having a label with that name, if it exists.
+        '''Retrieves the unique, direct subelement having a label equal to the argument, if it exists.
         Raises an exception if zero, or more than one values exist for that label.'''
         
-        if att in self.__dict__:
-            return self.__dict__[att]
         if att in self.getLabels():
             values = self.getValuesForLabel(att)
             assert len(values) == 1, values
             return values[0] 
         else:
-            raise AttributeError('No attribute, or unique label found.')
+            raise AttributeError('No attribute, or unique label found for argument "{}".'.format(att))
 #         
     def __setattr__(self, label, value):
         '''Raises exception when trying to set attributes directly.Elements are to be changed using "updateWith()".'''
@@ -68,7 +73,7 @@ class ParseStruct:
         
         sep = ' '
         result = []
-        for t in self.items:
+        for t in self._items:
             if isinstance(t, str):
                 result.append(t) 
             else:
@@ -111,10 +116,22 @@ class ParseStruct:
         result.extend(flattenList(self.getItems()))
         return result  
     
-    def __createParentPointers(self):
+    def finishInitialize(self):
+        self.createParentPointers()
+    
+    def createParentPointers(self):
         for i in self.getItems():
             if isinstance(i, ParseStruct):
-                i.__dict__['parent'] = self
+                i.__dict__['_parent'] = self
+#                 
+#     def __createPrefixes(self):
+#         pass
+#     
+#     def __createBase(self):
+#         pass
+
+    def setItems(self, items):
+        self.__dict__['_items'] = items
     
     def searchElements(self, *, label=None, element_type = None, value = None, labeledOnly=False):
         '''Returns a list of all elements with the specified search pattern. If labeledOnly is True,
@@ -152,7 +169,7 @@ class ParseStruct:
             other = self.pattern.parseString(new_content)[0]
         except ParseException:
             raise ParsertoolsException('{} is not a valid string for {} element'.format(new_content, self.__class__.__name__))        
-        self.__dict__['items'] = other.__dict__['items']
+        self.__dict__['_items'] = other.__dict__['_items']
         assert self.isValid()
     
     def check(self, *, report = False, render=False, dump=False):
@@ -171,11 +188,11 @@ class ParseStruct:
 
     def getLabel(self):
         '''Returns name attribute.'''
-        return self.label
+        return self._label
 
     def getItems(self):
         '''Returns items attribute.'''
-        return self.items
+        return self._items
 
     def hasLabel(self, k):
         '''True if k present as label (non-recursive).'''
@@ -187,7 +204,7 @@ class ParseStruct:
     
     def getValuesForLabel(self, k):
         '''Returns list of all values for label. (Non-recursive).'''
-        return [i for i in self.getItems() if isinstance(i, ParseStruct) and i.label == k]
+        return [i for i in self.getItems() if isinstance(i, ParseStruct) and i._label == k]
     
     def getChildren(self):
         '''Returns a list of all its child elements.'''
@@ -196,7 +213,7 @@ class ParseStruct:
     def getParent(self):
         '''Returns a list of its parent element, which is the first element encountered when going up in the parse tree.
         For the top element, the method returns None'''
-        return self.parent
+        return self._parent
     
     def getAncestors(self):
         '''Returns the list of parent nodes, starting with the direct parent and ending with the top element.'''
@@ -213,13 +230,13 @@ class ParseStruct:
             
     def isAtom(self):
         '''Test whether the node has no ParseStruct subnode, but instead contains a string.'''
-        return len(self.getItems()) == 1 and isinstance(self.items[0], str)
+        return len(self.getItems()) == 1 and isinstance(self._items[0], str)
     
     def descend(self):
         '''Descends until either an atom or a branch node is encountered; returns that node.'''
         result = self
         while not result.isAtom() and not result.isBranch():
-            result = result.items[0]
+            result = result._items[0]
         return result
         
     def dump(self, indent='', step='|  '):
@@ -239,7 +256,7 @@ class ParseStruct:
             return result       
        
         result += indent + ('> '+ self.getLabel() + ':\n' + indent if self.getLabel() else '') + '[' + self.__class__.__name__ + '] ' + '/' + self.__str__() + '/' + '\n'
-        result += dumpItems(self.items, indent, step)
+        result += dumpItems(self._items, indent, step)
         
         return result
     
@@ -261,7 +278,7 @@ class ParseStruct:
         return self == self.__getPattern().parseString(self.__str__())[0]
     
     
-def parseInfoFunc(cls):
+def parseStructFunc(cls):
     '''Returns the function that converts a ParseResults object to a ParseStruct object of class "cls", with label set to None, and
     items set to a recursive list of objects, each of which is either a string or a further ParseStruct object.
     The function returned is used to set a parseAction for a pattern.'''
@@ -279,8 +296,8 @@ def parseInfoFunc(cls):
             if isinstance(t, str):
                 result.append(t)
             elif isinstance(t, ParseStruct):
-                if t.__dict__['label'] == None:
-                    t.__dict__['label'] = valuedict.get(id(t))
+                if t.__dict__['_label'] == None:
+                    t.__dict__['_label'] = valuedict.get(id(t))
                 result.append(t)
             elif isinstance(t, list):
                 result.append(t)
@@ -292,15 +309,56 @@ def parseInfoFunc(cls):
     
     def makeparseinfo(parseresults):
         '''The function to be returned.'''
-        assert ParseStruct in cls.__bases__
+#         assert ParseStruct in cls.__bases__
+        assert issubclass(cls, ParseStruct)
         assert isinstance(parseresults, ParseResults)
-        return cls(None, itemList(parseresults))  
+#         result = cls(itemList(parseresults))  
+        result = cls()
+        result.setItems(itemList(parseresults))
+        result.finishInitialize()
+        return result
     
     return makeparseinfo
 
+# Helper function for delimited lists where the delimiters must be included in the result
+def separatedList(pattern, sep=','):
+    '''Similar to a delimited list of instances from a ParseStruct subclass, but includes the separator in its ParseResults. Returns a 
+    ParseResults object containing a simple list of matched tokens separated by the separator.'''
+      
+    def makeList(parseresults):
+        assert len(parseresults) > 0, 'internal error'
+        assert len(list((parseresults.keys()))) <= 1, 'internal error, got more than one key: {}'.format(list(parseresults.keys()))
+        label = list(parseresults.keys())[0] if len(list(parseresults.keys())) == 1 else None
+        assert all([p.__class__.pattern == pattern for p in parseresults if isinstance(p, ParseStruct)]), 'internal error: pattern mismatch ({}, {})'.format(p.__class__.pattern, pattern)
+        templist = []
+        for item in parseresults:
+            if isinstance(item, ParseStruct):
+#                 i = [label, item]
+#                 item.__dict__['label'] = i[0]
+#                 templist.append([label, item])
+                item.__dict__['_label'] = label
+                templist.append(item)
+            else:
+                assert isinstance(item, str)
+#                 templist.append([None, item])
+                templist.append(item)
+        result = []
+        result.append(templist[0])
+        for p in templist[1:]:
+            result.append(sep)
+            result.append(p)
+        return result
+  
+      
+    result = delimitedList(pattern, sep)
+    result.setParseAction(makeList)
+    return result
+
 class Parser:
     '''The main class for clients to use when parsing (sub)expressions of the language.'''
+    def __init__(self, cls=ParseStruct):
+        self.cls = cls
     def addElement(self, pattern):
-        setattr(self, pattern.name, type(pattern.name, (ParseStruct,), {'pattern': pattern}))
-        pattern.setParseAction(parseInfoFunc(getattr(self, pattern.name)))
+        setattr(self, pattern.name, type(pattern.name, (self.cls,), {'pattern': pattern}))
+        pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
                            

@@ -1,3 +1,9 @@
+Version 0.2.3
+- introduced SPARQLStruct as subclass of ParseStruct, keeps additional SPARQL related info
+- SPARQL parser now generates SPARQLStruct objects
+- SPARQLStruct objects now contain "prefixes" and "baseiri" attributes that keep track of 
+the current prefixes dictionary and base iri value (accessed through getPrefixes() and getBaseiri() methods)
+
 Version 0.2.2
 
 - Labels added for BASE, PREFIX, WHERE, Update, Prologue and Constraint occurrences
