@@ -9,6 +9,78 @@ from parsertools import ParsertoolsException, NoPrefixError
 import rfc3987
 
 #
+# Define the SPARQLStruct class
+#
+
+class SPARQLStruct(ParseStruct):
+    
+    def applyPrefixesAndBase(self, prefixes={}, baseiri=''):
+#         print('Applying prefixes {} and base "{}" to {} (type {})'.format(prefixes, baseiri, self, self.__class__.__name__))
+        self.__dict__['_prefixes'] = prefixes
+        self.__dict__['_baseiri'] = baseiri
+        prefixes = prefixes.copy()
+        for elt in self.getChildren():
+            if isinstance(elt, parser.Prologue):
+                for decl in elt.getChildren():
+                    if isinstance(decl, parser.PrefixDecl):
+                        assert str(decl.prefix) not in prefixes
+                        prefixes[str(decl.prefix)] = str(decl.namespace)
+                    else:
+                        assert isinstance(decl, parser.BaseDecl)
+                        baseiri = baseiri + str(decl.baseiri)
+                prefixes = prefixes.copy()
+            elt.applyPrefixesAndBase(prefixes, baseiri)
+            
+    def getPrefixes(self):
+        return self._prefixes
+    
+    def getBaseiri(self):
+        return self._baseiri   
+    
+    def expandIris(self):
+        for elt in self.searchElements(element_type=parser.iri):
+            print('Expanding iri "{}" with prefixes "{}" and baseiri "{}" (in element {})'.format(str(elt), elt._prefixes, elt._baseiri, elt.__class__.__name__))
+            children = elt.getChildren()
+            assert len(children) == 1, children
+            child = children[0]
+            if isinstance(child, parser.PrefixedName):
+                i = str(child)
+                splitted = i.split(':', maxsplit=1)
+                assert len(splitted) == 2, splitted
+                if splitted[0] != '':
+                    newiri = elt._prefixes[splitted[0] + ':'][1:-1] + splitted[1]
+                else:
+                    newiri = splitted[1]
+            else:
+                assert isinstance(child, IRIREF)
+                assert str(child[0]) + str(child[-1]) == '<>', str(child)
+                newiri = str(child)[1:-1]
+            if rfc3987.match(newiri, 'irelative_ref'):
+                newiri = rfc3987.resolve(elt._baseiri[1:-1], newiri)
+            assert rfc3987.match(newiri), 'String "{}" for iri production is not a proper iri'.format(newiri)
+            newiriref = '<' + newiri + '>'
+            print('Updating element "{}" with string "{}"'.format(elt, newiriref))
+            elt.updateWith(newiriref)
+            print('Result:')
+            print(elt.dump())
+
+
+#
+# The parser object
+#
+
+class Parser:
+    def __init__(self, cls=ParseStruct):
+        self.cls = cls
+    def addElement(self, pattern):
+        setattr(self, pattern.name, type(pattern.name, (self.cls,), {'pattern': pattern}))
+        pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
+
+
+parser = Parser(SPARQLStruct)
+
+
+#
 # Main function to call. This is a convenience function, adapted to the SPARQL definition.
 #
 
@@ -78,145 +150,6 @@ def checkQueryResult(r):
 
 def checkIri(r):
     pass
-
-# def checkIri(r):
-#     
-#     # "
-#     # "Text matched by the IRIREF production and PrefixedName (after prefix expansion) production, after escape processing,
-#     # "must conform to the generic syntax of IRI references in section 2.2 of RFC 3987 "ABNF for IRI References and IRIs" [RFC3987].
-#     # "For example, the IRIREF <abc#def> may occur in a SPARQL query string, but the IRIREF <abc##def> must not.
-#     # "
-#     
-#     # IRIREF's must match
-#     
-#     IRIREFs = r.searchElements(element_type=parser.IRIREF) 
-#     for t in IRIREFs:
-#         assert rfc3987.match(str(t)[1:-1]), 'IRIREF "{}" does not conform to RFC 3987'.format(str(t)[1:-1])
-#         
-#     # PrefixedNames must match after prefix expansion and escape processing
-#     
-#     prefixDict = {}
-#     prefixDecls = r.searchElements(element_type=parser.PrefixDecl)
-#     for p in prefixDecls:
-# #         print('p.prefix = {}, prefixDict = {}'.format(p.prefix, prefixDict))
-#         assert str(p.prefix) not in prefixDict
-#         prefixDict[str(p.prefix)[:-1]] = str(p.namespace)[1:-1]
-# #     print('checkIri: created prefixDict', prefixDict)
-#     bases = r.searchElements(element_type=parser.BaseDecl)
-#     assert len(bases) <= 1, 'bases: {}'.format(bases)
-#     if len(bases) == 0:
-#         base = ''
-#     else:
-#         base = bases[0][1:-1]
-# #     print('checkIri: created base', base)
-#     
-#     PrefixedNames = r.searchElements(element_type=parser.PrefixedName)
-#     for t in PrefixedNames:
-#         parts = str(t).split(':')
-#         assert(len(parts) == 2)
-#         p, n = parts
-#         if p == '':
-#             fullName = base + n
-#         else:
-#             try:
-#                 fullName = prefixDict[p] + n
-#             except KeyError:
-#                 raise NoPrefixError('Unknow prefix "{}"'.format(p))
-#         unescapedName = unescape(fullName)
-#         assert rfc3987.match(unescapedName), 'PrefixedName token "{}" does not conform to RFC 3987 after expansion to "{}"'.format(t, unescapedName)  
-
-
-
-#
-# Define the SPARQLStruct class
-#
-
-class SPARQLStruct(ParseStruct):
-    
-    def applyPrefixesAndBase(self, prefixes={}, baseiri=''):
-#         print('Applying prefixes {} and base "{}" to {} (type {})'.format(prefixes, baseiri, self, self.__class__.__name__))
-        self.__dict__['_prefixes'] = prefixes
-        self.__dict__['_baseiri'] = baseiri
-        prefixes = prefixes.copy()
-        for elt in self.getChildren():
-            if isinstance(elt, parser.Prologue):
-                for decl in elt.getChildren():
-                    if isinstance(decl, parser.PrefixDecl):
-                        assert str(decl.prefix) not in prefixes
-                        prefixes[str(decl.prefix)] = str(decl.namespace)
-                    else:
-                        assert isinstance(decl, parser.BaseDecl)
-                        baseiri = baseiri + str(decl.baseiri)
-                prefixes = prefixes.copy()
-            elt.applyPrefixesAndBase(prefixes, baseiri)
-        
-            
-    
-    def getPrefixes(self):
-        return self._prefixes
-    
-    def getBaseiri(self):
-        return self._baseiri
-    
-#     def expandIri(self, iri, prefixes, baseiri):
-#         print('Expanding iri "{}" with prefixes "{}" and baseiri "{}"'.format(iri, prefixes, baseiri))
-#         splitted = iri.split(':', maxsplit=1)
-#         if len(splitted) > 1 and len(splitted[0]) > 1:
-#             unprefixed = prefixes[splitted[0] + ':'][1:-1] + splitted[1]
-#         else:
-#             unprefixed = splitted[0]
-#         print('Un-prefixed = "{}"'.format(unprefixed))
-#         if rfc3987.match(unprefixed, 'irelative_ref'):
-#             expanded = rfc3987.resolve(baseiri, unprefixed)
-#         else:
-#             expanded = unprefixed
-#         print('Expanded = "{}"'.format(expanded))
-#         assert rfc3987.match(expanded), 'String "{}" for iri production is not a proper iri'.format(expanded)
-#         return expanded    
-    
-    def expandIris(self):
-        for elt in self.searchElements(element_type=parser.iri):
-            print('Expanding iri "{}" with prefixes "{}" and baseiri "{}" (in element {})'.format(str(elt), elt._prefixes, elt._baseiri, elt.__class__.__name__))
-            children = elt.getChildren()
-            assert len(children) == 1, children
-            child = children[0]
-            if isinstance(child, parser.PrefixedName):
-                i = str(child)
-                splitted = i.split(':', maxsplit=1)
-                assert len(splitted) == 2, splitted
-                if splitted[0] != '':
-                    newiri = elt._prefixes[splitted[0] + ':'][1:-1] + splitted[1]
-                else:
-                    newiri = splitted[1]
-            else:
-                assert isinstance(child, IRIREF)
-                assert str(child[0]) + str(child[-1]) == '<>', str(child)
-                newiri = str(child)[1:-1]
-            if rfc3987.match(newiri, 'irelative_ref'):
-                newiri = rfc3987.resolve(elt._baseiri[1:-1], newiri)
-            assert rfc3987.match(newiri), 'String "{}" for iri production is not a proper iri'.format(newiri)
-            newiriref = '<' + newiri + '>'
-            print('Updating element "{}" with string "{}"'.format(elt, newiriref))
-            elt.updateWith(newiriref)
-            print('Result:')
-            print(elt.dump())
-                
-                
-                       
-    
-#
-# Create the parser object
-#
-
-class Parser:
-    def __init__(self, cls=ParseStruct):
-        self.cls = cls
-    def addElement(self, pattern):
-        setattr(self, pattern.name, type(pattern.name, (self.cls,), {'pattern': pattern}))
-        pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
-
-
-parser = Parser(SPARQLStruct)
 
 #
 # Patterns
