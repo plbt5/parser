@@ -166,7 +166,7 @@ class ParseStruct:
         
         assert isinstance(new_content, str), 'UpdateFrom function needs a string'
         try:
-            other = self.pattern.parseString(new_content)[0]
+            other = self.pattern.parseString(new_content, parseAll=True)[0]
         except ParseException:
             raise ParsertoolsException('{} is not a valid string for {} element'.format(new_content, self.__class__.__name__))        
         self.__dict__['_items'] = other.__dict__['_items']
@@ -354,11 +354,11 @@ def separatedList(pattern, sep=','):
     result.setParseAction(makeList)
     return result
 
-class Parser:
-    '''The main class for clients to use when parsing (sub)expressions of the language.'''
-    def __init__(self, cls=ParseStruct):
-        self.cls = cls
-    def addElement(self, pattern):
-        setattr(self, pattern.name, type(pattern.name, (self.cls,), {'pattern': pattern}))
-        pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
+# class Parser:
+#     '''The main class for clients to use when parsing (sub)expressions of the language.'''
+#     def __init__(self, cls=ParseStruct):
+#         self.cls = cls
+#     def addElement(self, pattern):
+#         setattr(self, pattern.name, type(pattern.name, (self.cls,), {'pattern': pattern}))
+#         pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
                            

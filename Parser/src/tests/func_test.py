@@ -99,7 +99,7 @@ r = parser.PrimaryExpression(s)
 
 assert r.iriOrFunction.iri == parser.iri('<check#22?>')
 
-print(r.dump())
+# print(r.dump())
 # check searchElements
  
 found = r.searchElements()
@@ -249,7 +249,7 @@ d = e.descend()
 assert d.isAtom()
  
 s = '''
-BASE <testbase>
+BASE <http://testbase>
 PREFIX ns:     <http://ds.tno.nl/ontoA/>
 PREFIX foaf:   <http://xmlns.com/foaf/0.1/>
 PREFIX xsd:    <http://www.w3.org/2001/XMLSchema>
@@ -257,7 +257,7 @@ PREFIX xsd:    <http://www.w3.org/2001/XMLSchema>
 SELECT ?p ?t WHERE 
     {
         ?p a foaf:Person .
-        ?p ns:hasTemp ?t .
+        ?p :hasTemp ?t .
         ?p ns:hasAge ?a .
          ?t a ns:TempInC .
          FILTER ( (datatype(?t) = xsd:float) &&
@@ -268,33 +268,38 @@ SELECT ?p ?t WHERE
 '''
 
 
-s = '''
-BASE <base:22/>
-PREFIX prologue: <prologue:33>
-LOAD <testIri>
-;
-BASE <base:23> 
-PREFIX prologue2: <prologue:34>
-LOAD <nogwat>
-;
-BASE <base:24> 
-PREFIX prologue3: <prologue:35>
-LOAD <nogwat>
-'''
+# s = '''
+# BASE <http://base22/>
+# PREFIX prologue: <prologue:33>
+# LOAD <testIri>
+# ;
+# BASE <base23> 
+# PREFIX prologue2: http://
+# LOAD prologue2:nogwat
+# ;
+# BASE <base24> 
+# PREFIX prologue3: <prologue:35>
+# LOAD <nogwat>
+# '''
 
 r = parseQuery(s)
 
 d = r.dump()
+print(d)
 
 
 r.applyPrefixesAndBase()
 
 assert d == r.dump()
 # print(d)
-for e in r.searchElements():
-    print('prefixes of {} is:\n\t{}'.format(e.__class__.__name__, e.getPrefixes()))
-    print('baseiri  of {} is:\n\t"{}"'.format(e.__class__.__name__, e.getBaseiri()))
-    print()
+
+# for e in r.searchElements():
+#     print('prefixes of {} is:\n\t{}'.format(e.__class__.__name__, e.getPrefixes()))
+#     print('baseiri  of {} is:\n\t"{}"'.format(e.__class__.__name__, e.getBaseiri()))
+#     print()
+    
+r.expandIris()
+print(r.dump())
 
 
  
