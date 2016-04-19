@@ -305,3 +305,7 @@ print(r.dump())
  
 print('Passed')
 
+s = '"work" @en-bf'
+r = parser.RDFLiteral(s)
+print(r.dump())
+

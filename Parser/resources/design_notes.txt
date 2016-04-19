@@ -1,0 +1,101 @@
+Design Notes
+============
+
+Design objectives
+-----------------
+
+- the package is aimed at creating parsers for languages with a context free grammar, typically as defined using a BNF-like notation.
+- parsing an expressing in the language should result in a recursive object representation of the expression, analogous to an AST but with 
+objects at the nodes. All productions should have their own object type to represent them.
+- these objects should make it possible to render back the expression.
+- it should be possible to replace a subobject with another object of the same class (substitution in place)
+- there should be a rich "dump" facility to study the parsed expression
+- there should be facilities to query and to navigate the parsed expression
+- it should not be difficult for a Python programmer to extend the out-of-the-box functionality of the parse object.
+
+In addition, and most importantly, for a user with knowledge of pyparsing and of converting BNF syntax to pyparsing patterns, it should be
+easy to learn how to use the package.
+
+Implementation notes
+--------------------
+
+The heavy lifting is done by the ParseStruct class. This class is a representation of the for our purpose relevant information from the pyparsing ParseResults class.
+Instances of the class can bothe parse specific expressions from the language, from terminals to full programs, as well as hold the result. This result typically will contain
+parsed subexpressions, represented either as strings or as further ParseStruct instances.
+
+At the user side (i.e. the implementer of the parser), a Parser object is instantiated that will hold a ParseStruct instance for each rule in the grammar.
+Patterns corresponding to grammar rules are defined by the user, and registered with the Parser object. Within this object they give rise to an attribute which is a subclasses of ParseStruct,
+corresponding to the pattern being registered.
+
+More on what the user must do can be found in the howto.txt document. A short usage example can be found in example.py.
+
+A ParseStruct subclass corresponds to a grammar rule. As one of its attributes, it contains the pattern itsel for this rule. This makes it possible for it to
+act as a parser for the corresponding class of expressions, by calling it with the expression as its sole argument: C(exp). This creates an instance of C, subclass of ParseStruct,
+with all the information from parsing exp in a parse tree with lower level ParseStruct instances and, at the leaves, strings.
+
+During development, the main tool to inspect C(exp) is its "dump" method. A short example from the SPARQL parser, included with the package follows. What is being parsed is the string "work"@en-bf for a
+rule called RDFLiteral. (The double quotes here are part of the string.) A fragment of the program follows:
+
+	s = '"work" @en-bf'
+	r = parser.RDFLiteral(s)
+	print(r.dump())
+
+This prints:
+
+	[RDFLiteral] /"work" @en-bf/
+	|  > lexical_form:
+	|  [String] /"work"/
+	|  |  [STRING_LITERAL2] /"work"/
+	|  |  |  "work"
+	|  > langtag:
+	|  [LANGTAG] /@en-bf/
+	|  |  @en-bf
+
+Elements within [ and ] denote grammar rules matched. They are followed by a linear string representation of the string matched, between / an / delimiters.
+Elements preceded by ">" are labels that can be used for navigating the parse object and for direct addressing of subelements. The remaining elements are the strings
+matched by the terminal productions (by convention, in SPARQL denoted in capitals).
+
+These labels are defined in the pattern using the setResultsName method from pyparsing. The names used for the grammar rules are defined using the setName method.
+
+The relevant patterns for this example are (in the order in which they are defined in the source file, preceded by their EBNF definition taken from the SPARQL
+specification document, and followed by the code that registers them with the parser):
+
+	# [145]   LANGTAG   ::=   '@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)* 
+	LANGTAG_e = r'@[a-zA-Z]+(\-[a-zA-Z0-9]+)*'
+	LANGTAG = Regex(LANGTAG_e).setName('LANGTAG')
+	parser.addElement(LANGTAG)
+	
+	# [157]   STRING_LITERAL2   ::=   '"' ( ([^#x22#x5C#xA#xD]) | ECHAR )* '"' 
+	STRING_LITERAL2_e = r'"(({})|({}))*"'.format(ECHAR_e, r'[^\u0022\u005C\u000A\u000D]')
+	STRING_LITERAL2 = Regex(STRING_LITERAL2_e).parseWithTabs().setName('STRING_LITERAL2')
+	parser.addElement(STRING_LITERAL2)
+
+	# [135]   String    ::=   STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2 
+	String = Group(STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2 | STRING_LITERAL1 | STRING_LITERAL2).setName('String')
+	parser.addElement(String)
+			
+	# [129]   RDFLiteral        ::=   String ( LANGTAG | ( '^^' iri ) )? 
+	RDFLiteral = Group(String('lexical_form') + Optional(Group ((LANGTAG('langtag') | ('^^' + iri('datatype_uri')))))).setName('RDFLiteral')
+	parser.addElement(RDFLiteral)
+
+(To be extended)
+
+Miscellaneous
+-------------
+
+The most important tool to connect the framework to pyparsing is without doubt setParseAction. The function parseStructFunc in base.py returns a function that converts 
+a ParseResults object into a ParseStruct object that represents a recursive tree of further ParseStruct objects that represent smaller and smaller parsed subexpressions, and of
+strings at the leaves.
+Each of the
+
+For terminal productions in SPARQL, regex are used (with one or two exceptions). This was a pragmatic decision, it seemed to work best that way. All non-terminals 
+are defined using higher order pyparsing constructs.
+
+A helper function "separatedList" was developed. It matches the same expressions as a delimitedList (it is actually a delimitedList with a special parseAction attached), 
+but other than a delimitedList it includes the delimiter in its ParseResult. This is needed because a ParseStruct object must be able to render the expression it came from.
+
+
+
+	
+
+	

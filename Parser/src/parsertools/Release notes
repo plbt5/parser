@@ -1,11 +1,10 @@
 Version 0.2.4
-- Added SPARQLStruct instance method "expandIris()" to expand all iri elements with their expansion, taking into account
-	prefixes and base iri in force at the location of the iri
+- Added SPARQLStruct instance method "expandIris()" to replace all iri elements with their expansion, taking into account the prefixes and base iri in force at the location of the iri
 - Added SPARQLStruct classmethod "expandIri()" that takes 
 	- a iri string (conforming to either a PrefixedName or a IRIREF pattern),
 	- a dictionary of prefix-value mappings,
 	- and a base iri
-	and expands the iri string in the local context defined by prefixes and base iri.
+	and returns the iri string, expanded in the context defined by prefixes and base iri.
 - Added a howto.txt with a short explanation how to use the framework.
 	
 Version 0.2.3
