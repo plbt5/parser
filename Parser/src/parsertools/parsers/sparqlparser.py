@@ -8,6 +8,9 @@ from parsertools.base import ParseStruct, parseStructFunc, separatedList
 from parsertools import ParsertoolsException, NoPrefixError
 import rfc3987
 
+class SPARQLParseException(ParsertoolsException):
+    pass
+
 #
 # Define the SPARQLStruct class
 #
@@ -37,32 +40,41 @@ class SPARQLStruct(ParseStruct):
     def getBaseiri(self):
         return self._baseiri   
     
+    @classmethod
+    def expandIri(cls, iri, prefixes, baseiri):
+        '''Converts iri to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
+#         print('Expanding {} with prefixes {} and baseiri "{}"'.format(iri, prefixes, baseiri))
+        try:
+            _ = parser.PrefixedName(iri)
+            splitted = iri.split(':', maxsplit=1)
+            assert len(splitted) == 2, splitted
+            if splitted[0] != '':
+                newiri = prefixes[splitted[0] + ':'][1:-1] + splitted[1]
+            else:
+                newiri = splitted[1]
+        except ParseException:
+            try:
+                _ = parser.IRIREF(iri)
+                newiri = iri[1:-1]
+            except:
+                raise SPARQLParseException('Cannot expand "{}": no PrefixedName or IRIREF'.format(iri))
+        if rfc3987.match(newiri, 'irelative_ref'):
+            newiri = rfc3987.resolve(baseiri[1:-1], newiri)
+        assert rfc3987.match(newiri), 'String "{}" cannot be expanded as iri'.format(newiri)
+        return newiri
+        
     def expandIris(self):
+        '''Converts all iri elements to normal form, taking into account the prefixes and base in force at the location of the iri.'''
         for elt in self.searchElements(element_type=parser.iri):
-            print('Expanding iri "{}" with prefixes "{}" and baseiri "{}" (in element {})'.format(str(elt), elt._prefixes, elt._baseiri, elt.__class__.__name__))
+#             print('Expanding iri "{}" with prefixes "{}" and baseiri "{}" (in element {})'.format(str(elt), elt._prefixes, elt._baseiri, elt.__class__.__name__))
             children = elt.getChildren()
             assert len(children) == 1, children
             child = children[0]
-            if isinstance(child, parser.PrefixedName):
-                i = str(child)
-                splitted = i.split(':', maxsplit=1)
-                assert len(splitted) == 2, splitted
-                if splitted[0] != '':
-                    newiri = elt._prefixes[splitted[0] + ':'][1:-1] + splitted[1]
-                else:
-                    newiri = splitted[1]
-            else:
-                assert isinstance(child, IRIREF)
-                assert str(child[0]) + str(child[-1]) == '<>', str(child)
-                newiri = str(child)[1:-1]
-            if rfc3987.match(newiri, 'irelative_ref'):
-                newiri = rfc3987.resolve(elt._baseiri[1:-1], newiri)
-            assert rfc3987.match(newiri), 'String "{}" for iri production is not a proper iri'.format(newiri)
-            newiriref = '<' + newiri + '>'
-            print('Updating element "{}" with string "{}"'.format(elt, newiriref))
+            newiriref = '<' + SPARQLStruct.expandIri(str(child), elt._prefixes, elt._baseiri) + '>'
+#             print('Updating element "{}" with string "{}"'.format(elt, newiriref))
             elt.updateWith(newiriref)
-            print('Result:')
-            print(elt.dump())
+#             print('Result:')
+#             print(elt.dump())
 
 
 #

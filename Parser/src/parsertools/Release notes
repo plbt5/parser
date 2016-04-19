@@ -1,8 +1,18 @@
+Version 0.2.4
+- Added SPARQLStruct instance method "expandIris()" to expand all iri elements with their expansion, taking into account
+	prefixes and base iri in force at the location of the iri
+- Added SPARQLStruct classmethod "expandIri()" that takes 
+	- a iri string (conforming to either a PrefixedName or a IRIREF pattern),
+	- a dictionary of prefix-value mappings,
+	- and a base iri
+	and expands the iri string in the local context defined by prefixes and base iri.
+- Added a howto.txt with a short explanation how to use the framework.
+	
 Version 0.2.3
-- introduced SPARQLStruct as subclass of ParseStruct, keeps additional SPARQL related info
+- Introduced SPARQLStruct as subclass of ParseStruct, keeps additional SPARQL related info
 - SPARQL parser now generates SPARQLStruct objects
 - SPARQLStruct objects now contain "prefixes" and "baseiri" attributes that keep track of 
-the current prefixes dictionary and base iri value (accessed through getPrefixes() and getBaseiri() methods)
+	the current prefixes dictionary and base iri value (accessed through getPrefixes() and getBaseiri() methods)
 
 Version 0.2.2
 
