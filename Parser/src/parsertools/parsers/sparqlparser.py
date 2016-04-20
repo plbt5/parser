@@ -842,12 +842,12 @@ parser.addElement(iriOrFunction)
 #             | 'AVG' '(' 'DISTINCT'? Expression ')' 
 #             | 'SAMPLE' '(' 'DISTINCT'? Expression ')' 
 #             | 'GROUP_CONCAT' '(' 'DISTINCT'? Expression ( ';' 'SEPARATOR' '=' String )? ')' 
-Aggregate = Group((COUNT('count') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
-            ( SUM('sum') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
-            ( MIN('min') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
-            ( MAX('max') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
-            ( AVG('avg') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
-            ( SAMPLE('sample') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | \
+Aggregate = Group((COUNT('count') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | 
+            ( SUM('sum') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | 
+            ( MIN('min') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | 
+            ( MAX('max') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | 
+            ( AVG('avg') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | 
+            ( SAMPLE('sample') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | 
             ( GROUP_CONCAT('group_concat') + LPAR + Optional(DISTINCT('distinct')) + Expression('expression') + Optional( SEMICOL + SEPARATOR + '=' + String('separator') ) + RPAR)).setName('Aggregate')
 parser.addElement(Aggregate)
 
@@ -937,60 +937,60 @@ parser.addElement(ExpressionList)
 #             | RegexExpression 
 #             | ExistsFunc 
 #             | NotExistsFunc 
-BuiltInCall = Group(Aggregate | \
-                STR + LPAR + Expression('expression') + RPAR    | \
-                LANG + LPAR + Expression('expression') + RPAR    | \
-                LANGMATCHES + LPAR + Expression('language-tag') + COMMA + Expression('language-range') + RPAR    | \
-                DATATYPE + LPAR + Expression('expression') + RPAR    | \
-                BOUND + LPAR + Var('var') + RPAR    | \
-                IRI + LPAR + Expression('expression') + RPAR    | \
-                URI + LPAR + Expression('expression') + RPAR    | \
-                BNODE + (LPAR + Expression('expression') + RPAR | NIL)    | \
-                RAND + NIL    | \
-                ABS + LPAR + Expression('expression') + RPAR    | \
-                CEIL + LPAR + Expression('expression') + RPAR    | \
-                FLOOR + LPAR + Expression('expression') + RPAR    | \
-                ROUND + LPAR + Expression('expression') + RPAR    | \
-                CONCAT + ExpressionList('expressionList')    | \
-                SubstringExpression   | \
-                STRLEN + LPAR + Expression('expression') + RPAR    | \
-                StrReplaceExpression  | \
-                UCASE + LPAR + Expression('expression') + RPAR    | \
-                LCASE + LPAR + Expression('expression') + RPAR    | \
-                ENCODE_FOR_URI + LPAR + Expression('expression') + RPAR    | \
-                CONTAINS + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | \
-                STRSTARTS + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | \
-                STRENDS + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | \
-                STRBEFORE + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | \
-                STRAFTER + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | \
-                YEAR + LPAR + Expression('expression') + RPAR    | \
-                MONTH + LPAR + Expression('expression') + RPAR    | \
-                DAY + LPAR + Expression('expression') + RPAR    | \
-                HOURS + LPAR + Expression('expression') + RPAR    | \
-                MINUTES + LPAR + Expression('expression') + RPAR    | \
-                SECONDS + LPAR + Expression('expression') + RPAR    | \
-                TIMEZONE + LPAR + Expression('expression') + RPAR    | \
-                TZ + LPAR + Expression('expression') + RPAR    | \
-                NOW + NIL    | \
-                UUID + NIL    | \
-                STRUUID + NIL    | \
-                MD5 + LPAR + Expression('expression') + RPAR    | \
-                SHA1 + LPAR + Expression('expression') + RPAR    | \
-                SHA256 + LPAR + Expression('expression') + RPAR    | \
-                SHA384 + LPAR + Expression('expression') + RPAR    | \
-                SHA512 + LPAR + Expression('expression') + RPAR    | \
-                COALESCE + ExpressionList('expressionList')    | \
-                IF + LPAR + Expression('expression1') + COMMA + Expression('expression2') + COMMA + Expression('expression3') + RPAR    | \
-                STRLANG + LPAR + Expression('lexicalForm') + COMMA + Expression('langTag') + RPAR    | \
-                STRDT + LPAR + Expression('lexicalForm') + COMMA + Expression('datatypeIRI') + RPAR    | \
-                sameTerm + LPAR + Expression('term1') + COMMA + Expression('term2') + RPAR    | \
-                isIRI + LPAR + Expression('expression') + RPAR    | \
-                isURI + LPAR + Expression('expression') + RPAR    | \
-                isBLANK + LPAR + Expression('expression') + RPAR    | \
-                isLITERAL + LPAR + Expression('expression') + RPAR    | \
-                isNUMERIC + LPAR + Expression('expression') + RPAR    | \
-                RegexExpression | \
-                ExistsFunc | \
+BuiltInCall = Group(Aggregate | 
+                STR + LPAR + Expression('expression') + RPAR    | 
+                LANG + LPAR + Expression('expression') + RPAR    | 
+                LANGMATCHES + LPAR + Expression('language-tag') + COMMA + Expression('language-range') + RPAR    | 
+                DATATYPE + LPAR + Expression('expression') + RPAR    | 
+                BOUND + LPAR + Var('var') + RPAR    | 
+                IRI + LPAR + Expression('expression') + RPAR    | 
+                URI + LPAR + Expression('expression') + RPAR    | 
+                BNODE + (LPAR + Expression('expression') + RPAR | NIL)    | 
+                RAND + NIL    | 
+                ABS + LPAR + Expression('expression') + RPAR    | 
+                CEIL + LPAR + Expression('expression') + RPAR    | 
+                FLOOR + LPAR + Expression('expression') + RPAR    | 
+                ROUND + LPAR + Expression('expression') + RPAR    | 
+                CONCAT + ExpressionList('expressionList')    | 
+                SubstringExpression   | 
+                STRLEN + LPAR + Expression('expression') + RPAR    | 
+                StrReplaceExpression  | 
+                UCASE + LPAR + Expression('expression') + RPAR    | 
+                LCASE + LPAR + Expression('expression') + RPAR    | 
+                ENCODE_FOR_URI + LPAR + Expression('expression') + RPAR    | 
+                CONTAINS + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | 
+                STRSTARTS + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | 
+                STRENDS + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | 
+                STRBEFORE + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | 
+                STRAFTER + LPAR + Expression('arg1') + COMMA + Expression('arg2') + RPAR    | 
+                YEAR + LPAR + Expression('expression') + RPAR    | 
+                MONTH + LPAR + Expression('expression') + RPAR    | 
+                DAY + LPAR + Expression('expression') + RPAR    | 
+                HOURS + LPAR + Expression('expression') + RPAR    | 
+                MINUTES + LPAR + Expression('expression') + RPAR    | 
+                SECONDS + LPAR + Expression('expression') + RPAR    | 
+                TIMEZONE + LPAR + Expression('expression') + RPAR    | 
+                TZ + LPAR + Expression('expression') + RPAR    | 
+                NOW + NIL    | 
+                UUID + NIL    | 
+                STRUUID + NIL    | 
+                MD5 + LPAR + Expression('expression') + RPAR    | 
+                SHA1 + LPAR + Expression('expression') + RPAR    | 
+                SHA256 + LPAR + Expression('expression') + RPAR    | 
+                SHA384 + LPAR + Expression('expression') + RPAR    | 
+                SHA512 + LPAR + Expression('expression') + RPAR    | 
+                COALESCE + ExpressionList('expressionList')    | 
+                IF + LPAR + Expression('expression1') + COMMA + Expression('expression2') + COMMA + Expression('expression3') + RPAR    | 
+                STRLANG + LPAR + Expression('lexicalForm') + COMMA + Expression('langTag') + RPAR    | 
+                STRDT + LPAR + Expression('lexicalForm') + COMMA + Expression('datatypeIRI') + RPAR    | 
+                sameTerm + LPAR + Expression('term1') + COMMA + Expression('term2') + RPAR    | 
+                isIRI + LPAR + Expression('expression') + RPAR    | 
+                isURI + LPAR + Expression('expression') + RPAR    | 
+                isBLANK + LPAR + Expression('expression') + RPAR    | 
+                isLITERAL + LPAR + Expression('expression') + RPAR    | 
+                isNUMERIC + LPAR + Expression('expression') + RPAR    | 
+                RegexExpression | 
+                ExistsFunc | 
                 NotExistsFunc ).setName('BuiltInCall')
 parser.addElement(BuiltInCall)
 
@@ -1022,13 +1022,13 @@ NumericExpression = Group(AdditiveExpression + Empty()).setName('NumericExpressi
 parser.addElement(NumericExpression)
 
 # [114]   RelationalExpression      ::=   NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT' 'IN' ExpressionList )? 
-RelationalExpression = Group(NumericExpression + Optional( EQ + NumericExpression | \
-                                                         NE + NumericExpression | \
-                                                         LT + NumericExpression | \
-                                                         GT + NumericExpression | \
-                                                         LE + NumericExpression | \
-                                                         GE + NumericExpression | \
-                                                         IN + ExpressionList | \
+RelationalExpression = Group(NumericExpression + Optional( EQ + NumericExpression | 
+                                                         NE + NumericExpression | 
+                                                         LT + NumericExpression | 
+                                                         GT + NumericExpression | 
+                                                         LE + NumericExpression | 
+                                                         GE + NumericExpression | 
+                                                         IN + ExpressionList | 
                                                          NOT_IN + ExpressionList) ).setName('RelationalExpression')
 parser.addElement(RelationalExpression)
 
@@ -1048,11 +1048,11 @@ parser.addElement(ConditionalOrExpression)
 Expression << Group(ConditionalOrExpression + Empty())
 
 # [109]   GraphTerm         ::=   iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | NIL 
-GraphTerm =   Group(iri | \
-                RDFLiteral | \
-                NumericLiteral | \
-                BooleanLiteral | \
-                BlankNode | \
+GraphTerm =   Group(iri | 
+                RDFLiteral | 
+                NumericLiteral | 
+                BooleanLiteral | 
+                BlankNode | 
                 NIL ).setName('GraphTerm')
 parser.addElement(GraphTerm)
                 
@@ -1457,7 +1457,7 @@ DescribeQuery = Group(DESCRIBE + (OneOrMore(VarOrIri) | ALL_VALUES) + ZeroOrMore
 parser.addElement(DescribeQuery)
 
 # [10]    ConstructQuery    ::=   'CONSTRUCT' ( ConstructTemplate DatasetClause* WhereClause SolutionModifier | DatasetClause* 'WHERE' '{' TriplesTemplate? '}' SolutionModifier ) 
-ConstructQuery = Group(CONSTRUCT + ((ConstructTemplate + ZeroOrMore(DatasetClause) + WhereClause('where') + SolutionModifier) | \
+ConstructQuery = Group(CONSTRUCT + ((ConstructTemplate + ZeroOrMore(DatasetClause) + WhereClause('where') + SolutionModifier) | 
                                       (ZeroOrMore(DatasetClause) + WHERE + LCURL +  Optional(TriplesTemplate) + RCURL + SolutionModifier))).setName('ConstructQuery')
 parser.addElement(ConstructQuery)
 
