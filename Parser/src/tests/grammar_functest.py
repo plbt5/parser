@@ -4,7 +4,7 @@ Created on 24 feb. 2016
 @author: jeroenbruijning
 '''
 from parsertools.base import ParseResults
-from parsertools.parsers.sparqlparser import parser, checkIri
+from parsertools.parsers.sparqlparser import SPARQLParser, checkIri
 from sympy.solvers.ode import checkinfsol
 from parsertools import NoPrefixError
 import warnings
@@ -24,7 +24,7 @@ import warnings
 
 
 def printResults(l, rule, dump=False):
-    element = eval('parser.' + rule)
+    element = eval('SPARQLParser.' + rule)
     for s in l:
         r = element.pattern.parseString(s, parseAll=True)
         while len(r) == 1 and isinstance(r[0], ParseResults):

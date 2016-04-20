@@ -46,6 +46,9 @@ class ParseStruct:
         
         return self.__class__ == other.__class__ and str(self) == str(other)
     
+    def __ne__(self, other):
+        return not self == other
+    
     def __getattr__(self, att):
         '''Retrieves the unique, direct subelement having a label equal to the argument, if it exists.
         Raises an exception if zero, or more than one values exist for that label.'''

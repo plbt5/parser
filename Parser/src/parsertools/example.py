@@ -8,7 +8,7 @@ Created on 1 apr. 2016
 # Example program for the use of parsertools
 #
 
-# Running a SPARQL parser
+# Running a SPARQL SPARQLParser
 
 from parsertools.parsers.sparqlparser import parseQuery
 
@@ -32,18 +32,18 @@ print(query.dump())
 # comments from the query) and some postprocessing (to perform additional checks on the query that are
 # part of the SPARQL specification outside the EBNF grammar). In between the query string is parsed against 
 # a top level production of the grammar.
-# For this, an actual SPARQL parser object is used. It has attributes for every production in the grammar (except for
+# For this, an actual SPARQL SPARQLParser object is used. It has attributes for every production in the grammar (except for
 # the "whitespace" production which is not needed with pyparsing).
 # Such an attribute can be used to parse a valid string for that production. This is the basic mode of parsing.
 
 # As an example, below a string is parsed against the RDFLiteral production.
 # For this, we need to import sparqlparser.
 
-from parsertools.parsers.sparqlparser import parser
+from parsertools.parsers.sparqlparser import SPARQLParser
 
 rdfliteral = '"work"@en-bf'
 
-rdf = parser.RDFLiteral(rdfliteral)
+rdf = SPARQLParser.RDFLiteral(rdfliteral)
 
 print(rdf.dump())
 
@@ -56,7 +56,7 @@ print(rdf.dump())
 # In addition, a "labeledOnly" flag can be specified. If True, only elements with an assigned label will qualify.
 # The default for this flag is False (all elements considered).
 
-wheres = query.searchElements(label = None, element_type=parser.WhereClause, value=None)
+wheres = query.searchElements(label = None, element_type=SPARQLParser.WhereClause, value=None)
 for w in wheres:
     print()
     print(w.dump())

@@ -8,10 +8,10 @@ from parsertools.base import ParseStruct, parseStructFunc, separatedList
 from parsertools import ParsertoolsException, NoPrefixError
 import rfc3987
 
-# Custom exception. This is optional when defining a parser. When present, it can be used in methods of the Parser class as defined below.
+# Custom exception. This is optional when defining a SPARQLParser. When present, it can be used in methods of the Parser class as defined below.
 
 class SPARQLParseException(ParsertoolsException):
-    '''Custom exception. This is optional when defining a parser. When present, it can be used in methods of a ParseStruct subclass if
+    '''Custom exception. This is optional when defining a SPARQLParser. When present, it can be used in methods of a ParseStruct subclass if
     defined below.'''
     
     pass
@@ -32,13 +32,13 @@ class SPARQLStruct(ParseStruct):
         self.__dict__['_baseiri'] = baseiri
         prefixes = prefixes.copy()
         for elt in self.getChildren():
-            if isinstance(elt, parser.Prologue):
+            if isinstance(elt, SPARQLParser.Prologue):
                 for decl in elt.getChildren():
-                    if isinstance(decl, parser.PrefixDecl):
+                    if isinstance(decl, SPARQLParser.PrefixDecl):
                         assert str(decl.prefix) not in prefixes
                         prefixes[str(decl.prefix)] = str(decl.namespace)
                     else:
-                        assert isinstance(decl, parser.BaseDecl)
+                        assert isinstance(decl, SPARQLParser.BaseDecl)
                         baseiri = baseiri + str(decl.baseiri)
                 prefixes = prefixes.copy()
             elt.applyPrefixesAndBase(prefixes, baseiri)
@@ -51,7 +51,7 @@ class SPARQLStruct(ParseStruct):
         
     def expandIris(self):
         '''Converts all iri elements to normal form, taking into account the prefixes and base in force at the location of the iri.'''
-        for elt in self.searchElements(element_type=parser.iri):
+        for elt in self.searchElements(element_type=SPARQLParser.iri):
             children = elt.getChildren()
             assert len(children) == 1, children
             child = children[0]
@@ -59,7 +59,7 @@ class SPARQLStruct(ParseStruct):
             elt.updateWith(newiriref)
 
 #
-# The following is boilerplate code, to be included in every parser definition module
+# The following is boilerplate code, to be included in every SPARQLParser definition module
 #
 
 class Parser:
@@ -77,10 +77,10 @@ class Parser:
         pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
 
 #
-# Boilerplate code: create the parser object, optionally with a custom ParseStruct subclass
+# Boilerplate code: create the SPARQLParser object, optionally with a custom ParseStruct subclass
 #
 
-parser = Parser(SPARQLStruct)
+SPARQLParser = Parser(SPARQLStruct)
 
 #
 # Main function to call. This is a convenience function, adapted to the SPARQL definition.
@@ -94,10 +94,10 @@ def parseQuery(querystring):
     # In SPARQL, there are two entry points to the grammar: QueryUnit and UpdateUnit. These are tried in order.
     
     try:
-        result = parser.QueryUnit(s)
+        result = SPARQLParser.QueryUnit(s)
     except ParseException:
         try:
-            result = parser.UpdateUnit(s)
+            result = SPARQLParser.UpdateUnit(s)
         except ParseException:
             raise ParsertoolsException('Query {} cannot be parsed'.format(querystring))
         
@@ -115,7 +115,7 @@ def expandIri(iri, prefixes, baseiri):
     '''Converts iri to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
 
     try:
-        _ = parser.PrefixedName(iri)
+        _ = SPARQLParser.PrefixedName(iri)
         splitted = iri.split(':', maxsplit=1)
         assert len(splitted) == 2, splitted
         if splitted[0] != '':
@@ -124,7 +124,7 @@ def expandIri(iri, prefixes, baseiri):
             newiri = splitted[1]
     except ParseException:
         try:
-            _ = parser.IRIREF(iri)
+            _ = SPARQLParser.IRIREF(iri)
             newiri = iri[1:-1]
         except:
             raise SPARQLParseException('Cannot expand "{}": no PrefixedName or IRIREF'.format(iri))
@@ -184,423 +184,423 @@ def checkIri(r):
 #
 
 LPAR = Literal('(').setName('LPAR')
-parser.addElement(LPAR)
+SPARQLParser.addElement(LPAR)
 
 RPAR = Literal(')').setName('RPAR')
-parser.addElement(RPAR)
+SPARQLParser.addElement(RPAR)
 
 LBRACK = Literal('[').setName('LBRACK')
-parser.addElement(LBRACK)
+SPARQLParser.addElement(LBRACK)
 
 RBRACK = Literal(']').setName('RBRACK')
-parser.addElement(RBRACK)
+SPARQLParser.addElement(RBRACK)
 
 LCURL = Literal('{').setName('LCURL')
-parser.addElement(LCURL)
+SPARQLParser.addElement(LCURL)
 
 RCURL = Literal('}').setName('RCURL')
-parser.addElement(RCURL)
+SPARQLParser.addElement(RCURL)
 
 SEMICOL = Literal(';').setName('SEMICOL')
-parser.addElement(SEMICOL)
+SPARQLParser.addElement(SEMICOL)
 
 PERIOD = Literal('.').setName('PERIOD')
-parser.addElement(PERIOD)
+SPARQLParser.addElement(PERIOD)
 
 COMMA = Literal(',').setName('COMMA')
-parser.addElement(COMMA)
+SPARQLParser.addElement(COMMA)
 
 #
 # Operators
 #
 
 NEGATE = Literal('!').setName('NEGATE')
-parser.addElement(NEGATE)
+SPARQLParser.addElement(NEGATE)
 
 PLUS = Literal('+').setName('PLUS')
-parser.addElement(PLUS)
+SPARQLParser.addElement(PLUS)
 
 MINUS = Literal('-').setName('MINUS')
-parser.addElement(MINUS)
+SPARQLParser.addElement(MINUS)
 
 TIMES = Literal('*').setName('TIMES')
-parser.addElement(TIMES)
+SPARQLParser.addElement(TIMES)
 
 DIV = Literal('/').setName('DIV')
-parser.addElement(DIV)
+SPARQLParser.addElement(DIV)
 
 EQ = Literal('=').setName('EQ')
-parser.addElement(EQ)
+SPARQLParser.addElement(EQ)
 
 NE = Literal('!=').setName('NE')
-parser.addElement(NE)
+SPARQLParser.addElement(NE)
 
 GT = Literal('>').setName('GT')
-parser.addElement(GT)
+SPARQLParser.addElement(GT)
 
 LT = Literal('<').setName('LT')
-parser.addElement(LT)
+SPARQLParser.addElement(LT)
 
 GE = Literal('>=').setName('GE')
-parser.addElement(GE)
+SPARQLParser.addElement(GE)
 
 LE = Literal('<=').setName('LE')
-parser.addElement(LE)
+SPARQLParser.addElement(LE)
 
 AND = Literal('&&').setName('AND')
-parser.addElement(AND)
+SPARQLParser.addElement(AND)
 
 OR = Literal('||').setName('OR')
-parser.addElement(OR)
+SPARQLParser.addElement(OR)
 
 INVERSE = Literal('^').setName('INVERSE')
-parser.addElement(INVERSE)
+SPARQLParser.addElement(INVERSE)
 
 #
 # Keywords
 #
 
 ALL_VALUES = Literal('*').setName('ALL_VALUES')
-parser.addElement(ALL_VALUES)
+SPARQLParser.addElement(ALL_VALUES)
 
 TYPE = Keyword('a').setName('TYPE')
-parser.addElement(TYPE)
+SPARQLParser.addElement(TYPE)
 
 DISTINCT = CaselessKeyword('DISTINCT').setName('DISTINCT')
-parser.addElement(DISTINCT)
+SPARQLParser.addElement(DISTINCT)
 
 COUNT = CaselessKeyword('COUNT').setName('COUNT')
-parser.addElement(COUNT)
+SPARQLParser.addElement(COUNT)
 
 SUM = CaselessKeyword('SUM').setName('SUM')
-parser.addElement(SUM)
+SPARQLParser.addElement(SUM)
 
 MIN = CaselessKeyword('MIN').setName('MIN')
-parser.addElement(MIN)
+SPARQLParser.addElement(MIN)
 
 MAX = CaselessKeyword('MAX').setName('MAX')
-parser.addElement(MAX)
+SPARQLParser.addElement(MAX)
 
 AVG = CaselessKeyword('AVG').setName('AVG')
-parser.addElement(AVG)
+SPARQLParser.addElement(AVG)
 
 SAMPLE = CaselessKeyword('SAMPLE').setName('SAMPLE')
-parser.addElement(SAMPLE)
+SPARQLParser.addElement(SAMPLE)
 
 GROUP_CONCAT = CaselessKeyword('GROUP_CONCAT').setName('GROUP_CONCAT')
-parser.addElement(GROUP_CONCAT)
+SPARQLParser.addElement(GROUP_CONCAT)
 
 SEPARATOR = CaselessKeyword('SEPARATOR').setName('SEPARATOR')
-parser.addElement(SEPARATOR)
+SPARQLParser.addElement(SEPARATOR)
 
 NOT = (CaselessKeyword('NOT') + NotAny(CaselessKeyword('EXISTS') | CaselessKeyword('IN'))).setName('NOT')
-parser.addElement(NOT)
+SPARQLParser.addElement(NOT)
 
 EXISTS = CaselessKeyword('EXISTS').setName('EXISTS')
-parser.addElement(EXISTS)
+SPARQLParser.addElement(EXISTS)
 
 NOT_EXISTS = Combine(CaselessKeyword('NOT') + CaselessKeyword('EXISTS'), joinString=' ', adjacent=False).setName('NOT_EXISTS')
-parser.addElement(NOT_EXISTS)
+SPARQLParser.addElement(NOT_EXISTS)
 
 REPLACE = CaselessKeyword('REPLACE').setName('REPLACE')
-parser.addElement(REPLACE)
+SPARQLParser.addElement(REPLACE)
 
 SUBSTR = CaselessKeyword('SUBSTR').setName('SUBSTR')
-parser.addElement(SUBSTR)
+SPARQLParser.addElement(SUBSTR)
 
 REGEX = CaselessKeyword('REGEX').setName('REGEX')
-parser.addElement(REGEX)
+SPARQLParser.addElement(REGEX)
 
 STR = CaselessKeyword('STR').setName('STR')
-parser.addElement(STR)
+SPARQLParser.addElement(STR)
 
 LANG = CaselessKeyword('LANG').setName('LANG')
-parser.addElement(LANG)
+SPARQLParser.addElement(LANG)
 
 LANGMATCHES = CaselessKeyword('LANGMATCHES').setName('LANGMATCHES')
-parser.addElement(LANGMATCHES)
+SPARQLParser.addElement(LANGMATCHES)
 
 DATATYPE = CaselessKeyword('DATATYPE').setName('DATATYPE')
-parser.addElement(DATATYPE)
+SPARQLParser.addElement(DATATYPE)
 
 BOUND = CaselessKeyword('BOUND').setName('BOUND')
-parser.addElement(BOUND)
+SPARQLParser.addElement(BOUND)
 
 IRI = CaselessKeyword('IRI').setName('IRI')
-parser.addElement(IRI)
+SPARQLParser.addElement(IRI)
 
 URI = CaselessKeyword('URI').setName('URI')
-parser.addElement(URI)
+SPARQLParser.addElement(URI)
 
 BNODE = CaselessKeyword('BNODE').setName('BNODE')
-parser.addElement(BNODE)
+SPARQLParser.addElement(BNODE)
 
 RAND = CaselessKeyword('RAND').setName('RAND')
-parser.addElement(RAND)
+SPARQLParser.addElement(RAND)
 
 ABS = CaselessKeyword('ABS').setName('ABS')
-parser.addElement(ABS)
+SPARQLParser.addElement(ABS)
 
 CEIL = CaselessKeyword('CEIL').setName('CEIL')
-parser.addElement(CEIL)
+SPARQLParser.addElement(CEIL)
 
 FLOOR = CaselessKeyword('FLOOR').setName('FLOOR')
-parser.addElement(FLOOR)
+SPARQLParser.addElement(FLOOR)
 
 ROUND = CaselessKeyword('ROUND').setName('ROUND')
-parser.addElement(ROUND)
+SPARQLParser.addElement(ROUND)
 
 CONCAT = CaselessKeyword('CONCAT').setName('CONCAT')
-parser.addElement(CONCAT)
+SPARQLParser.addElement(CONCAT)
 
 STRLEN = CaselessKeyword('STRLEN').setName('STRLEN')
-parser.addElement(STRLEN)
+SPARQLParser.addElement(STRLEN)
 
 UCASE = CaselessKeyword('UCASE').setName('UCASE')
-parser.addElement(UCASE)
+SPARQLParser.addElement(UCASE)
 
 LCASE = CaselessKeyword('LCASE').setName('LCASE')
-parser.addElement(LCASE)
+SPARQLParser.addElement(LCASE)
 
 ENCODE_FOR_URI = CaselessKeyword('ENCODE_FOR_URI').setName('ENCODE_FOR_URI')
-parser.addElement(ENCODE_FOR_URI)
+SPARQLParser.addElement(ENCODE_FOR_URI)
 
 CONTAINS = CaselessKeyword('CONTAINS').setName('CONTAINS')
-parser.addElement(CONTAINS)
+SPARQLParser.addElement(CONTAINS)
 
 STRSTARTS = CaselessKeyword('STRSTARTS').setName('STRSTARTS')
-parser.addElement(STRSTARTS)
+SPARQLParser.addElement(STRSTARTS)
 
 STRENDS = CaselessKeyword('STRENDS').setName('STRENDS')
-parser.addElement(STRENDS)
+SPARQLParser.addElement(STRENDS)
 
 STRBEFORE = CaselessKeyword('STRBEFORE').setName('STRBEFORE')
-parser.addElement(STRBEFORE)
+SPARQLParser.addElement(STRBEFORE)
 
 STRAFTER = CaselessKeyword('STRAFTER').setName('STRAFTER')
-parser.addElement(STRAFTER)
+SPARQLParser.addElement(STRAFTER)
 
 YEAR = CaselessKeyword('YEAR').setName('YEAR')
-parser.addElement(YEAR)
+SPARQLParser.addElement(YEAR)
 
 MONTH = CaselessKeyword('MONTH').setName('MONTH')
-parser.addElement(MONTH)
+SPARQLParser.addElement(MONTH)
 
 DAY = CaselessKeyword('DAY').setName('DAY')
-parser.addElement(DAY)
+SPARQLParser.addElement(DAY)
 
 HOURS = CaselessKeyword('HOURS').setName('HOURS')
-parser.addElement(HOURS)
+SPARQLParser.addElement(HOURS)
 
 MINUTES = CaselessKeyword('MINUTES').setName('MINUTES')
-parser.addElement(MINUTES)
+SPARQLParser.addElement(MINUTES)
 
 SECONDS = CaselessKeyword('SECONDS').setName('SECONDS')
-parser.addElement(SECONDS)
+SPARQLParser.addElement(SECONDS)
 
 TIMEZONE = CaselessKeyword('TIMEZONE').setName('TIMEZONE')
-parser.addElement(TIMEZONE)
+SPARQLParser.addElement(TIMEZONE)
 
 TZ = CaselessKeyword('TZ').setName('TZ')
-parser.addElement(TZ)
+SPARQLParser.addElement(TZ)
 
 NOW = CaselessKeyword('NOW').setName('NOW')
-parser.addElement(NOW)
+SPARQLParser.addElement(NOW)
 
 UUID = CaselessKeyword('UUID').setName('UUID')
-parser.addElement(UUID)
+SPARQLParser.addElement(UUID)
 
 STRUUID = CaselessKeyword('STRUUID').setName('STRUUID')
-parser.addElement(STRUUID)
+SPARQLParser.addElement(STRUUID)
 
 MD5 = CaselessKeyword('MD5').setName('MD5')
-parser.addElement(MD5)
+SPARQLParser.addElement(MD5)
 
 SHA1 = CaselessKeyword('SHA1').setName('SHA1')
-parser.addElement(SHA1)
+SPARQLParser.addElement(SHA1)
 
 SHA256 = CaselessKeyword('SHA256').setName('SHA256')
-parser.addElement(SHA256)
+SPARQLParser.addElement(SHA256)
 
 SHA384 = CaselessKeyword('SHA384').setName('SHA384')
-parser.addElement(SHA384)
+SPARQLParser.addElement(SHA384)
 
 SHA512 = CaselessKeyword('SHA512').setName('SHA512')
-parser.addElement(SHA512)
+SPARQLParser.addElement(SHA512)
 
 COALESCE = CaselessKeyword('COALESCE').setName('COALESCE')
-parser.addElement(COALESCE)
+SPARQLParser.addElement(COALESCE)
 
 IF = CaselessKeyword('IF').setName('IF')
-parser.addElement(IF)
+SPARQLParser.addElement(IF)
 
 STRLANG = CaselessKeyword('STRLANG').setName('STRLANG')
-parser.addElement(STRLANG)
+SPARQLParser.addElement(STRLANG)
 
 STRDT = CaselessKeyword('STRDT').setName('STRDT')
-parser.addElement(STRDT)
+SPARQLParser.addElement(STRDT)
 
 sameTerm = CaselessKeyword('sameTerm').setName('sameTerm')
-parser.addElement(sameTerm)
+SPARQLParser.addElement(sameTerm)
 
 isIRI = CaselessKeyword('isIRI').setName('isIRI')
-parser.addElement(isIRI)
+SPARQLParser.addElement(isIRI)
 
 isURI = CaselessKeyword('isURI').setName('isURI')
-parser.addElement(isURI)
+SPARQLParser.addElement(isURI)
 
 isBLANK = CaselessKeyword('isBLANK').setName('isBLANK')
-parser.addElement(isBLANK)
+SPARQLParser.addElement(isBLANK)
 
 isLITERAL = CaselessKeyword('isLITERAL').setName('isLITERAL')
-parser.addElement(isLITERAL)
+SPARQLParser.addElement(isLITERAL)
 
 isNUMERIC = CaselessKeyword('isNUMERIC').setName('isNUMERIC')
-parser.addElement(isNUMERIC)
+SPARQLParser.addElement(isNUMERIC)
 
 IN = CaselessKeyword('IN').setName('IN')
-parser.addElement(IN)
+SPARQLParser.addElement(IN)
 
 NOT_IN = Combine(CaselessKeyword('NOT') + CaselessKeyword('IN'), joinString=' ', adjacent=False).setName('NOT_IN')
-parser.addElement(NOT_IN)
+SPARQLParser.addElement(NOT_IN)
 
 FILTER = CaselessKeyword('FILTER').setName('FILTER')
-parser.addElement(FILTER)
+SPARQLParser.addElement(FILTER)
 
 UNION = CaselessKeyword('UNION').setName('UNION')
-parser.addElement(UNION)
+SPARQLParser.addElement(UNION)
 
 SUBTRACT = CaselessKeyword('MINUS').setName('SUBTRACT')
-parser.addElement(SUBTRACT)
+SPARQLParser.addElement(SUBTRACT)
 
 UNDEF = CaselessKeyword('UNDEF').setName('UNDEF')
-parser.addElement(UNDEF)
+SPARQLParser.addElement(UNDEF)
 
 VALUES = CaselessKeyword('VALUES').setName('VALUES')
-parser.addElement(VALUES)
+SPARQLParser.addElement(VALUES)
 
 BIND = CaselessKeyword('BIND').setName('BIND')
-parser.addElement(BIND)
+SPARQLParser.addElement(BIND)
 
 AS = CaselessKeyword('AS').setName('AS')
-parser.addElement(AS)
+SPARQLParser.addElement(AS)
 
 SERVICE = CaselessKeyword('SERVICE').setName('SERVICE')
-parser.addElement(SERVICE)
+SPARQLParser.addElement(SERVICE)
 
 SILENT = CaselessKeyword('SILENT').setName('SILENT')
-parser.addElement(SILENT)
+SPARQLParser.addElement(SILENT)
 
 GRAPH = CaselessKeyword('GRAPH').setName('GRAPH')
-parser.addElement(GRAPH)
+SPARQLParser.addElement(GRAPH)
 
 OPTIONAL = CaselessKeyword('OPTIONAL').setName('OPTIONAL')
-parser.addElement(OPTIONAL)
+SPARQLParser.addElement(OPTIONAL)
 
 DEFAULT = CaselessKeyword('DEFAULT').setName('DEFAULT')
-parser.addElement(DEFAULT)
+SPARQLParser.addElement(DEFAULT)
 
 NAMED = CaselessKeyword('NAMED').setName('NAMED')
-parser.addElement(NAMED)
+SPARQLParser.addElement(NAMED)
 
 ALL = CaselessKeyword('ALL').setName('ALL')
-parser.addElement(ALL)
+SPARQLParser.addElement(ALL)
 
 USING = CaselessKeyword('USING').setName('USING')
-parser.addElement(USING)
+SPARQLParser.addElement(USING)
 
 INSERT = CaselessKeyword('INSERT').setName('INSERT')
-parser.addElement(INSERT)
+SPARQLParser.addElement(INSERT)
 
 DELETE = CaselessKeyword('DELETE').setName('DELETE')
-parser.addElement(DELETE)
+SPARQLParser.addElement(DELETE)
 
 WITH = CaselessKeyword('WITH').setName('WITH')
-parser.addElement(WITH)
+SPARQLParser.addElement(WITH)
 
 WHERE = CaselessKeyword('WHERE').setName('WHERE')
-parser.addElement(WHERE)
+SPARQLParser.addElement(WHERE)
 
 DELETE_WHERE = Combine(CaselessKeyword('DELETE') + CaselessKeyword('WHERE'), joinString=' ', adjacent=False).setName('DELETE_WHERE')
-parser.addElement(DELETE_WHERE)
+SPARQLParser.addElement(DELETE_WHERE)
 
 DELETE_DATA = Combine(CaselessKeyword('DELETE') + CaselessKeyword('DATA'), joinString=' ', adjacent=False).setName('DELETE_DATA')
-parser.addElement(DELETE_DATA)
+SPARQLParser.addElement(DELETE_DATA)
 
 INSERT_DATA = Combine(CaselessKeyword('INSERT') + CaselessKeyword('DATA'), joinString=' ', adjacent=False).setName('INSERT_DATA')
-parser.addElement(INSERT_DATA)
+SPARQLParser.addElement(INSERT_DATA)
 
 COPY = CaselessKeyword('COPY').setName('COPY')
-parser.addElement(COPY)
+SPARQLParser.addElement(COPY)
 
 MOVE = CaselessKeyword('MOVE').setName('MOVE')
-parser.addElement(MOVE)
+SPARQLParser.addElement(MOVE)
 
 ADD = CaselessKeyword('ADD').setName('ADD')
-parser.addElement(ADD)
+SPARQLParser.addElement(ADD)
 
 CREATE = CaselessKeyword('CREATE').setName('CREATE')
-parser.addElement(CREATE)
+SPARQLParser.addElement(CREATE)
 
 DROP = CaselessKeyword('DROP').setName('DROP')
-parser.addElement(DROP)
+SPARQLParser.addElement(DROP)
 
 CLEAR = CaselessKeyword('CLEAR').setName('CLEAR')
-parser.addElement(CLEAR)
+SPARQLParser.addElement(CLEAR)
 
 LOAD = CaselessKeyword('LOAD').setName('LOAD')
-parser.addElement(LOAD)
+SPARQLParser.addElement(LOAD)
 
 TO = CaselessKeyword('TO').setName('TO')
-parser.addElement(TO)
+SPARQLParser.addElement(TO)
 
 INTO = CaselessKeyword('INTO').setName('INTO')
-parser.addElement(INTO)
+SPARQLParser.addElement(INTO)
 
 OFFSET = CaselessKeyword('OFFSET').setName('OFFSET')
-parser.addElement(OFFSET)
+SPARQLParser.addElement(OFFSET)
 
 LIMIT = CaselessKeyword('LIMIT').setName('LIMIT')
-parser.addElement(LIMIT)
+SPARQLParser.addElement(LIMIT)
 
 ASC = CaselessKeyword('ASC').setName('ASC')
-parser.addElement(ASC)
+SPARQLParser.addElement(ASC)
 
 DESC = CaselessKeyword('DESC').setName('DESC')
-parser.addElement(DESC)
+SPARQLParser.addElement(DESC)
 
 ORDER_BY = Combine(CaselessKeyword('ORDER') + CaselessKeyword('BY'), joinString=' ', adjacent=False).setName('ORDER_BY')
-parser.addElement(ORDER_BY)
+SPARQLParser.addElement(ORDER_BY)
 
 HAVING = CaselessKeyword('HAVING').setName('HAVING')
-parser.addElement(HAVING)
+SPARQLParser.addElement(HAVING)
 
 GROUP_BY = Combine(CaselessKeyword('GROUP') + CaselessKeyword('BY'), joinString=' ', adjacent=False).setName('GROUP_BY')
-parser.addElement(GROUP_BY)
+SPARQLParser.addElement(GROUP_BY)
 
 FROM = CaselessKeyword('FROM').setName('FROM')
-parser.addElement(FROM)
+SPARQLParser.addElement(FROM)
 
 ASK = CaselessKeyword('ASK').setName('ASK')
-parser.addElement(ASK)
+SPARQLParser.addElement(ASK)
 
 DESCRIBE = CaselessKeyword('DESCRIBE').setName('DESCRIBE')
-parser.addElement(DESCRIBE)
+SPARQLParser.addElement(DESCRIBE)
 
 CONSTRUCT = CaselessKeyword('CONSTRUCT').setName('CONSTRUCT')
-parser.addElement(CONSTRUCT)
+SPARQLParser.addElement(CONSTRUCT)
 
 SELECT = CaselessKeyword('SELECT').setName('SELECT')
-parser.addElement(SELECT)
+SPARQLParser.addElement(SELECT)
 
 REDUCED = CaselessKeyword('REDUCED').setName('REDUCED')
-parser.addElement(REDUCED)
+SPARQLParser.addElement(REDUCED)
 
 PREFIX = CaselessKeyword('PREFIX').setName('PREFIX')
-parser.addElement(PREFIX)
+SPARQLParser.addElement(PREFIX)
 
 BASE = CaselessKeyword('BASE').setName('BASE')
-parser.addElement(BASE)
+SPARQLParser.addElement(BASE)
 
 # 
 # Parsers and classes for terminals
@@ -609,57 +609,57 @@ parser.addElement(BASE)
 # [173]   PN_LOCAL_ESC      ::=   '\' ( '_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%' ) 
 PN_LOCAL_ESC_e = r'\\[_~.\-!$&\'()*+,;=/?#@%]'
 PN_LOCAL_ESC = Regex(PN_LOCAL_ESC_e).setName('PN_LOCAL_ESC')
-parser.addElement(PN_LOCAL_ESC)
+SPARQLParser.addElement(PN_LOCAL_ESC)
 
 
 # [172]   HEX       ::=   [0-9] | [A-F] | [a-f] 
 HEX_e = r'[0-9A-Fa-f]'
 HEX = Regex(HEX_e).setName('HEX')
-parser.addElement(HEX)
+SPARQLParser.addElement(HEX)
 
 # [171]   PERCENT   ::=   '%' HEX HEX
 PERCENT_e = r'%({})({})'.format( HEX_e, HEX_e)
 PERCENT = Regex(PERCENT_e).setName('PERCENT')
-parser.addElement(PERCENT)
+SPARQLParser.addElement(PERCENT)
 
 # [170]   PLX       ::=   PERCENT | PN_LOCAL_ESC 
 PLX_e = r'({})|({})'.format( PERCENT_e, PN_LOCAL_ESC_e)
 PLX = Regex(PLX_e).setName('PLX')
-parser.addElement(PLX)
+SPARQLParser.addElement(PLX)
 
 # [164]   PN_CHARS_BASE     ::=   [A-Z] | [a-z] | [#x00C0-#x00D6] | [#x00D8-#x00F6] | [#x00F8-#x02FF] | [#x0370-#x037D] | [#x037F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF] 
 PN_CHARS_BASE_e = r'[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\U00010000-\U000EFFFF]'
 PN_CHARS_BASE = Regex(PN_CHARS_BASE_e).setName('PN_CHARS_BASE')
-parser.addElement(PN_CHARS_BASE)
+SPARQLParser.addElement(PN_CHARS_BASE)
 
 # [165]   PN_CHARS_U        ::=   PN_CHARS_BASE | '_' 
 PN_CHARS_U_e = r'({})|({})'.format( PN_CHARS_BASE_e, r'_')
 PN_CHARS_U = Regex(PN_CHARS_U_e).setName('PN_CHARS_U')
-parser.addElement(PN_CHARS_U)
+SPARQLParser.addElement(PN_CHARS_U)
 
 # [167]   PN_CHARS          ::=   PN_CHARS_U | '-' | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040] 
 PN_CHARS_e = r'({})|({})|({})|({})|({})|({})'.format( PN_CHARS_U_e, r'\-', r'[0-9]',  r'\u00B7', r'[\u0300-\u036F]', r'[\u203F-\u2040]')
 PN_CHARS = Regex(PN_CHARS_e).setName('PN_CHARS')
-parser.addElement(PN_CHARS)
+SPARQLParser.addElement(PN_CHARS)
 
 # [169]   PN_LOCAL          ::=   (PN_CHARS_U | ':' | [0-9] | PLX ) ((PN_CHARS | '.' | ':' | PLX)* (PN_CHARS | ':' | PLX) )?
 PN_LOCAL_e = r'(({})|({})|({})|({}))((({})|({})|({})|({}))*(({})|({})|({})))?'.format( PN_CHARS_U_e, r':', r'[0-9]', PLX_e, PN_CHARS_e, r'\.', r':', PLX_e, PN_CHARS_e, r':', PLX_e) 
 PN_LOCAL = Regex(PN_LOCAL_e).setName('PN_LOCAL')
-parser.addElement(PN_LOCAL)
+SPARQLParser.addElement(PN_LOCAL)
             
 # [168]   PN_PREFIX         ::=   PN_CHARS_BASE ((PN_CHARS|'.')* PN_CHARS)?
 PN_PREFIX_e = r'({})((({})|({}))*({}))?'.format( PN_CHARS_BASE_e, PN_CHARS_e, r'\.', PN_CHARS_e)
 PN_PREFIX = Regex(PN_PREFIX_e).setName('PN_PREFIX')
-parser.addElement(PN_PREFIX)
+SPARQLParser.addElement(PN_PREFIX)
 
 # [166]   VARNAME   ::=   ( PN_CHARS_U | [0-9] ) ( PN_CHARS_U | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040] )* 
 VARNAME_e = r'(({})|({}))(({})|({})|({})|({})|({}))*'.format( PN_CHARS_U_e, r'[0-9]', PN_CHARS_U_e, r'[0-9]', r'\u00B7', r'[\u0030-036F]', r'[\u0203-\u2040]')
 VARNAME = Regex(VARNAME_e).setName('VARNAME')
-parser.addElement(VARNAME)
+SPARQLParser.addElement(VARNAME)
 
 # [163]   ANON      ::=   '[' WS* ']' 
 ANON = Combine(Literal('[') + Literal(']'), joinString=' ', adjacent=False).setName('ANON')
-parser.addElement(ANON)
+SPARQLParser.addElement(ANON)
 
 # [162]   WS        ::=   #x20 | #x9 | #xD | #xA 
 # WS is not used
@@ -667,117 +667,117 @@ parser.addElement(ANON)
 
 # [161]   NIL       ::=   '(' WS* ')' 
 NIL = Combine(Literal('(') + Literal(')'), joinString=' ', adjacent=False).setName('NIL')
-parser.addElement(NIL)
+SPARQLParser.addElement(NIL)
 
 # [160]   ECHAR     ::=   '\' [tbnrf\"']
 ECHAR_e = r'\\[tbnrf\\"\']'
 ECHAR = Regex(ECHAR_e).setName('ECHAR')
-parser.addElement(ECHAR)
+SPARQLParser.addElement(ECHAR)
  
 # [159]   STRING_LITERAL_LONG2      ::=   '"""' ( ( '"' | '""' )? ( [^"\] | ECHAR ) )* '"""'  
 STRING_LITERAL_LONG2_e = r'"""((""|")?(({})|({})))*"""'.format(r'[^"\\]', ECHAR_e)
 STRING_LITERAL_LONG2 = Regex(STRING_LITERAL_LONG2_e).parseWithTabs().setName('STRING_LITERAL_LONG2')
-parser.addElement(STRING_LITERAL_LONG2)
+SPARQLParser.addElement(STRING_LITERAL_LONG2)
 
 # [158]   STRING_LITERAL_LONG1      ::=   "'''" ( ( "'" | "''" )? ( [^'\] | ECHAR ) )* "'''" 
 STRING_LITERAL_LONG1_e = r"'''(('|'')?(({})|({})))*'''".format(r"[^'\\]", ECHAR_e)
 STRING_LITERAL_LONG1 = Regex(STRING_LITERAL_LONG1_e).parseWithTabs().setName('STRING_LITERAL_LONG1')
-parser.addElement(STRING_LITERAL_LONG1)
+SPARQLParser.addElement(STRING_LITERAL_LONG1)
 
 # [157]   STRING_LITERAL2   ::=   '"' ( ([^#x22#x5C#xA#xD]) | ECHAR )* '"' 
 STRING_LITERAL2_e = r'"(({})|({}))*"'.format(ECHAR_e, r'[^\u0022\u005C\u000A\u000D]')
 STRING_LITERAL2 = Regex(STRING_LITERAL2_e).parseWithTabs().setName('STRING_LITERAL2')
-parser.addElement(STRING_LITERAL2)
+SPARQLParser.addElement(STRING_LITERAL2)
                            
 # [156]   STRING_LITERAL1   ::=   "'" ( ([^#x27#x5C#xA#xD]) | ECHAR )* "'" 
 STRING_LITERAL1_e = r"'(({})|({}))*'".format(ECHAR_e, r'[^\u0027\u005C\u000A\u000D]')
 STRING_LITERAL1 = Regex(STRING_LITERAL1_e).parseWithTabs().setName('STRING_LITERAL1')
-parser.addElement(STRING_LITERAL1)
+SPARQLParser.addElement(STRING_LITERAL1)
                             
 # [155]   EXPONENT          ::=   [eE] [+-]? [0-9]+ 
 EXPONENT_e = r'[eE][+-][0-9]+'
 EXPONENT = Regex(EXPONENT_e).setName('EXPONENT')
-parser.addElement(EXPONENT)
+SPARQLParser.addElement(EXPONENT)
 
 # [148]   DOUBLE    ::=   [0-9]+ '.' [0-9]* EXPONENT | '.' ([0-9])+ EXPONENT | ([0-9])+ EXPONENT 
 DOUBLE_e = r'([0-9]+\.[0-9]*({}))|(\.[0-9]+({}))|([0-9]+({}))'.format(EXPONENT_e, EXPONENT_e, EXPONENT_e)
 DOUBLE = Regex(DOUBLE_e).setName('DOUBLE')
-parser.addElement(DOUBLE)
+SPARQLParser.addElement(DOUBLE)
 
 # [154]   DOUBLE_NEGATIVE   ::=   '-' DOUBLE 
 DOUBLE_NEGATIVE_e = r'\-({})'.format(DOUBLE_e)
 DOUBLE_NEGATIVE = Regex(DOUBLE_NEGATIVE_e).setName('DOUBLE_NEGATIVE')
-parser.addElement(DOUBLE_NEGATIVE)
+SPARQLParser.addElement(DOUBLE_NEGATIVE)
 
 # [151]   DOUBLE_POSITIVE   ::=   '+' DOUBLE 
 DOUBLE_POSITIVE_e = r'\+({})'.format(DOUBLE_e)
 DOUBLE_POSITIVE = Regex(DOUBLE_POSITIVE_e).setName('DOUBLE_POSITIVE')
-parser.addElement(DOUBLE_POSITIVE)
+SPARQLParser.addElement(DOUBLE_POSITIVE)
 
 # [147]   DECIMAL   ::=   [0-9]* '.' [0-9]+ 
 DECIMAL_e = r'[0-9]*\.[0-9]+'
 DECIMAL = Regex(DECIMAL_e).setName('DECIMAL')
-parser.addElement(DECIMAL)
+SPARQLParser.addElement(DECIMAL)
 
 # [153]   DECIMAL_NEGATIVE          ::=   '-' DECIMAL 
 DECIMAL_NEGATIVE_e = r'\-({})'.format(DECIMAL_e)
 DECIMAL_NEGATIVE = Regex(DECIMAL_NEGATIVE_e).setName('DECIMAL_NEGATIVE')
-parser.addElement(DECIMAL_NEGATIVE)
+SPARQLParser.addElement(DECIMAL_NEGATIVE)
 
 # [150]   DECIMAL_POSITIVE          ::=   '+' DECIMAL 
 DECIMAL_POSITIVE_e = r'\+({})'.format(DECIMAL_e)
 DECIMAL_POSITIVE = Regex(DECIMAL_POSITIVE_e).setName('DECIMAL_POSITIVE')
-parser.addElement(DECIMAL_POSITIVE)
+SPARQLParser.addElement(DECIMAL_POSITIVE)
 
 # [146]   INTEGER   ::=   [0-9]+ 
 INTEGER_e = r'[0-9]+'
 INTEGER = Regex(INTEGER_e).setName('INTEGER')
-parser.addElement(INTEGER)
+SPARQLParser.addElement(INTEGER)
 
 # [152]   INTEGER_NEGATIVE          ::=   '-' INTEGER
 INTEGER_NEGATIVE_e = r'\-({})'.format(INTEGER_e)
 INTEGER_NEGATIVE = Regex(INTEGER_NEGATIVE_e).setName('INTEGER_NEGATIVE')
-parser.addElement(INTEGER_NEGATIVE)
+SPARQLParser.addElement(INTEGER_NEGATIVE)
 
 # [149]   INTEGER_POSITIVE          ::=   '+' INTEGER 
 INTEGER_POSITIVE_e = r'\+({})'.format(INTEGER_e)
 INTEGER_POSITIVE = Regex(INTEGER_POSITIVE_e).setName('INTEGER_POSITIVE')
-parser.addElement(INTEGER_POSITIVE)
+SPARQLParser.addElement(INTEGER_POSITIVE)
 
 # [145]   LANGTAG   ::=   '@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)* 
 LANGTAG_e = r'@[a-zA-Z]+(\-[a-zA-Z0-9]+)*'
 LANGTAG = Regex(LANGTAG_e).setName('LANGTAG')
-parser.addElement(LANGTAG)
+SPARQLParser.addElement(LANGTAG)
 
 # [144]   VAR2      ::=   '$' VARNAME 
 VAR2_e = r'\$({})'.format(VARNAME_e)
 VAR2 = Regex(VAR2_e).setName('VAR2')
-parser.addElement(VAR2)
+SPARQLParser.addElement(VAR2)
 
 # [143]   VAR1      ::=   '?' VARNAME 
 VAR1_e = r'\?({})'.format(VARNAME_e)
 VAR1 = Regex(VAR1_e).setName('VAR1')
-parser.addElement(VAR1)
+SPARQLParser.addElement(VAR1)
 
 # [142]   BLANK_NODE_LABEL          ::=   '_:' ( PN_CHARS_U | [0-9] ) ((PN_CHARS|'.')* PN_CHARS)?
 BLANK_NODE_LABEL_e = r'_:(({})|[0-9])((({})|\.)*({}))?'.format(PN_CHARS_U_e, PN_CHARS_e, PN_CHARS_e)
 BLANK_NODE_LABEL = Regex(BLANK_NODE_LABEL_e).setName('BLANK_NODE_LABEL')
-parser.addElement(BLANK_NODE_LABEL)
+SPARQLParser.addElement(BLANK_NODE_LABEL)
 
 # [140]   PNAME_NS          ::=   PN_PREFIX? ':'
 PNAME_NS_e = r'({})?:'.format(PN_PREFIX_e)
 PNAME_NS = Regex(PNAME_NS_e).setName('PNAME_NS')
-parser.addElement(PNAME_NS)
+SPARQLParser.addElement(PNAME_NS)
 
 # [141]   PNAME_LN          ::=   PNAME_NS PN_LOCAL 
 PNAME_LN_e = r'({})({})'.format(PNAME_NS_e, PN_LOCAL_e)
 PNAME_LN = Regex(PNAME_LN_e).setName('PNAME_LN')
-parser.addElement(PNAME_LN)
+SPARQLParser.addElement(PNAME_LN)
 
 # [139]   IRIREF    ::=   '<' ([^<>"{}|^`\]-[#x00-#x20])* '>' 
 IRIREF_e = r'<[^<>"{}|^`\\\\\u0000-\u0020]*>'
 IRIREF = Regex(IRIREF_e).setName('IRIREF')
-parser.addElement(IRIREF)
+SPARQLParser.addElement(IRIREF)
 
 #
 # Parsers and classes for non-terminals
@@ -785,55 +785,55 @@ parser.addElement(IRIREF)
 
 # [138]   BlankNode         ::=   BLANK_NODE_LABEL | ANON 
 BlankNode = Group(BLANK_NODE_LABEL | ANON).setName('BlankNode')
-parser.addElement(BlankNode)
+SPARQLParser.addElement(BlankNode)
 
 # [137]   PrefixedName      ::=   PNAME_LN | PNAME_NS 
 PrefixedName = Group(PNAME_LN | PNAME_NS).setName('PrefixedName')
-parser.addElement(PrefixedName)
+SPARQLParser.addElement(PrefixedName)
 
 # [136]   iri       ::=   IRIREF | PrefixedName 
 iri = Group(IRIREF | PrefixedName).setName('iri')
-parser.addElement(iri)
+SPARQLParser.addElement(iri)
 
 # [135]   String    ::=   STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2 
 String = Group(STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2 | STRING_LITERAL1 | STRING_LITERAL2).setName('String')
-parser.addElement(String)
+SPARQLParser.addElement(String)
  
 # [134]   BooleanLiteral    ::=   'true' | 'false' 
 BooleanLiteral = Group(Literal('true') | Literal('false')).setName('BooleanLiteral')
-parser.addElement(BooleanLiteral)
+SPARQLParser.addElement(BooleanLiteral)
  
 # [133]   NumericLiteralNegative    ::=   INTEGER_NEGATIVE | DECIMAL_NEGATIVE | DOUBLE_NEGATIVE 
 NumericLiteralNegative = Group(DOUBLE_NEGATIVE | DECIMAL_NEGATIVE | INTEGER_NEGATIVE).setName('NumericLiteralNegative')
-parser.addElement(NumericLiteralNegative)
+SPARQLParser.addElement(NumericLiteralNegative)
  
 # [132]   NumericLiteralPositive    ::=   INTEGER_POSITIVE | DECIMAL_POSITIVE | DOUBLE_POSITIVE 
 NumericLiteralPositive = Group(DOUBLE_POSITIVE | DECIMAL_POSITIVE | INTEGER_POSITIVE).setName('NumericLiteralPositive')
-parser.addElement(NumericLiteralPositive)
+SPARQLParser.addElement(NumericLiteralPositive)
  
 # [131]   NumericLiteralUnsigned    ::=   INTEGER | DECIMAL | DOUBLE 
 NumericLiteralUnsigned = Group(DOUBLE | DECIMAL | INTEGER).setName('NumericLiteralUnsigned')
-parser.addElement(NumericLiteralUnsigned)
+SPARQLParser.addElement(NumericLiteralUnsigned)
 
 # # [130]   NumericLiteral    ::=   NumericLiteralUnsigned | NumericLiteralPositive | NumericLiteralNegative 
 NumericLiteral = Group(NumericLiteralUnsigned | NumericLiteralPositive | NumericLiteralNegative).setName('NumericLiteral')
-parser.addElement(NumericLiteral)
+SPARQLParser.addElement(NumericLiteral)
 
 # [129]   RDFLiteral        ::=   String ( LANGTAG | ( '^^' iri ) )? 
 RDFLiteral = Group(String('lexical_form') + Optional(Group ((LANGTAG('langtag') | ('^^' + iri('datatype_uri')))))).setName('RDFLiteral')
-parser.addElement(RDFLiteral)
+SPARQLParser.addElement(RDFLiteral)
 
 Expression = Forward().setName('Expression')
-parser.addElement(Expression)
+SPARQLParser.addElement(Expression)
 
 # [71]    ArgList   ::=   NIL | '(' 'DISTINCT'? Expression ( ',' Expression )* ')' 
 ArgList = Group((NIL('nil')) | (LPAR + Optional(DISTINCT)('distinct') + separatedList(Expression)('argument') + RPAR)).setName('ArgList')
-parser.addElement(ArgList)
+SPARQLParser.addElement(ArgList)
 
 
 # [128]   iriOrFunction     ::=   iri ArgList? 
 iriOrFunction = Group(iri('iri') + Optional(ArgList)('argList')).setName('iriOrFunction')
-parser.addElement(iriOrFunction)
+SPARQLParser.addElement(iriOrFunction)
 
 # [127]   Aggregate         ::=     'COUNT' '(' 'DISTINCT'? ( '*' | Expression ) ')' 
 #             | 'SUM' '(' 'DISTINCT'? Expression ')' 
@@ -849,37 +849,37 @@ Aggregate = Group((COUNT('count') + LPAR + Optional(DISTINCT('distinct')) + ( AL
             ( AVG('avg') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | 
             ( SAMPLE('sample') + LPAR + Optional(DISTINCT('distinct')) + ( ALL_VALUES('all') | Expression('expression') ) + RPAR ) | 
             ( GROUP_CONCAT('group_concat') + LPAR + Optional(DISTINCT('distinct')) + Expression('expression') + Optional( SEMICOL + SEPARATOR + '=' + String('separator') ) + RPAR)).setName('Aggregate')
-parser.addElement(Aggregate)
+SPARQLParser.addElement(Aggregate)
 
 GroupGraphPattern = Forward().setName('GroupGraphPattern')
-parser.addElement(GroupGraphPattern)
+SPARQLParser.addElement(GroupGraphPattern)
  
 # [126]   NotExistsFunc     ::=   'NOT' 'EXISTS' GroupGraphPattern 
 NotExistsFunc = Group(NOT_EXISTS + GroupGraphPattern('groupgraph')).setName('NotExistsFunc')
-parser.addElement(NotExistsFunc)
+SPARQLParser.addElement(NotExistsFunc)
  
 # [125]   ExistsFunc        ::=   'EXISTS' GroupGraphPattern 
 ExistsFunc = Group(EXISTS + GroupGraphPattern('groupgraph')).setName('ExistsFunc')
-parser.addElement(ExistsFunc)
+SPARQLParser.addElement(ExistsFunc)
  
 # [124]   StrReplaceExpression      ::=   'REPLACE' '(' Expression ',' Expression ',' Expression ( ',' Expression )? ')' 
 StrReplaceExpression = Group(REPLACE + LPAR + Expression('arg') + COMMA + Expression('pattern') + COMMA + Expression('replacement') + Optional(COMMA + Expression('flags')) + RPAR).setName('StrReplaceExpression')
-parser.addElement(StrReplaceExpression)
+SPARQLParser.addElement(StrReplaceExpression)
  
 # [123]   SubstringExpression       ::=   'SUBSTR' '(' Expression ',' Expression ( ',' Expression )? ')' 
 SubstringExpression = Group(SUBSTR + LPAR + Expression('source') + COMMA + Expression('startloc') + Optional(COMMA + Expression('length')) + RPAR).setName('SubstringExpression')
-parser.addElement(SubstringExpression)
+SPARQLParser.addElement(SubstringExpression)
  
 # [122]   RegexExpression   ::=   'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')' 
 RegexExpression = Group(REGEX + LPAR + Expression('text') + COMMA + Expression('pattern') + Optional(COMMA + Expression('flags')) + RPAR).setName('RegexExpression')
-parser.addElement(RegexExpression)
+SPARQLParser.addElement(RegexExpression)
 
 # [108]   Var       ::=   VAR1 | VAR2 
 Var = Group(VAR1 | VAR2).setName('Var')
-parser.addElement(Var)
+SPARQLParser.addElement(Var)
 
 ExpressionList = Forward().setName('ExpressionList')
-parser.addElement(ExpressionList)
+SPARQLParser.addElement(ExpressionList)
 
 
 # [121]   BuiltInCall       ::=     Aggregate 
@@ -992,34 +992,34 @@ BuiltInCall = Group(Aggregate |
                 RegexExpression | 
                 ExistsFunc | 
                 NotExistsFunc ).setName('BuiltInCall')
-parser.addElement(BuiltInCall)
+SPARQLParser.addElement(BuiltInCall)
 
 # [120]   BrackettedExpression      ::=   '(' Expression ')' 
 BracketedExpression = Group(LPAR + Expression('expression') + RPAR).setName('BracketedExpression')
-parser.addElement(BracketedExpression)
+SPARQLParser.addElement(BracketedExpression)
 
 # [119]   PrimaryExpression         ::=   BrackettedExpression | BuiltInCall | iriOrFunction | RDFLiteral | NumericLiteral | BooleanLiteral | Var 
 PrimaryExpression = Group(BracketedExpression | BuiltInCall | iriOrFunction('iriOrFunction') | RDFLiteral | NumericLiteral | BooleanLiteral | Var).setName('PrimaryExpression')
-parser.addElement(PrimaryExpression)
+SPARQLParser.addElement(PrimaryExpression)
 
 # [118]   UnaryExpression   ::=     '!' PrimaryExpression 
 #             | '+' PrimaryExpression 
 #             | '-' PrimaryExpression 
 #             | PrimaryExpression 
 UnaryExpression = Group(NEGATE + PrimaryExpression | PLUS + PrimaryExpression | MINUS + PrimaryExpression | PrimaryExpression).setName('UnaryExpression')
-parser.addElement(UnaryExpression)
+SPARQLParser.addElement(UnaryExpression)
 
 # [117]   MultiplicativeExpression          ::=   UnaryExpression ( '*' UnaryExpression | '/' UnaryExpression )* 
 MultiplicativeExpression = Group(UnaryExpression + ZeroOrMore( TIMES + UnaryExpression | DIV + UnaryExpression )).setName('MultiplicativeExpression')
-parser.addElement(MultiplicativeExpression)
+SPARQLParser.addElement(MultiplicativeExpression)
 
 # [116]   AdditiveExpression        ::=   MultiplicativeExpression ( '+' MultiplicativeExpression | '-' MultiplicativeExpression | ( NumericLiteralPositive | NumericLiteralNegative ) ( ( '*' UnaryExpression ) | ( '/' UnaryExpression ) )* )* 
 AdditiveExpression = Group(MultiplicativeExpression + ZeroOrMore (PLUS + MultiplicativeExpression | MINUS  + MultiplicativeExpression | (NumericLiteralPositive | NumericLiteralNegative) + ZeroOrMore (TIMES + UnaryExpression | DIV + UnaryExpression))).setName('AdditiveExpression')
-parser.addElement(AdditiveExpression)
+SPARQLParser.addElement(AdditiveExpression)
 
 # [115]   NumericExpression         ::=   AdditiveExpression 
 NumericExpression = Group(AdditiveExpression + Empty()).setName('NumericExpression')
-parser.addElement(NumericExpression)
+SPARQLParser.addElement(NumericExpression)
 
 # [114]   RelationalExpression      ::=   NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT' 'IN' ExpressionList )? 
 RelationalExpression = Group(NumericExpression + Optional( EQ + NumericExpression | 
@@ -1030,19 +1030,19 @@ RelationalExpression = Group(NumericExpression + Optional( EQ + NumericExpressio
                                                          GE + NumericExpression | 
                                                          IN + ExpressionList | 
                                                          NOT_IN + ExpressionList) ).setName('RelationalExpression')
-parser.addElement(RelationalExpression)
+SPARQLParser.addElement(RelationalExpression)
 
 # [113]   ValueLogical      ::=   RelationalExpression 
 ValueLogical = Group(RelationalExpression + Empty()).setName('ValueLogical')
-parser.addElement(ValueLogical)
+SPARQLParser.addElement(ValueLogical)
 
 # [112]   ConditionalAndExpression          ::=   ValueLogical ( '&&' ValueLogical )* 
 ConditionalAndExpression = Group(ValueLogical + ZeroOrMore(AND + ValueLogical)).setName('ConditionalAndExpression')
-parser.addElement(ConditionalAndExpression)
+SPARQLParser.addElement(ConditionalAndExpression)
 
 # [111]   ConditionalOrExpression   ::=   ConditionalAndExpression ( '||' ConditionalAndExpression )* 
 ConditionalOrExpression = Group(ConditionalAndExpression + ZeroOrMore(OR + ConditionalAndExpression)).setName('ConditionalOrExpression')
-parser.addElement(ConditionalOrExpression)
+SPARQLParser.addElement(ConditionalOrExpression)
 
 # [110]   Expression        ::=   ConditionalOrExpression 
 Expression << Group(ConditionalOrExpression + Empty())
@@ -1054,445 +1054,445 @@ GraphTerm =   Group(iri |
                 BooleanLiteral | 
                 BlankNode | 
                 NIL ).setName('GraphTerm')
-parser.addElement(GraphTerm)
+SPARQLParser.addElement(GraphTerm)
                 
 # [107]   VarOrIri          ::=   Var | iri 
 VarOrIri = Group(Var | iri).setName('VarOrIri')
-parser.addElement(VarOrIri)
+SPARQLParser.addElement(VarOrIri)
 
 # [106]   VarOrTerm         ::=   Var | GraphTerm 
 VarOrTerm = Group(Var | GraphTerm).setName('VarOrTerm')
-parser.addElement(VarOrTerm)
+SPARQLParser.addElement(VarOrTerm)
 
 TriplesNodePath = Forward().setName('TriplesNodePath')
-parser.addElement(TriplesNodePath)
+SPARQLParser.addElement(TriplesNodePath)
 
 # [105]   GraphNodePath     ::=   VarOrTerm | TriplesNodePath 
 GraphNodePath = Group(VarOrTerm | TriplesNodePath ).setName('GraphNodePath')
-parser.addElement(GraphNodePath)
+SPARQLParser.addElement(GraphNodePath)
 
 TriplesNode = Forward().setName('TriplesNode')
-parser.addElement(TriplesNode)
+SPARQLParser.addElement(TriplesNode)
 
 # [104]   GraphNode         ::=   VarOrTerm | TriplesNode 
 GraphNode = Group(VarOrTerm | TriplesNode).setName('GraphNode')
-parser.addElement(GraphNode)
+SPARQLParser.addElement(GraphNode)
 
 # [103]   CollectionPath    ::=   '(' GraphNodePath+ ')' 
 CollectionPath = Group(LPAR + OneOrMore(GraphNodePath) + RPAR).setName('CollectionPath')
-parser.addElement(CollectionPath)
+SPARQLParser.addElement(CollectionPath)
 
 # [102]   Collection        ::=   '(' GraphNode+ ')' 
 Collection = Group(LPAR + OneOrMore(GraphNode) + RPAR).setName('Collection')
-parser.addElement(Collection)
+SPARQLParser.addElement(Collection)
 
 PropertyListPathNotEmpty = Forward().setName('PropertyListPathNotEmpty')
-parser.addElement(PropertyListPathNotEmpty)
+SPARQLParser.addElement(PropertyListPathNotEmpty)
 
 # [101]   BlankNodePropertyListPath         ::=   '[' PropertyListPathNotEmpty ']'
 BlankNodePropertyListPath = Group(LBRACK + PropertyListPathNotEmpty + RBRACK ).setName('BlankNodePropertyListPath')
-parser.addElement(BlankNodePropertyListPath)
+SPARQLParser.addElement(BlankNodePropertyListPath)
 
 # [100]   TriplesNodePath   ::=   CollectionPath | BlankNodePropertyListPath 
 TriplesNodePath << Group(CollectionPath | BlankNodePropertyListPath)
 
 PropertyListNotEmpty = Forward().setName('PropertyListNotEmpty')
-parser.addElement(PropertyListNotEmpty)
+SPARQLParser.addElement(PropertyListNotEmpty)
 
 # [99]    BlankNodePropertyList     ::=   '[' PropertyListNotEmpty ']' 
 BlankNodePropertyList = Group(LBRACK + PropertyListNotEmpty + RBRACK ).setName('BlankNodePropertyList')
-parser.addElement(BlankNodePropertyList)
+SPARQLParser.addElement(BlankNodePropertyList)
 
 # [98]    TriplesNode       ::=   Collection | BlankNodePropertyList 
 TriplesNode << Group(Collection | BlankNodePropertyList)
 
 # [97]    Integer   ::=   INTEGER 
 Integer = Group(INTEGER + Empty()).setName('Integer')
-parser.addElement(Integer)
+SPARQLParser.addElement(Integer)
 
 # [96]    PathOneInPropertySet      ::=   iri | 'a' | '^' ( iri | 'a' ) 
 PathOneInPropertySet = Group(iri | TYPE | (INVERSE  + ( iri | TYPE ))).setName('PathOneInPropertySet')
-parser.addElement(PathOneInPropertySet)
+SPARQLParser.addElement(PathOneInPropertySet)
 
 # [95]    PathNegatedPropertySet    ::=   PathOneInPropertySet | '(' ( PathOneInPropertySet ( '|' PathOneInPropertySet )* )? ')' 
 PathNegatedPropertySet = Group(PathOneInPropertySet | (LPAR + Group(Optional(separatedList(PathOneInPropertySet, sep='|'))('pathinonepropertyset')) + RPAR)).setName('PathNegatedPropertySet')
-parser.addElement(PathNegatedPropertySet)
+SPARQLParser.addElement(PathNegatedPropertySet)
 
 Path = Forward().setName('Path')
-parser.addElement(Path)
+SPARQLParser.addElement(Path)
 
 # [94]    PathPrimary       ::=   iri | 'a' | '!' PathNegatedPropertySet | '(' Path ')' 
 PathPrimary = Group(iri | TYPE | (NEGATE + PathNegatedPropertySet) | (LPAR + Path + RPAR)).setName('PathPrimary')
-parser.addElement(PathPrimary)
+SPARQLParser.addElement(PathPrimary)
 
 # [93]    PathMod   ::=   '?' | '*' | '+' 
 PathMod = Group((~VAR1 + Literal('?')) | Literal('*') | Literal('+')).setName('PathMod')
-parser.addElement(PathMod)
+SPARQLParser.addElement(PathMod)
 
 # [91]    PathElt   ::=   PathPrimary PathMod? 
 PathElt = Group(PathPrimary + Optional(PathMod) ).setName('PathElt')
-parser.addElement(PathElt)
+SPARQLParser.addElement(PathElt)
 
 # [92]    PathEltOrInverse          ::=   PathElt | '^' PathElt 
 PathEltOrInverse = Group(PathElt | (INVERSE + PathElt)).setName('PathEltOrInverse')
-parser.addElement(PathEltOrInverse)
+SPARQLParser.addElement(PathEltOrInverse)
 
 # [90]    PathSequence      ::=   PathEltOrInverse ( '/' PathEltOrInverse )* 
 PathSequence = Group(separatedList(PathEltOrInverse, sep='/')).setName('PathSequence')
-parser.addElement(PathSequence)
+SPARQLParser.addElement(PathSequence)
 
 # [89]    PathAlternative   ::=   PathSequence ( '|' PathSequence )* 
 PathAlternative = Group(separatedList(PathSequence, sep='|')).setName('PathAlternative')
-parser.addElement(PathAlternative)
+SPARQLParser.addElement(PathAlternative)
  
 # [88]    Path      ::=   PathAlternative
 Path << Group(PathAlternative + Empty())
 
 # [87]    ObjectPath        ::=   GraphNodePath 
 ObjectPath = Group(GraphNodePath + Empty() ).setName('ObjectPath')
-parser.addElement(ObjectPath)
+SPARQLParser.addElement(ObjectPath)
 
 # [86]    ObjectListPath    ::=   ObjectPath ( ',' ObjectPath )* 
 ObjectListPath = Group(separatedList(ObjectPath)).setName('ObjectListPath')
-parser.addElement(ObjectListPath)
+SPARQLParser.addElement(ObjectListPath)
 
 # [85]    VerbSimple        ::=   Var 
 VerbSimple = Group(Var + Empty() ).setName('VerbSimple')
-parser.addElement(VerbSimple)
+SPARQLParser.addElement(VerbSimple)
 
 # [84]    VerbPath          ::=   Path
 VerbPath = Group(Path + Empty() ).setName('VerbPath')
-parser.addElement(VerbPath)
+SPARQLParser.addElement(VerbPath)
 
 # [80]    Object    ::=   GraphNode 
 Object = Group(GraphNode + Empty() ).setName('Object')
-parser.addElement(Object)
+SPARQLParser.addElement(Object)
  
 # [79]    ObjectList        ::=   Object ( ',' Object )* 
 ObjectList = Group(separatedList(Object)).setName('ObjectList')
-parser.addElement(ObjectList)
+SPARQLParser.addElement(ObjectList)
 
 # [83]    PropertyListPathNotEmpty          ::=   ( VerbPath | VerbSimple ) ObjectListPath ( ';' ( ( VerbPath | VerbSimple ) ObjectList )? )* 
 PropertyListPathNotEmpty << Group((VerbPath | VerbSimple) + ObjectListPath +  ZeroOrMore(SEMICOL + Optional(( VerbPath | VerbSimple) + ObjectList)))
 
 # [82]    PropertyListPath          ::=   PropertyListPathNotEmpty? 
 PropertyListPath = Group(Optional(PropertyListPathNotEmpty)).setName('PropertyListPath')
-parser.addElement(PropertyListPath)
+SPARQLParser.addElement(PropertyListPath)
 
 # [81]    TriplesSameSubjectPath    ::=   VarOrTerm PropertyListPathNotEmpty | TriplesNodePath PropertyListPath 
 TriplesSameSubjectPath = Group((VarOrTerm + PropertyListPathNotEmpty) | (TriplesNodePath + PropertyListPath)).setName('TriplesSameSubjectPath')
-parser.addElement(TriplesSameSubjectPath)
+SPARQLParser.addElement(TriplesSameSubjectPath)
 
 # [78]    Verb      ::=   VarOrIri | 'a' 
 Verb = Group(VarOrIri | TYPE).setName('Verb')
-parser.addElement(Verb)
+SPARQLParser.addElement(Verb)
 
 # [77]    PropertyListNotEmpty      ::=   Verb ObjectList ( ';' ( Verb ObjectList )? )* 
 PropertyListNotEmpty << Group(Verb + ObjectList + ZeroOrMore(SEMICOL + Optional(Verb + ObjectList)))
 
 # [76]    PropertyList      ::=   PropertyListNotEmpty?
 PropertyList = Group(Optional(PropertyListNotEmpty) ).setName('PropertyList')
-parser.addElement(PropertyList)
+SPARQLParser.addElement(PropertyList)
 
 # [75]    TriplesSameSubject        ::=   VarOrTerm PropertyListNotEmpty | TriplesNode PropertyList
 TriplesSameSubject = Group((VarOrTerm + PropertyListNotEmpty) | (TriplesNode + PropertyList) ).setName('TriplesSameSubject')
-parser.addElement(TriplesSameSubject)
+SPARQLParser.addElement(TriplesSameSubject)
 
 # [74]    ConstructTriples          ::=   TriplesSameSubject ( '.' ConstructTriples? )? 
 ConstructTriples = Group(separatedList(TriplesSameSubject, sep='.') + Optional(PERIOD)).setName('ConstructTriples')
-parser.addElement(ConstructTriples)
+SPARQLParser.addElement(ConstructTriples)
 
 # [73]    ConstructTemplate         ::=   '{' ConstructTriples? '}'
 ConstructTemplate = Group(LCURL + Optional(ConstructTriples) + RCURL ).setName('ConstructTemplate')
-parser.addElement(ConstructTemplate)
+SPARQLParser.addElement(ConstructTemplate)
 
 # [72]    ExpressionList    ::=   NIL | '(' Expression ( ',' Expression )* ')' 
 ExpressionList << Group(NIL | (LPAR + separatedList(Expression) + RPAR))
 
 # [70]    FunctionCall      ::=   iri ArgList 
 FunctionCall = Group(iri + ArgList).setName('FunctionCall')
-parser.addElement(FunctionCall)
+SPARQLParser.addElement(FunctionCall)
 
 # [69]    Constraint        ::=   BrackettedExpression | BuiltInCall | FunctionCall 
 Constraint = Group(BracketedExpression | BuiltInCall | FunctionCall).setName('Constraint')
-parser.addElement(Constraint)
+SPARQLParser.addElement(Constraint)
 
 # [68]    Filter    ::=   'FILTER' Constraint
 Filter = Group(FILTER + Constraint('constraint')).setName('Filter')
-parser.addElement(Filter)
+SPARQLParser.addElement(Filter)
 
 # [67]    GroupOrUnionGraphPattern          ::=   GroupGraphPattern ( 'UNION' GroupGraphPattern )* 
 GroupOrUnionGraphPattern = Group(GroupGraphPattern + ZeroOrMore(UNION + GroupGraphPattern) ).setName('GroupOrUnionGraphPattern')
-parser.addElement(GroupOrUnionGraphPattern)
+SPARQLParser.addElement(GroupOrUnionGraphPattern)
 
 # [66]    MinusGraphPattern         ::=   'MINUS' GroupGraphPattern
 MinusGraphPattern = Group(SUBTRACT + GroupGraphPattern ).setName('MinusGraphPattern')
-parser.addElement(MinusGraphPattern)
+SPARQLParser.addElement(MinusGraphPattern)
 
 # [65]    DataBlockValue    ::=   iri | RDFLiteral | NumericLiteral | BooleanLiteral | 'UNDEF' 
 DataBlockValue = Group(iri | RDFLiteral | NumericLiteral | BooleanLiteral | UNDEF).setName('DataBlockValue')
-parser.addElement(DataBlockValue)
+SPARQLParser.addElement(DataBlockValue)
 
 # [64]    InlineDataFull    ::=   ( NIL | '(' Var* ')' ) '{' ( '(' DataBlockValue* ')' | NIL )* '}' 
 InlineDataFull = Group(( NIL | (LPAR + ZeroOrMore(Var) + RPAR)) + LCURL +  ZeroOrMore((LPAR + ZeroOrMore(DataBlockValue) + RPAR) | NIL) + RCURL ).setName('InlineDataFull')
-parser.addElement(InlineDataFull)
+SPARQLParser.addElement(InlineDataFull)
 
 # [63]    InlineDataOneVar          ::=   Var '{' DataBlockValue* '}' 
 InlineDataOneVar = Group(Var + LCURL + ZeroOrMore(DataBlockValue) + RCURL ).setName('InlineDataOneVar')
-parser.addElement(InlineDataOneVar)
+SPARQLParser.addElement(InlineDataOneVar)
 
 # [62]    DataBlock         ::=   InlineDataOneVar | InlineDataFull 
 DataBlock = Group(InlineDataOneVar | InlineDataFull).setName('DataBlock')
-parser.addElement(DataBlock)
+SPARQLParser.addElement(DataBlock)
 
 # [61]    InlineData        ::=   'VALUES' DataBlock 
 InlineData = Group(VALUES + DataBlock ).setName('InlineData')
-parser.addElement(InlineData)
+SPARQLParser.addElement(InlineData)
 
 # [60]    Bind      ::=   'BIND' '(' Expression 'AS' Var ')' 
 Bind = Group(BIND + LPAR + Expression + AS + Var + RPAR ).setName('Bind')
-parser.addElement(Bind)
+SPARQLParser.addElement(Bind)
 
 # [59]    ServiceGraphPattern       ::=   'SERVICE' 'SILENT'? VarOrIri GroupGraphPattern 
 ServiceGraphPattern = Group(SERVICE + Optional(SILENT) + VarOrIri + GroupGraphPattern ).setName('ServiceGraphPattern')
-parser.addElement(ServiceGraphPattern)
+SPARQLParser.addElement(ServiceGraphPattern)
 
 # [58]    GraphGraphPattern         ::=   'GRAPH' VarOrIri GroupGraphPattern 
 GraphGraphPattern = Group(GRAPH + VarOrIri + GroupGraphPattern ).setName('GraphGraphPattern')
-parser.addElement(GraphGraphPattern)
+SPARQLParser.addElement(GraphGraphPattern)
 
 # [57]    OptionalGraphPattern      ::=   'OPTIONAL' GroupGraphPattern 
 OptionalGraphPattern = Group(OPTIONAL + GroupGraphPattern ).setName('OptionalGraphPattern')
-parser.addElement(OptionalGraphPattern)
+SPARQLParser.addElement(OptionalGraphPattern)
 
 # [56]    GraphPatternNotTriples    ::=   GroupOrUnionGraphPattern | OptionalGraphPattern | MinusGraphPattern | GraphGraphPattern | ServiceGraphPattern | Filter | Bind | InlineData 
 GraphPatternNotTriples = Group(GroupOrUnionGraphPattern | OptionalGraphPattern | MinusGraphPattern | GraphGraphPattern | ServiceGraphPattern | Filter | Bind | InlineData ).setName('GraphPatternNotTriples')
-parser.addElement(GraphPatternNotTriples)
+SPARQLParser.addElement(GraphPatternNotTriples)
                                            
 # [55]    TriplesBlock      ::=   TriplesSameSubjectPath ( '.' TriplesBlock? )? 
 TriplesBlock = Group(separatedList(TriplesSameSubjectPath, sep='.')('subjpath') + Optional(PERIOD)).setName('TriplesBlock')
-parser.addElement(TriplesBlock)
+SPARQLParser.addElement(TriplesBlock)
 
 # [54]    GroupGraphPatternSub      ::=   TriplesBlock? ( GraphPatternNotTriples '.'? TriplesBlock? )* 
 GroupGraphPatternSub = Group(Optional(TriplesBlock) + ZeroOrMore(GraphPatternNotTriples + Optional(PERIOD) + Optional(TriplesBlock)) ).setName('GroupGraphPatternSub')
-parser.addElement(GroupGraphPatternSub)
+SPARQLParser.addElement(GroupGraphPatternSub)
 
 SubSelect = Forward().setName('SubSelect')
-parser.addElement(SubSelect)
+SPARQLParser.addElement(SubSelect)
 
 # [53]    GroupGraphPattern         ::=   '{' ( SubSelect | GroupGraphPatternSub ) '}' 
 GroupGraphPattern << Group(LCURL + (SubSelect | GroupGraphPatternSub)('pattern') + RCURL)
 
 # [52]    TriplesTemplate   ::=   TriplesSameSubject ( '.' TriplesTemplate? )? 
 TriplesTemplate = Group(separatedList(TriplesSameSubject, sep='.') + Optional(PERIOD)).setName('TriplesTemplate')
-parser.addElement(TriplesTemplate)
+SPARQLParser.addElement(TriplesTemplate)
 
 # [51]    QuadsNotTriples   ::=   'GRAPH' VarOrIri '{' TriplesTemplate? '}' 
 QuadsNotTriples = Group(GRAPH + VarOrIri + LCURL + Optional(TriplesTemplate) + RCURL ).setName('QuadsNotTriples')
-parser.addElement(QuadsNotTriples)
+SPARQLParser.addElement(QuadsNotTriples)
 
 # [50]    Quads     ::=   TriplesTemplate? ( QuadsNotTriples '.'? TriplesTemplate? )* 
 Quads = Group(Optional(TriplesTemplate) + ZeroOrMore(QuadsNotTriples + Optional(PERIOD) + Optional(TriplesTemplate)) ).setName('Quads')
-parser.addElement(Quads)
+SPARQLParser.addElement(Quads)
 
 # [49]    QuadData          ::=   '{' Quads '}' 
 QuadData = Group(LCURL + Quads + RCURL ).setName('QuadData')
-parser.addElement(QuadData)
+SPARQLParser.addElement(QuadData)
 
 # [48]    QuadPattern       ::=   '{' Quads '}' 
 QuadPattern = Group(LCURL + Quads + RCURL ).setName('QuadPattern')
-parser.addElement(QuadPattern)
+SPARQLParser.addElement(QuadPattern)
 
 # [46]    GraphRef          ::=   'GRAPH' iri 
 GraphRef = Group(GRAPH + iri ).setName('GraphRef')
-parser.addElement(GraphRef)
+SPARQLParser.addElement(GraphRef)
 
 # [47]    GraphRefAll       ::=   GraphRef | 'DEFAULT' | 'NAMED' | 'ALL' 
 GraphRefAll = Group(GraphRef | DEFAULT | NAMED | ALL ).setName('GraphRefAll')
-parser.addElement(GraphRefAll)
+SPARQLParser.addElement(GraphRefAll)
 
 # [45]    GraphOrDefault    ::=   'DEFAULT' | 'GRAPH'? iri 
 GraphOrDefault = Group(DEFAULT | (Optional(GRAPH) + iri) ).setName('GraphOrDefault')
-parser.addElement(GraphOrDefault)
+SPARQLParser.addElement(GraphOrDefault)
 
 # [44]    UsingClause       ::=   'USING' ( iri | 'NAMED' iri ) 
 UsingClause = Group(USING + (iri | (NAMED + iri)) ).setName('UsingClause')
-parser.addElement(UsingClause)
+SPARQLParser.addElement(UsingClause)
 
 # [43]    InsertClause      ::=   'INSERT' QuadPattern 
 InsertClause = Group(INSERT + QuadPattern ).setName('InsertClause')
-parser.addElement(InsertClause)
+SPARQLParser.addElement(InsertClause)
 
 # [42]    DeleteClause      ::=   'DELETE' QuadPattern 
 DeleteClause = Group(DELETE + QuadPattern ).setName('DeleteClause')
-parser.addElement(DeleteClause)
+SPARQLParser.addElement(DeleteClause)
 
 # [41]    Modify    ::=   ( 'WITH' iri )? ( DeleteClause InsertClause? | InsertClause ) UsingClause* 'WHERE' GroupGraphPattern 
 Modify = Group(Optional(WITH + iri) + ( (DeleteClause + Optional(InsertClause) ) | InsertClause ) + ZeroOrMore(UsingClause) + WHERE + GroupGraphPattern ).setName('Modify')
-parser.addElement(Modify)
+SPARQLParser.addElement(Modify)
 
 # [40]    DeleteWhere       ::=   'DELETE WHERE' QuadPattern 
 DeleteWhere = Group(DELETE_WHERE + QuadPattern ).setName('DeleteWhere')
-parser.addElement(DeleteWhere)
+SPARQLParser.addElement(DeleteWhere)
 
 # [39]    DeleteData        ::=   'DELETE DATA' QuadData 
 DeleteData = Group(DELETE_DATA + QuadData ).setName('DeleteData')
-parser.addElement(DeleteData)
+SPARQLParser.addElement(DeleteData)
 
 # [38]    InsertData        ::=   'INSERT DATA' QuadData 
 InsertData = Group(INSERT_DATA + QuadData ).setName('InsertData')
-parser.addElement(InsertData)
+SPARQLParser.addElement(InsertData)
 
 # [37]    Copy      ::=   'COPY' 'SILENT'? GraphOrDefault 'TO' GraphOrDefault 
 Copy = Group(COPY + Optional(SILENT) + GraphOrDefault + TO + GraphOrDefault ).setName('Copy')
-parser.addElement(Copy)
+SPARQLParser.addElement(Copy)
 
 # [36]    Move      ::=   'MOVE' 'SILENT'? GraphOrDefault 'TO' GraphOrDefault 
 Move = Group(MOVE + Optional(SILENT) + GraphOrDefault + TO + GraphOrDefault ).setName('Move')
-parser.addElement(Move)
+SPARQLParser.addElement(Move)
 
 # [35]    Add       ::=   'ADD' 'SILENT'? GraphOrDefault 'TO' GraphOrDefault 
 Add = Group(ADD + Optional(SILENT) + GraphOrDefault + TO + GraphOrDefault ).setName('Add')
-parser.addElement(Add)
+SPARQLParser.addElement(Add)
 
 # [34]    Create    ::=   'CREATE' 'SILENT'? GraphRef 
 Create = Group(CREATE + Optional(SILENT) + GraphRef).setName('Create')
-parser.addElement(Create)
+SPARQLParser.addElement(Create)
 
 # [33]    Drop      ::=   'DROP' 'SILENT'? GraphRefAll 
 Drop = Group(DROP + Optional(SILENT) + GraphRefAll).setName('Drop')
-parser.addElement(Drop)
+SPARQLParser.addElement(Drop)
 
 # [32]    Clear     ::=   'CLEAR' 'SILENT'? GraphRefAll 
 Clear = Group(CLEAR + Optional(SILENT) + GraphRefAll ).setName('Clear')
-parser.addElement(Clear)
+SPARQLParser.addElement(Clear)
 
 # [31]    Load      ::=   'LOAD' 'SILENT'? iri ( 'INTO' GraphRef )? 
 Load = Group(LOAD + Optional(SILENT) + iri  + Optional(INTO + GraphRef)).setName('Load')
-parser.addElement(Load)
+SPARQLParser.addElement(Load)
 
 # [30]    Update1   ::=   Load | Clear | Drop | Add | Move | Copy | Create | InsertData | DeleteData | DeleteWhere | Modify 
 Update1 = Group(Load | Clear | Drop | Add | Move | Copy | Create | InsertData | DeleteData | DeleteWhere | Modify ).setName('Update1')
-parser.addElement(Update1)
+SPARQLParser.addElement(Update1)
 
 Prologue = Forward().setName('Prologue')
-parser.addElement(Prologue)
+SPARQLParser.addElement(Prologue)
 
 Update = Forward().setName('Update')
-parser.addElement(Update)
+SPARQLParser.addElement(Update)
 
 # [29]    Update    ::=   Prologue ( Update1 ( ';' Update )? )? 
 Update << Group(Prologue('prologue') + Optional(Update1 + Optional(SEMICOL + Update)))
 
 # [28]    ValuesClause      ::=   ( 'VALUES' DataBlock )? 
 ValuesClause = Group(Optional(VALUES + DataBlock) ).setName('ValuesClause')
-parser.addElement(ValuesClause)
+SPARQLParser.addElement(ValuesClause)
 
 # [27]    OffsetClause      ::=   'OFFSET' INTEGER 
 OffsetClause = Group(OFFSET + INTEGER ).setName('OffsetClause')
-parser.addElement(OffsetClause)
+SPARQLParser.addElement(OffsetClause)
 
 # [26]    LimitClause       ::=   'LIMIT' INTEGER 
 LimitClause = Group(LIMIT + INTEGER ).setName('LimitClause')
-parser.addElement(LimitClause)
+SPARQLParser.addElement(LimitClause)
 
 # [25]    LimitOffsetClauses        ::=   LimitClause OffsetClause? | OffsetClause LimitClause? 
 LimitOffsetClauses = Group((LimitClause + Optional(OffsetClause)) | (OffsetClause + Optional(LimitClause))).setName('LimitOffsetClauses')
-parser.addElement(LimitOffsetClauses)
+SPARQLParser.addElement(LimitOffsetClauses)
 
 # [24]    OrderCondition    ::=   ( ( 'ASC' | 'DESC' ) BrackettedExpression ) | ( Constraint | Var ) 
 OrderCondition =   Group(((ASC | DESC) + BracketedExpression) | (Constraint('constraint') | Var)).setName('OrderCondition')
-parser.addElement(OrderCondition)
+SPARQLParser.addElement(OrderCondition)
 
 # [23]    OrderClause       ::=   'ORDER' 'BY' OrderCondition+ 
 OrderClause = Group(ORDER_BY + OneOrMore(OrderCondition) ).setName('OrderClause')
-parser.addElement(OrderClause)
+SPARQLParser.addElement(OrderClause)
 
 # [22]    HavingCondition   ::=   Constraint 
 HavingCondition = Group(Constraint('constraint')).setName('HavingCondition')
-parser.addElement(HavingCondition)
+SPARQLParser.addElement(HavingCondition)
 
 # [21]    HavingClause      ::=   'HAVING' HavingCondition+ 
 HavingClause = Group(HAVING + OneOrMore(HavingCondition) ).setName('HavingClause')
-parser.addElement(HavingClause)
+SPARQLParser.addElement(HavingClause)
 
 # [20]    GroupCondition    ::=   BuiltInCall | FunctionCall | '(' Expression ( 'AS' Var )? ')' | Var 
 GroupCondition = Group(BuiltInCall | FunctionCall | (LPAR + Expression + Optional(AS + Var) + RPAR) | Var ).setName('GroupCondition')
-parser.addElement(GroupCondition)
+SPARQLParser.addElement(GroupCondition)
 
 # [19]    GroupClause       ::=   'GROUP' 'BY' GroupCondition+ 
 GroupClause = Group(GROUP_BY + OneOrMore(GroupCondition) ).setName('GroupClause')
-parser.addElement(GroupClause)
+SPARQLParser.addElement(GroupClause)
 
 # [18]    SolutionModifier          ::=   GroupClause? HavingClause? OrderClause? LimitOffsetClauses? 
 SolutionModifier = Group(Optional(GroupClause) + Optional(HavingClause) + Optional(OrderClause) + Optional(LimitOffsetClauses) ).setName('SolutionModifier')
-parser.addElement(SolutionModifier)
+SPARQLParser.addElement(SolutionModifier)
 
 # [17]    WhereClause       ::=   'WHERE'? GroupGraphPattern 
 WhereClause = Group(Optional(WHERE) + GroupGraphPattern ).setName('WhereClause')
-parser.addElement(WhereClause)
+SPARQLParser.addElement(WhereClause)
 
 # [16]    SourceSelector    ::=   iri 
 SourceSelector = Group(iri).setName('SourceSelector')
-parser.addElement(SourceSelector)
+SPARQLParser.addElement(SourceSelector)
 
 # [15]    NamedGraphClause          ::=   'NAMED' SourceSelector 
 NamedGraphClause = Group(NAMED + SourceSelector ).setName('NamedGraphClause')
-parser.addElement(NamedGraphClause)
+SPARQLParser.addElement(NamedGraphClause)
 
 # [14]    DefaultGraphClause        ::=   SourceSelector 
 DefaultGraphClause = Group(SourceSelector).setName('DefaultGraphClause')
-parser.addElement(DefaultGraphClause)
+SPARQLParser.addElement(DefaultGraphClause)
 
 # [13]    DatasetClause     ::=   'FROM' ( DefaultGraphClause | NamedGraphClause ) 
 DatasetClause = Group(FROM + (DefaultGraphClause | NamedGraphClause) ).setName('DatasetClause')
-parser.addElement(DatasetClause)
+SPARQLParser.addElement(DatasetClause)
 
 # [12]    AskQuery          ::=   'ASK' DatasetClause* WhereClause SolutionModifier 
 AskQuery = Group(ASK + ZeroOrMore(DatasetClause) + WhereClause('where') + SolutionModifier ).setName('AskQuery')
-parser.addElement(AskQuery)
+SPARQLParser.addElement(AskQuery)
 
 # [11]    DescribeQuery     ::=   'DESCRIBE' ( VarOrIri+ | '*' ) DatasetClause* WhereClause? SolutionModifier 
 DescribeQuery = Group(DESCRIBE + (OneOrMore(VarOrIri) | ALL_VALUES) + ZeroOrMore(DatasetClause) + Optional(WhereClause('where')) + SolutionModifier ).setName('DescribeQuery')
-parser.addElement(DescribeQuery)
+SPARQLParser.addElement(DescribeQuery)
 
 # [10]    ConstructQuery    ::=   'CONSTRUCT' ( ConstructTemplate DatasetClause* WhereClause SolutionModifier | DatasetClause* 'WHERE' '{' TriplesTemplate? '}' SolutionModifier ) 
 ConstructQuery = Group(CONSTRUCT + ((ConstructTemplate + ZeroOrMore(DatasetClause) + WhereClause('where') + SolutionModifier) | 
                                       (ZeroOrMore(DatasetClause) + WHERE + LCURL +  Optional(TriplesTemplate) + RCURL + SolutionModifier))).setName('ConstructQuery')
-parser.addElement(ConstructQuery)
+SPARQLParser.addElement(ConstructQuery)
 
 # [9]     SelectClause      ::=   'SELECT' ( 'DISTINCT' | 'REDUCED' )? ( ( Var | ( '(' Expression 'AS' Var ')' ) )+ | '*' ) 
 SelectClause = Group(SELECT + Optional(DISTINCT | REDUCED) + ( OneOrMore(Var | (LPAR + Expression + AS + Var + RPAR)) | ALL_VALUES ) ).setName('SelectClause')
-parser.addElement(SelectClause)
+SPARQLParser.addElement(SelectClause)
 
 # [8]     SubSelect         ::=   SelectClause WhereClause SolutionModifier ValuesClause 
 SubSelect << Group(SelectClause + WhereClause('where') + SolutionModifier + ValuesClause)
 
 # [7]     SelectQuery       ::=   SelectClause DatasetClause* WhereClause SolutionModifier 
 SelectQuery = Group(SelectClause + ZeroOrMore(DatasetClause) + WhereClause('where') + SolutionModifier ).setName('SelectQuery')
-parser.addElement(SelectQuery)
+SPARQLParser.addElement(SelectQuery)
 
 # [6]     PrefixDecl        ::=   'PREFIX' PNAME_NS IRIREF 
 PrefixDecl = Group(PREFIX + PNAME_NS('prefix') + IRIREF('namespace')).setName('PrefixDecl')
-parser.addElement(PrefixDecl)
+SPARQLParser.addElement(PrefixDecl)
 
 # [5]     BaseDecl          ::=   'BASE' IRIREF 
 BaseDecl = Group(BASE + IRIREF('baseiri')).setName('BaseDecl')
-parser.addElement(BaseDecl)
+SPARQLParser.addElement(BaseDecl)
 
 # [4]     Prologue          ::=   ( BaseDecl | PrefixDecl )* 
 Prologue << Group(ZeroOrMore(BaseDecl | PrefixDecl))
 
 # [3]     UpdateUnit        ::=   Update 
 UpdateUnit = Group(Update('update')).setName('UpdateUnit')
-parser.addElement(UpdateUnit)
+SPARQLParser.addElement(UpdateUnit)
 
 # [2]     Query     ::=   Prologue ( SelectQuery | ConstructQuery | DescribeQuery | AskQuery ) ValuesClause 
 Query = Group(Prologue('prologue') + ( SelectQuery | ConstructQuery | DescribeQuery | AskQuery ) + ValuesClause ).setName('Query')
-parser.addElement(Query)
+SPARQLParser.addElement(Query)
 
 # [1]     QueryUnit         ::=   Query 
 QueryUnit = Group(Query).setName('QueryUnit')
-parser.addElement(QueryUnit)
+SPARQLParser.addElement(QueryUnit)
 
 

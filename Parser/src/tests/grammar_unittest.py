@@ -7,7 +7,7 @@ Created on 24 feb. 2016
 import unittest
 from pyparsing import ParseException
 from parsertools.base import ParseResults
-from parsertools.parsers.sparqlparser import parser
+from parsertools.parsers.sparqlparser import SPARQLParser
 
 
 # Next lines are temporary during development, to be deleted as implementions added to .grammar
@@ -27,7 +27,7 @@ from parsertools.parsers.sparqlparser import parser
 class Test(unittest.TestCase):
     @classmethod
     def makeTestFunc(self, rule, testCases, *, info=False, debug=0):
-        element = eval('parser.' + rule + '.pattern')
+        element = eval('SPARQLParser.' + rule + '.pattern')
         def testFunc():
             if info:
                 print('\ntesting', rule, 'with', len(testCases[rule]['pass']), 'pass case(s) and', len(testCases[rule]['fail']), 'fail case(s)')
