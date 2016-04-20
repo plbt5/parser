@@ -12,39 +12,37 @@ class ParseStruct:
     e.g. an EBNF grammar.'''
     
     def __init__(self, expr=None):
-        '''A ParseStruct object can be initialized wih either a valid string for the subclass concerned,
+        '''A ParseStruct object contains a _pattern attribute, that corresponds to a pyparsing pattern.
+        It can be initialized wih either a valid string for the subclass concerned,
         using its own pattern attribute to parse it, or it can be initialized with a list of items
         which together form a valid parse result, together with a dictionary containing the prefixes in force at the subexpression with their
         values, and a string containing the active base. This latter option is only meant to be
-        used by internal parser processes. The normal use case is to feed it with a string.
-        Each of the items is either
-        - a string
+        used by internal parser processes. The normal use case is to feed it with a string. This will build the item list as the _items attribute.
+        Each of the items in the item list is either
+        - a string, or
         - another ParseStruct object.
-        This nested list is the basic internal structure for the class and contains all relevant parsing information.
-        In addition to the above, this includes a parent pointer in case the element is part of a larger ParseStruct instance,
-        and a label which contains the "resultsName" of the parsed subexpression, if any. Furthermore, a dictionary containing 
-        the prefixes in force at the subexpression with their values, and a string containing the active base.'''
+        This nested list is the basic internal structure for the class.
+        The other attibutes: _label, _parent, _prefixes and _baseiri, are context dependent and should be set by the creating higher level ParseStruct,
+        if that exists.'''
         
         self.__dict__['_items'] = None
         self.__dict__['_label'] = None
         self.__dict__['_parent'] = None
+        self.__dict__['_prefixes'] = None
+        self.__dict__['_baseiri'] = None
         
         if expr:
             assert isinstance(expr, str), type(expr)
-#             self.__dict__['items'] = self.__getPattern().parseString(expr, parseAll=True)[0].items
             other = self.__getPattern().parseString(expr, parseAll=True)[0]
             for attr in other.__dict__:
                 self.__dict__[attr] = other.__dict__[attr]
-#         self.createParentPointers()
-#         self.__createPrefixes()
-#         self.__createBase()
                 
     def __eq__(self, other):
         '''Compares the instances for equality of:
         - class
         - string representation.
-        This means that the labels  and parent pointers are not taken into account. This is because
-        these are a form of annotation, separate from the parse tree in terms of resolved production rules.'''
+        This means that the labels, parent pointers etc. are not taken into account. This is because
+        these are a form of annotation and/or context, separate from the parse tree in terms of resolved production rules.'''
         
         return self.__class__ == other.__class__ and str(self) == str(other)
     
@@ -54,24 +52,23 @@ class ParseStruct:
         
         if att in self.getLabels():
             values = self.getValuesForLabel(att)
-            assert len(values) == 1, values
-            return values[0] 
+            if len(values) == 1:
+                return values[0] 
         else:
             raise AttributeError('No attribute, or unique label found for argument "{}".'.format(att))
 #         
     def __setattr__(self, label, value):
         '''Raises exception when trying to set attributes directly.Elements are to be changed using "updateWith()".'''
         
-        raise AttributeError('Direct setting of attributes not allowed. To change a labeled element, try updateWith() instead.')
+        raise AttributeError('Direct setting of attributes not allowed. To change an element e, try e.updateWith() instead.')
     
     def __repr__(self):
         return self.__class__.__name__ + '("' + str(self) + '")'
     
     def __str__(self):
-        '''Generates the string corresponding to the object. Except for possible whitespace variation, 
+        '''Generates a string corresponding to the object. Except for possible whitespace variation, 
         this is identical to the string that was used to create the object.'''
         
-        sep = ' '
         result = []
         for t in self._items:
             if isinstance(t, str):
@@ -79,17 +76,11 @@ class ParseStruct:
             else:
                 assert isinstance(t, ParseStruct), '__str__: found value {} of type {} instead of ParseStruct instance'.format(t, type(t))
                 result.append(str(t))
-        return sep.join([r for r in result if r != ''])
+        return ' '.join([r for r in result if r != ''])
 
     def __getPattern(self):
         '''Returns the pattern used to parse expressions for this class.'''
         return self.__class__.pattern
-    
-    def copy(self):
-        '''Returns a deep copy of itself.'''
-        result = self.pattern.parseString(str(self))[0]
-        assert result == self
-        return result
     
     def __getElements(self, labeledOnly = True):
         '''Returns a flat list of all enmbedded ParseStruct instances (inclusing itself),
@@ -116,20 +107,17 @@ class ParseStruct:
         result.extend(flattenList(self.getItems()))
         return result  
     
-    def finishInitialize(self):
-        self.createParentPointers()
-    
     def createParentPointers(self):
         for i in self.getItems():
             if isinstance(i, ParseStruct):
                 i.__dict__['_parent'] = self
-#                 
-#     def __createPrefixes(self):
-#         pass
-#     
-#     def __createBase(self):
-#         pass
 
+    def copy(self):
+        '''Returns a deep copy of itself.'''
+        result = self.pattern.parseString(str(self))[0]
+        assert result == self
+        return result
+    
     def setItems(self, items):
         self.__dict__['_items'] = items
     
@@ -175,9 +163,8 @@ class ParseStruct:
     def check(self, *, report = False, render=False, dump=False):
         '''Runs various checks. Returns True if all checks pass, else False. Optionally prints a report with the check results, renders, and/or dumps itself.'''
         if report:
-            print('{} is{}internally label-consistent'.format(self, ' ' if self.__isLabelConsistent() else ' not '))
-            print('{} renders a{}expression ({})'.format(self, ' valid ' if self.yieldsValidExpression() else 'n invalid ', self.__str__()))
-            print('{} is a{}valid parse object'.format(self, ' ' if self.isValid() else ' not '))
+            print('{} renders {} expression ({})'.format(self, 'a valid' if self.yieldsValidExpression() else 'an invalid', self.__str__()))
+            print('{} is{}a valid parse object'.format(self, ' ' if self.isValid() else ' not '))
         if render:
             print('--rendering:')
             self.render()
@@ -195,23 +182,23 @@ class ParseStruct:
         return self._items
 
     def hasLabel(self, k):
-        '''True if k present as label (non-recursive).'''
+        '''True if k present as label of a direct descendant.'''
         return k in self.getLabels()
      
     def getLabels(self):
-        '''Returns list of all labels from items attribute (non-recursive).'''
+        '''Returns list of all labels from direct descendants.'''
         return(filter(None, [i.getLabel() for i in self.getItems() if isinstance(i, ParseStruct)]))
     
     def getValuesForLabel(self, k):
-        '''Returns list of all values for label. (Non-recursive).'''
+        '''Returns list of all direct descendants with k as label.'''
         return [i for i in self.getItems() if isinstance(i, ParseStruct) and i._label == k]
     
     def getChildren(self):
-        '''Returns a list of all its child elements.'''
+        '''Returns a list of all its non-string child elements.'''
         return [i for i in self.getItems() if isinstance(i, ParseStruct)]
     
     def getParent(self):
-        '''Returns a list of its parent element, which is the first element encountered when going up in the parse tree.
+        '''Returns its parent element, which is the first element encountered when going up in the parse tree.
         For the top element, the method returns None'''
         return self._parent
     
@@ -229,14 +216,14 @@ class ParseStruct:
         return len(self.getItems()) > 1
             
     def isAtom(self):
-        '''Test whether the node has no ParseStruct subnode, but instead contains a string.'''
+        '''Test whether the node has a string as its single descendant.'''
         return len(self.getItems()) == 1 and isinstance(self._items[0], str)
     
     def descend(self):
         '''Descends until either an atom or a branch node is encountered; returns that node.'''
         result = self
         while not result.isAtom() and not result.isBranch():
-            result = result._items[0]
+            result = result.getItems()[0]
         return result
         
     def dump(self, indent='', step='|  '):
@@ -277,9 +264,8 @@ class ParseStruct:
         This should normally be the case.'''
         return self == self.__getPattern().parseString(self.__str__())[0]
     
-    
-def parseStructFunc(cls):
-    '''Returns the function that converts a ParseResults object to a ParseStruct object of class "cls", with label set to None, and
+def parseStructFunc(class_):
+    '''Returns the function that converts a ParseResults object to a ParseStruct object of class "class_", with label set to None, and
     items set to a recursive list of objects, each of which is either a string or a further ParseStruct object.
     The function returned is used to set a parseAction for a pattern.'''
             
@@ -308,22 +294,22 @@ def parseStructFunc(cls):
         return result
     
     def makeparseinfo(parseresults):
-        '''The function to be returned.'''
-#         assert ParseStruct in cls.__bases__
-        assert issubclass(cls, ParseStruct)
+        # The function to be returned.
+        assert issubclass(class_, ParseStruct)
         assert isinstance(parseresults, ParseResults)
-#         result = cls(itemList(parseresults))  
-        result = cls()
+        result = class_()
         result.setItems(itemList(parseresults))
-        result.finishInitialize()
+        result.createParentPointers()
         return result
     
     return makeparseinfo
 
 # Helper function for delimited lists where the delimiters must be included in the result
+
 def separatedList(pattern, sep=','):
     '''Similar to a delimited list of instances from a ParseStruct subclass, but includes the separator in its ParseResults. Returns a 
-    ParseResults object containing a simple list of matched tokens separated by the separator.'''
+    delimitedList object with a special parse action. If a resultsName for the delimitedList was specified, the corresponding
+    label is applied to all occurrences of the pattern.'''
       
     def makeList(parseresults):
         assert len(parseresults) > 0, 'internal error'
@@ -333,14 +319,10 @@ def separatedList(pattern, sep=','):
         templist = []
         for item in parseresults:
             if isinstance(item, ParseStruct):
-#                 i = [label, item]
-#                 item.__dict__['label'] = i[0]
-#                 templist.append([label, item])
                 item.__dict__['_label'] = label
                 templist.append(item)
             else:
                 assert isinstance(item, str)
-#                 templist.append([None, item])
                 templist.append(item)
         result = []
         result.append(templist[0])
@@ -354,11 +336,4 @@ def separatedList(pattern, sep=','):
     result.setParseAction(makeList)
     return result
 
-# class Parser:
-#     '''The main class for clients to use when parsing (sub)expressions of the language.'''
-#     def __init__(self, cls=ParseStruct):
-#         self.cls = cls
-#     def addElement(self, pattern):
-#         setattr(self, pattern.name, type(pattern.name, (self.cls,), {'pattern': pattern}))
-#         pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
                            

@@ -94,6 +94,9 @@ are defined using higher order pyparsing constructs.
 A helper function "separatedList" was developed. It matches the same expressions as a delimitedList (it is actually a delimitedList with a special parseAction attached), 
 but other than a delimitedList it includes the delimiter in its ParseResult. This is needed because a ParseStruct object must be able to render the expression it came from.
 
+Liberal use is made of assert statements to catch unexpected situations. The choice is here to prefer safety over performance. The latter should not be an issue in the previsioned 
+use of the package.
+
 
 
 	

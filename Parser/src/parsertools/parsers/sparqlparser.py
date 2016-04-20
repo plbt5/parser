@@ -8,7 +8,12 @@ from parsertools.base import ParseStruct, parseStructFunc, separatedList
 from parsertools import ParsertoolsException, NoPrefixError
 import rfc3987
 
+# Custom exception. This is optional when defining a parser. When present, it can be used in methods of the Parser class as defined below.
+
 class SPARQLParseException(ParsertoolsException):
+    '''Custom exception. This is optional when defining a parser. When present, it can be used in methods of a ParseStruct subclass if
+    defined below.'''
+    
     pass
 
 #
@@ -16,9 +21,13 @@ class SPARQLParseException(ParsertoolsException):
 #
 
 class SPARQLStruct(ParseStruct):
+    '''Optional subclass of ParseStruct for the language. Typically, this class contains attributes and methods for the language that
+    go beyond context free parsing, such as pre- and post processing, checking for conditions not covered by the grammar, etc.'''
     
     def applyPrefixesAndBase(self, prefixes={}, baseiri=''):
-#         print('Applying prefixes {} and base "{}" to {} (type {})'.format(prefixes, baseiri, self, self.__class__.__name__))
+        '''Recursively attaches information to the element about the prefixes and base-iri valid at this point
+        in the expression, as determined by PREFIX and BASE declarations in the query.'''
+        
         self.__dict__['_prefixes'] = prefixes
         self.__dict__['_baseiri'] = baseiri
         prefixes = prefixes.copy()
@@ -43,53 +52,35 @@ class SPARQLStruct(ParseStruct):
     def expandIris(self):
         '''Converts all iri elements to normal form, taking into account the prefixes and base in force at the location of the iri.'''
         for elt in self.searchElements(element_type=parser.iri):
-#             print('Expanding iri "{}" with prefixes "{}" and baseiri "{}" (in element {})'.format(str(elt), elt._prefixes, elt._baseiri, elt.__class__.__name__))
             children = elt.getChildren()
             assert len(children) == 1, children
             child = children[0]
             newiriref = '<' + expandIri(str(child), elt._prefixes, elt._baseiri) + '>'
-#             print('Updating element "{}" with string "{}"'.format(elt, newiriref))
             elt.updateWith(newiriref)
-#             print('Result:')
-#             print(elt.dump())
 
-# helper function
-    
-def expandIri(iri, prefixes, baseiri):
-    '''Converts iri to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
-#         print('Expanding {} with prefixes {} and baseiri "{}"'.format(iri, prefixes, baseiri))
-    try:
-        _ = parser.PrefixedName(iri)
-        splitted = iri.split(':', maxsplit=1)
-        assert len(splitted) == 2, splitted
-        if splitted[0] != '':
-            newiri = prefixes[splitted[0] + ':'][1:-1] + splitted[1]
-        else:
-            newiri = splitted[1]
-    except ParseException:
-        try:
-            _ = parser.IRIREF(iri)
-            newiri = iri[1:-1]
-        except:
-            raise SPARQLParseException('Cannot expand "{}": no PrefixedName or IRIREF'.format(iri))
-    if rfc3987.match(newiri, 'irelative_ref'):
-        newiri = rfc3987.resolve(baseiri[1:-1], newiri)
-    assert rfc3987.match(newiri), 'String "{}" cannot be expanded as iri'.format(newiri)
-    return newiri
 #
-# The parser object
+# The following is boilerplate code, to be included in every parser definition module
 #
 
 class Parser:
-    def __init__(self, cls=ParseStruct):
-        self.cls = cls
+    '''Class to be instantiated to contain a parser for the language being implemented.
+    This code must be present in the parser definition file for the language.
+    Optionally, it takes a class argument if the language demands functionality in its
+    ParseStruct elements that goes beyond what is provided in base.py. The argument must be
+    a subclass of ParseStruct. The default is to instantiate the parser as a ParseStruct 
+    parser.'''
+    
+    def __init__(self, class_=ParseStruct):
+        self.class_ = class_
     def addElement(self, pattern):
-        setattr(self, pattern.name, type(pattern.name, (self.cls,), {'pattern': pattern}))
+        setattr(self, pattern.name, type(pattern.name, (self.class_,), {'pattern': pattern}))
         pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
 
+#
+# Boilerplate code: create the parser object, optionally with a custom ParseStruct subclass
+#
 
 parser = Parser(SPARQLStruct)
-
 
 #
 # Main function to call. This is a convenience function, adapted to the SPARQL definition.
@@ -97,8 +88,6 @@ parser = Parser(SPARQLStruct)
 
 def parseQuery(querystring):
     '''Entry point to parse any SPARQL query'''
-    
-
     
     s = prepareQuery(querystring)
     
@@ -119,6 +108,30 @@ def parseQuery(querystring):
 #
 # Utility functions for SPARQL
 #
+
+# helper function to determing the expanded form of an iri, in a given context of prefixes and base-iri.
+    
+def expandIri(iri, prefixes, baseiri):
+    '''Converts iri to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
+
+    try:
+        _ = parser.PrefixedName(iri)
+        splitted = iri.split(':', maxsplit=1)
+        assert len(splitted) == 2, splitted
+        if splitted[0] != '':
+            newiri = prefixes[splitted[0] + ':'][1:-1] + splitted[1]
+        else:
+            newiri = splitted[1]
+    except ParseException:
+        try:
+            _ = parser.IRIREF(iri)
+            newiri = iri[1:-1]
+        except:
+            raise SPARQLParseException('Cannot expand "{}": no PrefixedName or IRIREF'.format(iri))
+    if rfc3987.match(newiri, 'irelative_ref'):
+        newiri = rfc3987.resolve(baseiri[1:-1], newiri)
+    assert rfc3987.match(newiri), 'String "{}" cannot be expanded as iri'.format(newiri)
+    return newiri
 
 def stripComments(text):
     '''Strips SPARQL-style comments from a multiline string'''
@@ -148,14 +161,14 @@ def prepareQuery(querystring):
     strippedQuery = stripComments(querystring)
     query = unescape(strippedQuery)
     # TODO: finish
-    return strippedQuery
+    preparedQuery = query
+    return preparedQuery
 
 def checkQueryResult(r):
     '''Used to perform additional checks on the ParseStruct resulting from a parsing action. These are conditions that are not covered by the EBNF syntax.
     See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
     
     checkIri(r)
-            
     #TODO: finish
     return True
 
@@ -169,7 +182,6 @@ def checkIri(r):
 #
 # Brackets and interpunction
 #
-
 
 LPAR = Literal('(').setName('LPAR')
 parser.addElement(LPAR)

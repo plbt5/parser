@@ -26,7 +26,7 @@ assert not rc is r
 try:
     rc.lexical_form = parser.String("'work2'")
 except AttributeError as e:
-    assert str(e) == 'Direct setting of attributes not allowed. To change a labeled element, try updateWith() instead.', e
+    assert str(e) == 'Direct setting of attributes not allowed. To change an element e, try e.updateWith() instead.', e
 rc.lexical_form.updateWith("'work2'")
 assert rc == rc2
 assert not rc2 == r
