@@ -1,3 +1,6 @@
+Applied, but not yet released
+- Moved SPARQLStruct classmethod expandIri() to module level of sparqlparser
+
 Version 0.2.4
 - Added SPARQLStruct instance method "expandIris()" to replace all iri elements with their expansion, taking into account the prefixes and base iri in force at the location of the iri
 - Added SPARQLStruct classmethod "expandIri()" that takes 

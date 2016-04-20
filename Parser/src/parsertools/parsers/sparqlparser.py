@@ -39,29 +39,6 @@ class SPARQLStruct(ParseStruct):
     
     def getBaseiri(self):
         return self._baseiri   
-    
-    @classmethod
-    def expandIri(cls, iri, prefixes, baseiri):
-        '''Converts iri to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
-#         print('Expanding {} with prefixes {} and baseiri "{}"'.format(iri, prefixes, baseiri))
-        try:
-            _ = parser.PrefixedName(iri)
-            splitted = iri.split(':', maxsplit=1)
-            assert len(splitted) == 2, splitted
-            if splitted[0] != '':
-                newiri = prefixes[splitted[0] + ':'][1:-1] + splitted[1]
-            else:
-                newiri = splitted[1]
-        except ParseException:
-            try:
-                _ = parser.IRIREF(iri)
-                newiri = iri[1:-1]
-            except:
-                raise SPARQLParseException('Cannot expand "{}": no PrefixedName or IRIREF'.format(iri))
-        if rfc3987.match(newiri, 'irelative_ref'):
-            newiri = rfc3987.resolve(baseiri[1:-1], newiri)
-        assert rfc3987.match(newiri), 'String "{}" cannot be expanded as iri'.format(newiri)
-        return newiri
         
     def expandIris(self):
         '''Converts all iri elements to normal form, taking into account the prefixes and base in force at the location of the iri.'''
@@ -70,13 +47,35 @@ class SPARQLStruct(ParseStruct):
             children = elt.getChildren()
             assert len(children) == 1, children
             child = children[0]
-            newiriref = '<' + SPARQLStruct.expandIri(str(child), elt._prefixes, elt._baseiri) + '>'
+            newiriref = '<' + expandIri(str(child), elt._prefixes, elt._baseiri) + '>'
 #             print('Updating element "{}" with string "{}"'.format(elt, newiriref))
             elt.updateWith(newiriref)
 #             print('Result:')
 #             print(elt.dump())
 
-
+# helper function
+    
+def expandIri(iri, prefixes, baseiri):
+    '''Converts iri to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
+#         print('Expanding {} with prefixes {} and baseiri "{}"'.format(iri, prefixes, baseiri))
+    try:
+        _ = parser.PrefixedName(iri)
+        splitted = iri.split(':', maxsplit=1)
+        assert len(splitted) == 2, splitted
+        if splitted[0] != '':
+            newiri = prefixes[splitted[0] + ':'][1:-1] + splitted[1]
+        else:
+            newiri = splitted[1]
+    except ParseException:
+        try:
+            _ = parser.IRIREF(iri)
+            newiri = iri[1:-1]
+        except:
+            raise SPARQLParseException('Cannot expand "{}": no PrefixedName or IRIREF'.format(iri))
+    if rfc3987.match(newiri, 'irelative_ref'):
+        newiri = rfc3987.resolve(baseiri[1:-1], newiri)
+    assert rfc3987.match(newiri), 'String "{}" cannot be expanded as iri'.format(newiri)
+    return newiri
 #
 # The parser object
 #
