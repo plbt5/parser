@@ -89,6 +89,7 @@ s2 = """
 'sdfasf# sdfsfd'
 """[1:-1]
 
+print(stripComments(s1))
 assert stripComments(s1) == s2
  
 s = '<check#22?> ( $var, ?var )'

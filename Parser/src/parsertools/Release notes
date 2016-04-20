@@ -1,6 +1,8 @@
-Applied, but not yet released (build 802)
+Applied, but not yet released (build 816)
 - cleaned up code and docstrings in base.py and sparqlparser.py
-- Moved SPARQLStruct classmethod expandIri() to sparqlparser module level
+- Changed SPARQLStruct classmethod expandIri() to a sparqlparser module level function
+- Added design_notes.txt
+- extras.py is no longer, functionality moved to base.py
 
 Version 0.2.4
 - Added SPARQLStruct instance method "expandIris()" to replace all iri elements with their expansion, taking into account the prefixes and base iri in force at the location of the iri
@@ -12,10 +14,10 @@ Version 0.2.4
 - Added a howto.txt with a short explanation how to use the framework.
 	
 Version 0.2.3
-- Introduced SPARQLStruct as subclass of ParseStruct, keeps additional SPARQL related info
+- Introduced SPARQLStruct as subclass of ParseStruct, holds additional SPARQL related info
 - SPARQL parser now generates SPARQLStruct objects
 - SPARQLStruct objects now contain "prefixes" and "baseiri" attributes that keep track of 
-	the current prefixes dictionary and base iri value (accessed through getPrefixes() and getBaseiri() methods)
+	the current prefixes dictionary and base iri value (accessable through getPrefixes() and getBaseiri() methods)
 
 Version 0.2.2
 
