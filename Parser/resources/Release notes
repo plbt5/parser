@@ -1,4 +1,4 @@
-Applied, but not yet released (build 903)
+Applied, but not yet released (Build 964)
 - converted func_test to unittest format, renamed to func_unittest
 - cleaned up code and docstrings in base.py and sparqlparser.py
 - Changed SPARQLStruct classmethod expandIri() to a sparqlparser module level function

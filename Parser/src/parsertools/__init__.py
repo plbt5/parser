@@ -14,7 +14,7 @@ with open(buildfilepath, 'r+') as buildfile:
         buildfile.seek(0)
         buildfile.write(str(buildno + 1))
  
-__version__ = '0.2.1'
+__version__ = '0.2.4'
 
 
 class ParsertoolsException(Exception):
