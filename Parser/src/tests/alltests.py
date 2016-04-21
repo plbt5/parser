@@ -7,6 +7,7 @@ Created on 11 mrt. 2016
 from subprocess import *
 import parsertools
 import os
+from parsertools import buildfilepath, versionfilepath
 
 os.chdir('reftest/fed')
 print('Running fed test/n')
@@ -27,4 +28,4 @@ print('\nRunning func_unittest test\n')
 print(check_output(['/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5', 'func_unittest.py']).decode('utf-8'))
 print('\nRunning grammar_unittest test\n')
 print(check_output(['/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5', 'grammar_unittest.py']).decode('utf-8'))
-print('\nAll tests finished')
+print('\nAll tests finished (Version {}, Build {})'.format(open(versionfilepath).read().strip(), open(buildfilepath).read().strip()))
