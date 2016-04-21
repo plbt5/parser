@@ -1,4 +1,5 @@
-Applied, but not yet released (Build 1024)
+Committed, but not yet released (Build 1024)
+- Added Unicode escape function "unescapeUcode()" to sparqlparser
 - Moved version info out of __init__.py to separate file, alltests now prints version and build numbers
 - Renamed ParseStruct "pattern" attribute to "_pattern" 
 - Converted func_test to unittest format, renamed to func_unittest

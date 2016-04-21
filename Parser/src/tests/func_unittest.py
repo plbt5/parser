@@ -6,7 +6,7 @@ Created on 20 apr. 2016
 import unittest
 
 from parsertools.parsers.sparqlparser import SPARQLParser
-from parsertools.parsers.sparqlparser import stripComments, parseQuery
+from parsertools.parsers.sparqlparser import stripComments, parseQuery, unescapeUcode
 
 
 class Test(unittest.TestCase):
@@ -198,6 +198,10 @@ class Test(unittest.TestCase):
 
 
 # Other tests
+
+    def testUnescapeUcode(self):
+        s = 'abra\\U000C00AAcada\\u00AAbr\u99DDa'
+        assert unescapeUcode(s) == 'abra󀂪cadaªbr駝a'
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']

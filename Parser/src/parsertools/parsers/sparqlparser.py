@@ -7,6 +7,7 @@ from pyparsing import *
 from parsertools.base import ParseStruct, parseStructFunc, separatedList
 from parsertools import ParsertoolsException, NoPrefixError
 import rfc3987
+import re
 
 # Custom exception. This is optional when defining a SPARQLParser. When present, it can be used in methods of the Parser class as defined below.
 
@@ -145,7 +146,23 @@ def stripComments(text):
     lines = text.split('\n')
     return '\n'.join([Line.parseString(l)[0] for l in lines])
 
-def unescape(s):
+
+
+def unescapeUcode(s):
+    
+    def escToUcode(s):
+        assert (s[:2] == r'\u' and len(s) == 6) or (s[:2] == r'\U' and len(s) == 10)
+        return chr(int(s[2:], 16))
+                   
+    smallUcodePattern = r'\\u[0-9a-fA-F]{4}'
+    largeUcodePattern = r'\\U[0-9a-fA-F]{8}'
+    s = re.sub(smallUcodePattern, lambda x: escToUcode(x.group()), s)
+    s = re.sub(largeUcodePattern, lambda x: escToUcode(x.group()), s)  
+      
+    return s
+    
+    
+def stringEscape(s):
     s = s.replace(r'\t', '\u0009')   
     s = s.replace(r'\n', '\u000A')   
     s = s.replace(r'\r', '\u000D')   
@@ -158,11 +175,10 @@ def unescape(s):
 
 def prepareQuery(querystring):
     '''Used to prepare a string for parsing. See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
-    strippedQuery = stripComments(querystring)
-    query = unescape(strippedQuery)
+    querystring = stripComments(querystring)
+    querystring = unescapeUcode(querystring)
     # TODO: finish
-    preparedQuery = query
-    return preparedQuery
+    return querystring
 
 def checkQueryResult(r):
     '''Used to perform additional checks on the ParseStruct resulting from a parsing action. These are conditions that are not covered by the EBNF syntax.
