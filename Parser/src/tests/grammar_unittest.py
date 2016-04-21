@@ -327,7 +327,7 @@ class Test(unittest.TestCase):
 # [139]   IRIREF    ::=   '<' ([^<>"{}|^`\]-[#x00-#x20])* '>' 
 
         self.testCases['IRIREF'] = {'pass': ['<testIri>', '<work;een/IRI>', '<test$iri:dach][t-het-wel>'],
-                                      'fail': ['work IRI', '<foute}iri>', '<foute|iri>', '<nog\teen foute>', '<en]nogeen']}
+                                    'fail': ['work IRI', '<foute}iri>', '<foute|iri>', '<nog\teen foute>', '<en]nogeen']}
         
 # [138]   BlankNode         ::=   BLANK_NODE_LABEL | ANON 
 

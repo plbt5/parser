@@ -58,6 +58,24 @@ class SPARQLStruct(ParseStruct):
             child = children[0]
             newiriref = '<' + expandIri(str(child), elt._prefixes, elt._baseiri) + '>'
             elt.updateWith(newiriref)
+            
+    def processEscapeSeqs(self):
+        for stringtype in [SPARQLParser.STRING_LITERAL2, SPARQLParser.STRING_LITERAL1, SPARQLParser.STRING_LITERAL_LONG1, SPARQLParser.STRING_LITERAL_LONG2]:
+            for elt in self.searchElements(element_type=stringtype):
+                elt.updateWith(stringEscape(str(elt)))
+                
+    def checkIris(self):
+            for elt in self.searchElements(element_type=SPARQLParser.PrefixedName):
+                try:
+                    rfc3987.parse(str(elt))
+                except:
+                    raise
+            for elt in self.searchElements(element_type=SPARQLParser.IRIREF):
+                try:
+                    rfc3987.parse(str(elt)[1:-1])
+                except:
+                    raise
+            
 
 #
 # The following is boilerplate code, to be included in every SPARQLParser definition module
@@ -102,13 +120,60 @@ def parseQuery(querystring):
         except ParseException:
             raise ParsertoolsException('Query {} cannot be parsed'.format(querystring))
         
-    assert checkQueryResult(result), 'Fault in postprocessing query {}'.format(querystring)
+    result.processEscapeSeqs()    
+    
+    try:
+        checkQueryResult(result)
+    except:
+        raise
     
     return result
 
 #
 # Utility functions for SPARQL
 #
+
+def prepareQuery(querystring):
+    '''Used to prepare a string for parsing. See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
+    # See 19.4 "Comments"
+    querystring = stripComments(querystring)
+    # See 19.2 "Codepoint Escape Sequences"
+    querystring = unescapeUcode(querystring)
+    return querystring
+
+
+def stripComments(text):
+    '''Strips SPARQL-style comments from a multiline string'''
+    if isinstance(text, list):
+        text = '\n'.join(text)
+    Comment = Literal('#') + SkipTo(lineEnd)
+    NormalText = Regex('[^#<\'"]+')    
+    Line = ZeroOrMore(String | (IRIREF | Literal('<')) | NormalText) + Optional(Comment) + lineEnd
+    Line.ignore(Comment)
+    Line.setParseAction(lambda tokens: ' '.join([t if isinstance(t, str) else t.__str__() for t in tokens]))
+    lines = text.split('\n')
+    return '\n'.join([Line.parseString(l)[0] for l in lines])
+
+def unescapeUcode(s):
+    
+    def escToUcode(s):
+        assert (s[:2] == r'\u' and len(s) == 6) or (s[:2] == r'\U' and len(s) == 10)
+        return chr(int(s[2:], 16))
+                   
+    smallUcodePattern = r'\\u[0-9a-fA-F]{4}'
+    largeUcodePattern = r'\\U[0-9a-fA-F]{8}'
+    s = re.sub(smallUcodePattern, lambda x: escToUcode(x.group()), s)
+    s = re.sub(largeUcodePattern, lambda x: escToUcode(x.group()), s)  
+      
+    return s
+
+def checkQueryResult(r):
+    '''Used to perform additional checks on the ParseStruct resulting from a parsing action. These are conditions that are not covered by the EBNF syntax.
+    See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
+    
+    # See 19.5 "IRI References"
+    r.checkIris()
+    #TODO: finish
 
 # helper function to determing the expanded form of an iri, in a given context of prefixes and base-iri.
     
@@ -134,32 +199,6 @@ def expandIri(iri, prefixes, baseiri):
     assert rfc3987.match(newiri), 'String "{}" cannot be expanded as iri'.format(newiri)
     return newiri
 
-def stripComments(text):
-    '''Strips SPARQL-style comments from a multiline string'''
-    if isinstance(text, list):
-        text = '\n'.join(text)
-    Comment = Literal('#') + SkipTo(lineEnd)
-    NormalText = Regex('[^#<\'"]+')    
-    Line = ZeroOrMore(String | (IRIREF | Literal('<')) | NormalText) + Optional(Comment) + lineEnd
-    Line.ignore(Comment)
-    Line.setParseAction(lambda tokens: ' '.join([t if isinstance(t, str) else t.__str__() for t in tokens]))
-    lines = text.split('\n')
-    return '\n'.join([Line.parseString(l)[0] for l in lines])
-
-
-
-def unescapeUcode(s):
-    
-    def escToUcode(s):
-        assert (s[:2] == r'\u' and len(s) == 6) or (s[:2] == r'\U' and len(s) == 10)
-        return chr(int(s[2:], 16))
-                   
-    smallUcodePattern = r'\\u[0-9a-fA-F]{4}'
-    largeUcodePattern = r'\\U[0-9a-fA-F]{8}'
-    s = re.sub(smallUcodePattern, lambda x: escToUcode(x.group()), s)
-    s = re.sub(largeUcodePattern, lambda x: escToUcode(x.group()), s)  
-      
-    return s
     
     
 def stringEscape(s):
@@ -172,24 +211,6 @@ def stringEscape(s):
     s = s.replace(r"\'", '\u0027')   
     s = s.replace(r'\\', '\u005C')
     return s
-
-def prepareQuery(querystring):
-    '''Used to prepare a string for parsing. See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
-    querystring = stripComments(querystring)
-    querystring = unescapeUcode(querystring)
-    # TODO: finish
-    return querystring
-
-def checkQueryResult(r):
-    '''Used to perform additional checks on the ParseStruct resulting from a parsing action. These are conditions that are not covered by the EBNF syntax.
-    See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
-    
-    checkIri(r)
-    #TODO: finish
-    return True
-
-def checkIri(r):
-    pass
 
 #
 # Patterns

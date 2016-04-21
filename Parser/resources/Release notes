@@ -1,4 +1,5 @@
-Committed, but not yet released (Build 1024)
+Committed, but not yet released (Build 1100)
+- Added checkIris() method to SPARQLStruct: tests all IRIREFs and PrefixedNames for well-formedness according to rfc3987
 - Added Unicode escape function "unescapeUcode()" to sparqlparser
 - Moved version info out of __init__.py to separate file, alltests now prints version and build numbers
 - Renamed ParseStruct "pattern" attribute to "_pattern" 

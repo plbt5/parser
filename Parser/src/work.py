@@ -1,33 +1,16 @@
-def u2int(s):
-    return int(s.replace('uU', 'x'))
-
-# s = r'\\u12CA'
-# 
-# t = s.replace(r'\\u', r'x')
-# print(t)
-# print(int(t))
-
-def escToUcode(s):
-    assert (s[:2] == r'\u' and len(s) == 6) or (s[:2] == r'\U' and len(s) == 10)
-    return chr(int(s[2:], 16))
-
-print(escToUcode(r'\U000C00AA'))
-
-import re
+from parsertools.parsers.sparqlparser import SPARQLParser, parseQuery
+import rfc3987
 
 
 
-s = 'abra\\U000C00AAcada\\u00AAbr\u99DDa'
+s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <test$iri:dach][t-het-wel> }'
+r = parseQuery(s)
+print(r.dump())
+# s = 'BASE <prologue:22> PREFIX prologue: <prologue:33> LOAD <testIri> ; BASE <prologue:22> PREFIX prologue: <prologue:33>'
+# parseQuery(s)
 
-
-
-print(s)
-
-def unescapeUcode(s):
-    smallUcodePattern = r'\\u[0-9a-fA-F]{4}'
-    largeUcodePattern = r'\\U[0-9a-fA-F]{8}'
-    s = re.sub(smallUcodePattern, lambda x: escToUcode(x.group()), s)
-    s = re.sub(largeUcodePattern, lambda x: escToUcode(x.group()), s)    
-    return s
-
-print(unescapeUcode(s))
+# import pprint
+# pprint.pprint(rfc3987.parse('testIri'))
+# # pprint.pprint(rfc3987.parse('work:22?'))
+# # pprint.pprint(rfc3987.parse('pref:double'))
+# pprint.pprint(rfc3987.parse('test$iri:dach][t-het-wel'))

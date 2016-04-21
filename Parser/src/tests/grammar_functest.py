@@ -4,7 +4,7 @@ Created on 24 feb. 2016
 @author: jeroenbruijning
 '''
 from parsertools.base import ParseResults
-from parsertools.parsers.sparqlparser import SPARQLParser, checkIri
+from parsertools.parsers.sparqlparser import SPARQLParser
 from sympy.solvers.ode import checkinfsol
 from parsertools import NoPrefixError
 import warnings

@@ -195,6 +195,21 @@ class Test(unittest.TestCase):
  
         r = SPARQLParser.ArgList(s)
         assert r.dump() == s_dump
+        
+    def testCheckIris(self):
+        s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <test$iri:dach][t-het-wel> }'
+        try:
+            parseQuery(s)
+            assert False
+        except:
+            assert True
+        s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { pref:testiri }'
+        try:
+            parseQuery(s)
+            assert True
+        except:
+            assert False
+            
 
 
 # Other tests
