@@ -12,9 +12,9 @@ class ParseStruct:
     e.g. an EBNF grammar.'''
     
     def __init__(self, expr=None):
-        '''A ParseStruct object contains a _pattern attribute, that corresponds to a pyparsing pattern.
+        '''A ParseStruct object contains a _pattern attribute, that corresponds to a pyparsing _pattern.
         It can be initialized wih either a valid string for the subclass concerned,
-        using its own pattern attribute to parse it, or it can be initialized with a list of items
+        using its own _pattern attribute to parse it, or it can be initialized with a list of items
         which together form a valid parse result, together with a dictionary containing the prefixes in force at the subexpression with their
         values, and a string containing the active base. This latter option is only meant to be
         used by internal parser processes. The normal use case is to feed it with a string. This will build the item list as the _items attribute.
@@ -82,8 +82,8 @@ class ParseStruct:
         return ' '.join([r for r in result if r != ''])
 
     def __getPattern(self):
-        '''Returns the pattern used to parse expressions for this class.'''
-        return self.__class__.pattern
+        '''Returns the _pattern used to parse expressions for this class.'''
+        return self.__class__._pattern
     
     def __getElements(self, labeledOnly = True):
         '''Returns a flat list of all enmbedded ParseStruct instances (inclusing itself),
@@ -117,7 +117,7 @@ class ParseStruct:
 
     def copy(self):
         '''Returns a deep copy of itself.'''
-        result = self.pattern.parseString(str(self))[0]
+        result = self._pattern.parseString(str(self))[0]
         assert result == self
         return result
     
@@ -125,7 +125,7 @@ class ParseStruct:
         self.__dict__['_items'] = items
     
     def searchElements(self, *, label=None, element_type = None, value = None, labeledOnly=False):
-        '''Returns a list of all elements with the specified search pattern. If labeledOnly is True,
+        '''Returns a list of all elements with the specified search _pattern. If labeledOnly is True,
         only elements with label not None are considered for inclusion. Otherwise (the default case) all elements are considered.
         Keyword arguments label, element_type, value are used as a wildcard if None. All must be matched for an element to be included in the result.'''
         
@@ -142,7 +142,7 @@ class ParseStruct:
                 continue
             if value:
                 try:
-                    e1 = e.pattern.parseString(value)[0]
+                    e1 = e._pattern.parseString(value)[0]
                     if e != e1:
                         continue
                 except ParseException:
@@ -152,12 +152,12 @@ class ParseStruct:
 
     def updateWith(self, new_content):
         '''Replaces the items attribute with the items attribute of a freshly parsed new_content, which must be a string.
-        The parsing is done with the pattern of the element being updated.
+        The parsing is done with the _pattern of the element being updated.
         This is the core function to change elements in place.'''
         
         assert isinstance(new_content, str), 'UpdateFrom function needs a string'
         try:
-            other = self.pattern.parseString(new_content, parseAll=True)[0]
+            other = self._pattern.parseString(new_content, parseAll=True)[0]
         except ParseException:
             raise ParsertoolsException('{} is not a valid string for {} element'.format(new_content, self.__class__.__name__))        
         self.__dict__['_items'] = other.__dict__['_items']
@@ -270,7 +270,7 @@ class ParseStruct:
 def parseStructFunc(class_):
     '''Returns the function that converts a ParseResults object to a ParseStruct object of class "class_", with label set to None, and
     items set to a recursive list of objects, each of which is either a string or a further ParseStruct object.
-    The function returned is used to set a parseAction for a pattern.'''
+    The function returned is used to set a parseAction for a _pattern.'''
             
     def itemList(parseresults):
         '''For internal use. Converts a ParseResults object to a recursive structure consisting of a list of objects,
@@ -309,16 +309,16 @@ def parseStructFunc(class_):
 
 # Helper function for delimited lists where the delimiters must be included in the result
 
-def separatedList(pattern, sep=','):
+def separatedList(_pattern, sep=','):
     '''Similar to a delimited list of instances from a ParseStruct subclass, but includes the separator in its ParseResults. Returns a 
     delimitedList object with a special parse action. If a resultsName for the delimitedList was specified, the corresponding
-    label is applied to all occurrences of the pattern.'''
+    label is applied to all occurrences of the _pattern.'''
       
     def makeList(parseresults):
         assert len(parseresults) > 0, 'internal error'
         assert len(list((parseresults.keys()))) <= 1, 'internal error, got more than one key: {}'.format(list(parseresults.keys()))
         label = list(parseresults.keys())[0] if len(list(parseresults.keys())) == 1 else None
-        assert all([p.__class__.pattern == pattern for p in parseresults if isinstance(p, ParseStruct)]), 'internal error: pattern mismatch ({}, {})'.format(p.__class__.pattern, pattern)
+        assert all([p.__class__._pattern == _pattern for p in parseresults if isinstance(p, ParseStruct)]), 'internal error: _pattern mismatch ({}, {})'.format(p.__class__._pattern, _pattern)
         templist = []
         for item in parseresults:
             if isinstance(item, ParseStruct):
@@ -335,7 +335,7 @@ def separatedList(pattern, sep=','):
         return result
   
       
-    result = delimitedList(pattern, sep)
+    result = delimitedList(_pattern, sep)
     result.setParseAction(makeList)
     return result
 

@@ -27,7 +27,7 @@ from parsertools.parsers.sparqlparser import SPARQLParser
 class Test(unittest.TestCase):
     @classmethod
     def makeTestFunc(self, rule, testCases, *, info=False, debug=0):
-        element = eval('SPARQLParser.' + rule + '.pattern')
+        element = eval('SPARQLParser.' + rule + '._pattern')
         def testFunc():
             if info:
                 print('\ntesting', rule, 'with', len(testCases[rule]['pass']), 'pass case(s) and', len(testCases[rule]['fail']), 'fail case(s)')

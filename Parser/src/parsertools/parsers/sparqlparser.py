@@ -73,7 +73,7 @@ class Parser:
     def __init__(self, class_=ParseStruct):
         self.class_ = class_
     def addElement(self, pattern):
-        setattr(self, pattern.name, type(pattern.name, (self.class_,), {'pattern': pattern}))
+        setattr(self, pattern.name, type(pattern.name, (self.class_,), {'_pattern': pattern}))
         pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
 
 #

@@ -1,9 +1,10 @@
-Applied, but not yet released (Build 964)
-- converted func_test to unittest format, renamed to func_unittest
-- cleaned up code and docstrings in base.py and sparqlparser.py
+Applied, but not yet released (Build 980)
+- Renamed ParseStruct "pattern" attribute to "_pattern" 
+- Converted func_test to unittest format, renamed to func_unittest
+- Cleaned up code and docstrings in base.py and sparqlparser.py
 - Changed SPARQLStruct classmethod expandIri() to a sparqlparser module level function
 - Added design_notes.txt
-- extras.py exists no longer, functionality moved to base.py
+- Module extras.py exists no longer, functionality moved to base.py
 
 Version 0.2.4
 - Added SPARQLStruct instance method "expandIris()" to replace all iri elements with their expansion, taking into account the prefixes and base iri in force at the location of the iri

@@ -26,7 +26,7 @@ import warnings
 def printResults(l, rule, dump=False):
     element = eval('SPARQLParser.' + rule)
     for s in l:
-        r = element.pattern.parseString(s, parseAll=True)
+        r = element._pattern.parseString(s, parseAll=True)
         while len(r) == 1 and isinstance(r[0], ParseResults):
             r = r[0]
         rendering = str(r[0])
