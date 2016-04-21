@@ -3,9 +3,12 @@ import rfc3987
 
 
 
-s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <test$iri:dach][t-het-wel> }'
+s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testiri>  }'
+
 r = parseQuery(s)
-print(r.dump())
+
+
+# print(r.dump())
 # s = 'BASE <prologue:22> PREFIX prologue: <prologue:33> LOAD <testIri> ; BASE <prologue:22> PREFIX prologue: <prologue:33>'
 # parseQuery(s)
 

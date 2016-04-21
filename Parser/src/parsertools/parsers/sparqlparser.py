@@ -65,20 +65,28 @@ class SPARQLStruct(ParseStruct):
                 elt.updateWith(stringEscape(str(elt)))
                 
     def checkIris(self):
-            for elt in self.searchElements(element_type=SPARQLParser.PrefixedName):
-                try:
-                    rfc3987.parse(str(elt))
-                except:
-                    raise
-            for elt in self.searchElements(element_type=SPARQLParser.IRIREF):
-                try:
-                    rfc3987.parse(str(elt)[1:-1])
-                except:
-                    raise
+        '''Checks if all IRIs conform to RFC3987'''
+        for elt in self.searchElements(element_type=SPARQLParser.PrefixedName):
+            try:
+                rfc3987.parse(str(elt))
+            except ValueError as e:
+                raise SPARQLParseException(str(e))
+        for elt in self.searchElements(element_type=SPARQLParser.IRIREF):
+            try:
+                rfc3987.parse(str(elt)[1:-1])
+            except ValueError as e:
+                raise SPARQLParseException(str(e))
+            
+    def checkBases(self):
+        for elt in self.searchElements(element_type=SPARQLParser.BaseDecl):
+            try:
+                rfc3987.parse(str(elt.baseiri)[1:-1], rule='absolute_IRI')
+            except ValueError as e:
+                raise SPARQLParseException(str(e))
             
 
 #
-# The following is boilerplate code, to be included in every SPARQLParser definition module
+# The following is boilerplate code, to be included in every Parsertools parser definition module
 #
 
 class Parser:
@@ -118,13 +126,13 @@ def parseQuery(querystring):
         try:
             result = SPARQLParser.UpdateUnit(s)
         except ParseException:
-            raise ParsertoolsException('Query {} cannot be parsed'.format(querystring))
+            raise SPARQLParseException('Query {} cannot be parsed'.format(querystring))
         
     result.processEscapeSeqs()    
     
     try:
         checkQueryResult(result)
-    except:
+    except SPARQLParseException:
         raise
     
     return result
@@ -173,7 +181,8 @@ def checkQueryResult(r):
     
     # See 19.5 "IRI References"
     r.checkIris()
-    #TODO: finish
+    r.checkBases()
+    #  TODO: finish
 
 # helper function to determing the expanded form of an iri, in a given context of prefixes and base-iri.
     

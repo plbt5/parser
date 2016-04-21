@@ -5,7 +5,7 @@ Created on 20 apr. 2016
 '''
 import unittest
 
-from parsertools.parsers.sparqlparser import SPARQLParser
+from parsertools.parsers.sparqlparser import SPARQLParser, SPARQLParseException
 from parsertools.parsers.sparqlparser import stripComments, parseQuery, unescapeUcode
 
 
@@ -198,19 +198,34 @@ class Test(unittest.TestCase):
         
     def testCheckIris(self):
         s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <test$iri:dach][t-het-wel> }'
+        # incorrect
         try:
             parseQuery(s)
-            assert False
-        except:
-            assert True
-        s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { pref:testiri }'
-        try:
-            parseQuery(s)
-            assert True
-        except:
-            assert False
-            
+            raise SPARQLParseException('Unexpected pass')
+        except SPARQLParseException as e:
+            if str(e) == 'Unexpected pass':
+                raise
+            else:
+                pass
+        s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testiri> }'
+        # correct
+        parseQuery(s)
 
+
+    def testCheckBases(self):
+        s = 'BASE <:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testiri> }'
+        # incorrect
+        try:
+            parseQuery(s)
+            raise SPARQLParseException('Unexpected pass')
+        except SPARQLParseException as e:
+            if str(e) == 'Unexpected pass':
+                raise
+            else:
+                pass
+        s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testiri> }'
+        # correct
+        parseQuery(s)
 
 # Other tests
 
