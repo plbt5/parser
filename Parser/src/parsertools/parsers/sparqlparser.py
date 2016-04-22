@@ -30,9 +30,12 @@ class SPARQLStruct(ParseStruct):
         self.__dict__['_prefixes'] = None
         self.__dict__['_baseiri'] = None
         
-    def applyPrefixesAndBase(self, prefixes={}, baseiri=''):
+    def _applyPrefixesAndBase(self, prefixes={}, baseiri='', isdefaultbase=True):
         '''Recursively attaches information to the element about the prefixes and base-iri valid at this point
-        in the expression, as determined by PREFIX and BASE declarations in the query.'''
+        in the expression, as determined by PREFIX and BASE declarations in the query.
+        The parameter isdefaultbase is True when there is not yet a BASE declaration in force, as per the Turtle
+        specification. The first BASE declaration replaces the current base iri instead of being appended to it,
+        which is what happens with subsequent BASE declarations.'''
         
         self.__dict__['_prefixes'] = prefixes
         self.__dict__['_baseiri'] = baseiri
@@ -42,12 +45,14 @@ class SPARQLStruct(ParseStruct):
                 for decl in elt.getChildren():
                     if isinstance(decl, SPARQLParser.PrefixDecl):
                         assert str(decl.prefix) not in prefixes
-                        prefixes[str(decl.prefix)] = str(decl.namespace)
+                        prefixes[str(decl.prefix)] = str(decl.namespace)[1:-1]
                     else:
                         assert isinstance(decl, SPARQLParser.BaseDecl)
-                        baseiri = baseiri + str(decl.baseiri)
-                prefixes = prefixes.copy()
-            elt.applyPrefixesAndBase(prefixes, baseiri)
+                        if isdefaultbase:
+                            baseiri = ''
+                            isdefaultbase = False
+                        baseiri = baseiri + str(decl.baseiri)[1:-1]
+            elt._applyPrefixesAndBase(prefixes, baseiri, isdefaultbase)
             
     def getPrefixes(self):
         return self._prefixes
@@ -196,12 +201,12 @@ def expandIri(iri, prefixes, baseiri):
 
     try:
         _ = SPARQLParser.PrefixedName(iri)
-        splitted = iri.split(':', maxsplit=1)
-        assert len(splitted) == 2, splitted
-        if splitted[0] != '':
-            newiri = prefixes[splitted[0] + ':'][1:-1] + splitted[1]
+        splitiri = iri.split(':', maxsplit=1)
+        assert len(splitiri) == 2, splitiri
+        if splitiri[0] != '':
+            newiri = prefixes[splitiri[0] + ':'][1:-1] + splitiri[1]
         else:
-            newiri = splitted[1]
+            newiri = splitiri[1]
     except ParseException:
         try:
             _ = SPARQLParser.IRIREF(iri)

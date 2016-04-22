@@ -1,9 +1,9 @@
-Committed, but not yet released (Build 1266)
-- Moved createParentPointers from parseStructFunc to ParseStruct.__init__()
+Committed, but not yet released (Build 1305)
+- Added _applyPrefixesAndBase method to SPARQLStruct: recursively attaches prefixes and base iri locally in force to subelements as _prefixes and _baseiri attributes
+- Changed createParentPointers() to recursive form and moved it from parseStructFunc to ParseStruct.__init__()
 - Changed signature of ParseStruct.__init__(): now always takes an argument ("None" for bootstrapping by parseAction)
-- Improved checkIris()
-- Added checkBases() method to SPARQLStruct: tests all iris in BaseDecls for being absolute iris
-- Added checkIris() method to SPARQLStruct: tests all iris in IRIREFs and PrefixedNames for well-formedness according to rfc3987
+- Added checkBases() method to SPARQLStruct: tests all iris in BaseDecls for being absolute iris 
+- Added checkIris() method to SPARQLStruct: tests all iris in IRIREFs and PrefixedNames for well-formedness according to rfc3987 (after prefix processing and expansion to absolute form)
 - Added Unicode escape function "unescapeUcode()" to sparqlparser
 - alltests now prints version and build numbers
 - Moved version info out of parsertools.__init__.py to separate file
