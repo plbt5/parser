@@ -1,9 +1,12 @@
-Committed, but not yet released (Build 1100)
+Committed, but not yet released (Build 1266)
+- Moved createParentPointers from parseStructFunc to ParseStruct.__init__()
+- Changed signature of ParseStruct.__init__(): now always takes an argument ("None" for bootstrapping by parseAction)
 - Improved checkIris()
 - Added checkBases() method to SPARQLStruct: tests all iris in BaseDecls for being absolute iris
 - Added checkIris() method to SPARQLStruct: tests all iris in IRIREFs and PrefixedNames for well-formedness according to rfc3987
 - Added Unicode escape function "unescapeUcode()" to sparqlparser
-- Moved version info out of __init__.py to separate file, alltests now prints version and build numbers
+- alltests now prints version and build numbers
+- Moved version info out of parsertools.__init__.py to separate file
 - Renamed ParseStruct "pattern" attribute to "_pattern" 
 - Converted func_test to unittest format, renamed to func_unittest
 - Cleaned up code and docstrings in base.py and sparqlparser.py

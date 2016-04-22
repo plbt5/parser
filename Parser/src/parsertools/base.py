@@ -11,7 +11,7 @@ class ParseStruct:
     '''Parent class for all ParseStruct subclasses. These subclasses will typically correspond to productions in a given grammar,
     e.g. an EBNF grammar.'''
     
-    def __init__(self, expr=None):
+    def __init__(self, expr):
         '''A ParseStruct object contains a _pattern attribute, that corresponds to a pyparsing _pattern.
         It can be initialized wih either a valid string for the subclass concerned,
         using its own _pattern attribute to parse it, or it can be initialized with a list of items
@@ -22,20 +22,18 @@ class ParseStruct:
         - a string, or
         - another ParseStruct object.
         This nested list is the basic internal structure for the class.
-        The other attibutes: _label, _parent, _prefixes and _baseiri, are context dependent and should be set by the creating higher level ParseStruct,
-        if that exists.'''
+        The other attibutes: _label and _parent_, are context dependent and should be set by a creating higher level ParseStruct, if that exists.'''
         
         self.__dict__['_items'] = None
         self.__dict__['_label'] = None
         self.__dict__['_parent'] = None
-        self.__dict__['_prefixes'] = None
-        self.__dict__['_baseiri'] = None
         
-        if expr:
+        if not expr is None:
             assert isinstance(expr, str), type(expr)
             other = self.__getPattern().parseString(expr, parseAll=True)[0]
             for attr in other.__dict__:
                 self.__dict__[attr] = other.__dict__[attr]
+            self.createParentPointers()
                 
     def __eq__(self, other):
         '''Compares the instances for equality of:
@@ -114,6 +112,7 @@ class ParseStruct:
         for i in self.getItems():
             if isinstance(i, ParseStruct):
                 i.__dict__['_parent'] = self
+                i.createParentPointers()
 
     def copy(self):
         '''Returns a deep copy of itself.'''
@@ -300,9 +299,8 @@ def parseStructFunc(class_):
         # The function to be returned.
         assert issubclass(class_, ParseStruct)
         assert isinstance(parseresults, ParseResults)
-        result = class_()
+        result = class_(None)
         result.setItems(itemList(parseresults))
-        result.createParentPointers()
         return result
     
     return makeparseinfo

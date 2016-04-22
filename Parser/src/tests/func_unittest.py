@@ -122,7 +122,7 @@ class Test(unittest.TestCase):
         assert(len(arglist.getChildren())) == 4, len(arglist.getChildren())
          
         ancestors = arglist.getAncestors()
-        assert str(ancestors) == '[iriOrFunction("<check#22?> ( $var , ?var )"), PrimaryExpression("<check#22?> ( $var , ?var )")]'
+        assert str(ancestors) == '[iriOrFunction("<check#22?> ( $var , ?var )"), PrimaryExpression("<check#22?> ( $var , ?var )")]', str(ancestors)
 
     def testParseQuery(self):
         s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testIri> <testIri> }'

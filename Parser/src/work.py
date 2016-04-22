@@ -1,19 +1,17 @@
-from parsertools.parsers.sparqlparser import SPARQLParser, parseQuery
+from parsertools.parsers.sparqlparser import SPARQLParser, parseQuery,\
+    SPARQLStruct
 import rfc3987
 
 
 
-s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testiri>  }'
+s = 'BASE <work:22?> BASE <play:33> PREFIX piep: <somerefiex> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testiri>  }'
 
 r = parseQuery(s)
 
+print(isinstance(r, SPARQLStruct))
+r.applyPrefixesAndBase()
 
-# print(r.dump())
-# s = 'BASE <prologue:22> PREFIX prologue: <prologue:33> LOAD <testIri> ; BASE <prologue:22> PREFIX prologue: <prologue:33>'
-# parseQuery(s)
+print(r.dump())
 
-# import pprint
-# pprint.pprint(rfc3987.parse('testIri'))
-# # pprint.pprint(rfc3987.parse('work:22?'))
-# # pprint.pprint(rfc3987.parse('pref:double'))
-# pprint.pprint(rfc3987.parse('test$iri:dach][t-het-wel'))
+for elt in r.searchElements():
+    print(elt, elt.__class__.__name__, elt.getPrefixes(), elt.getBaseiri())

@@ -25,6 +25,11 @@ class SPARQLStruct(ParseStruct):
     '''Optional subclass of ParseStruct for the language. Typically, this class contains attributes and methods for the language that
     go beyond context free parsing, such as pre- and post processing, checking for conditions not covered by the grammar, etc.'''
     
+    def __init__(self, expr):
+        ParseStruct.__init__(self, expr)
+        self.__dict__['_prefixes'] = None
+        self.__dict__['_baseiri'] = None
+        
     def applyPrefixesAndBase(self, prefixes={}, baseiri=''):
         '''Recursively attaches information to the element about the prefixes and base-iri valid at this point
         in the expression, as determined by PREFIX and BASE declarations in the query.'''
