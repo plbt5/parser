@@ -22,24 +22,24 @@ class Test(unittest.TestCase):
 # ParseStruct tests
 
     def testParse(self):
-        s = "'work' ^^<work>"
+        s = "'work' ^^<work:>"
         r = SPARQLParser.RDFLiteral(s)
         assert r.check()
         
     def testCopy(self):
-        s = "'work' ^^<work>"
+        s = "'work' ^^<work:>"
         r = SPARQLParser.RDFLiteral(s)
         r_copy = r.copy()
         assert r_copy == r
         assert not r_copy is r
         
     def testStr(self):
-        s = "'work' ^^<work>"
+        s = "'work' ^^<work:>"
         r = SPARQLParser.RDFLiteral(s)
-        assert r.__str__() == "'work' ^^ <work>" 
+        assert r.__str__() == "'work' ^^ <work:>" 
 
     def testLabelDotAccess(self):
-        s = "'work' ^^<work>"
+        s = "'work' ^^<work:>"
         r = SPARQLParser.RDFLiteral(s)
         assert str(r.lexical_form) == "'work'", r.lexical_form
         r_copy = r.copy()
@@ -48,12 +48,12 @@ class Test(unittest.TestCase):
         except AttributeError as e:
             assert str(e) == 'Direct setting of attributes not allowed. To change an element e, try e.updateWith() instead.'
             
-        s = '<check#22?> ( $var, ?var )'
+        s = '<c:check#22?> ( $var, ?var )'
         r = SPARQLParser.PrimaryExpression(s)
-        assert r.iriOrFunction.iri == SPARQLParser.iri('<check#22?>')
+        assert r.iriOrFunction.iri == SPARQLParser.iri('<c:check#22?>')
     
     def testUpdateWith(self):
-        s = "'work' ^^<work>"
+        s = "'work' ^^<work:>"
         r = SPARQLParser.RDFLiteral(s)
         r_copy = r.copy()
         r_copy.lexical_form.updateWith("'work2'")
@@ -62,7 +62,7 @@ class Test(unittest.TestCase):
         assert r_copy == r
         
     def testBranchAndAtom(self):
-        s = "'work' ^^<work>"
+        s = "'work' ^^<work:>"
         r = SPARQLParser.RDFLiteral(s)
         assert r.isBranch()
         assert not r.isAtom()
@@ -82,13 +82,13 @@ class Test(unittest.TestCase):
         
     def testStripComments(self):
         s1 = """
-<check#22?> ( $var, ?var )
+<c:check#22?> ( $var, ?var )
 # bla
 'sdfasf# sdfsfd' # comment
 """[1:-1].split('\n')
          
         s2 = """
-<check#22?> ( $var, ?var )
+<c:check#22?> ( $var, ?var )
 
 'sdfasf# sdfsfd'
 """[1:-1]
@@ -96,7 +96,7 @@ class Test(unittest.TestCase):
     
     def testSearchElements(self):
         
-        s = '<check#22?> ( $var, ?var )'
+        s = '<c:check#22?> ( $var, ?var )'
         r = SPARQLParser.PrimaryExpression(s)
         
         found = r.searchElements()
@@ -108,26 +108,26 @@ class Test(unittest.TestCase):
         found = r.searchElements(labeledOnly=True)
         assert len(found) == 4, len(found)
         
-        found = r.searchElements(value='<check#22?>') 
+        found = r.searchElements(value='<c:check#22?>') 
         assert len(found) == 2, len(found)
         assert type(found[0]) == SPARQLParser.iri
         assert found[0].getLabel() == 'iri'
-        assert found[0].__str__() == '<check#22?>'
+        assert found[0].__str__() == '<c:check#22?>'
 
     def testGetChildOrAncestors(self):
-        s = '<check#22?> ( $var, ?var )'
+        s = '<c:check#22?> ( $var, ?var )'
         r = SPARQLParser.PrimaryExpression(s)
         found = r.searchElements(element_type=SPARQLParser.ArgList)
         arglist = found[0]
         assert(len(arglist.getChildren())) == 4, len(arglist.getChildren())
          
         ancestors = arglist.getAncestors()
-        assert str(ancestors) == '[iriOrFunction("<check#22?> ( $var , ?var )"), PrimaryExpression("<check#22?> ( $var , ?var )")]', str(ancestors)
+        assert str(ancestors) == '[iriOrFunction("<c:check#22?> ( $var , ?var )"), PrimaryExpression("<c:check#22?> ( $var , ?var )")]', str(ancestors)
 
     def testParseQuery(self):
-        s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testIri> <testIri> }'
+        s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <t:testIri> <t:testIri> }'
         parseQuery(s)
-        s = 'BASE <prologue:22> PREFIX prologue: <prologue:33> LOAD <testIri> ; BASE <prologue2:42> PREFIX prologue2: <prologue3:33>'
+        s = 'BASE <prologue:22> PREFIX prologue: <prologue:33> LOAD <t:testIri> ; BASE <prologue2:42> PREFIX prologue2: <prologue3:33>'
         parseQuery(s)
     
     def testDump(self):
@@ -197,23 +197,23 @@ class Test(unittest.TestCase):
         assert r.dump() == s_dump
         
     def testPrefixesAndBase(self):
-        s = 'BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>'
+        s = 'BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>'
         
         r = parseQuery(s)
         
         answer1 = '''
 UpdateUnit
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
 []
 
 
 UpdateUnit
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
 []
 
 
 Update
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
 []
 
 
@@ -258,12 +258,12 @@ IRIREF
 prologue:22/
 
 Update1
-LOAD <testIri>
+LOAD <t:testIri>
 [('prologue1:', 'prologue:33')]
 prologue:22/
 
 Load
-LOAD <testIri>
+LOAD <t:testIri>
 [('prologue1:', 'prologue:33')]
 prologue:22/
 
@@ -273,12 +273,12 @@ LOAD
 prologue:22/
 
 iri
-<testIri>
+<t:testIri>
 [('prologue1:', 'prologue:33')]
 prologue:22/
 
 IRIREF
-<testIri>
+<t:testIri>
 [('prologue1:', 'prologue:33')]
 prologue:22/
 
@@ -344,17 +344,17 @@ prologue:22/prologue:44
          
         answer2 = '''
 UpdateUnit
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
 []
 ftp://nothing/
 
 UpdateUnit
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
 []
 ftp://nothing/
 
 Update
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
 []
 ftp://nothing/
 
@@ -399,12 +399,12 @@ IRIREF
 prologue:22/
 
 Update1
-LOAD <testIri>
+LOAD <t:testIri>
 [('prologue1:', 'prologue:33')]
 prologue:22/
 
 Load
-LOAD <testIri>
+LOAD <t:testIri>
 [('prologue1:', 'prologue:33')]
 prologue:22/
 
@@ -414,12 +414,12 @@ LOAD
 prologue:22/
 
 iri
-<testIri>
+<t:testIri>
 [('prologue1:', 'prologue:33')]
 prologue:22/
 
 IRIREF
-<testIri>
+<t:testIri>
 [('prologue1:', 'prologue:33')]
 prologue:22/
 

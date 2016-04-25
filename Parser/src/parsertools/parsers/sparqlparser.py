@@ -25,7 +25,7 @@ class SPARQLStruct(ParseStruct):
     '''Optional subclass of ParseStruct for the language. Typically, this class contains attributes and methods for the language that
     go beyond context free parsing, such as pre- and post processing, checking for conditions not covered by the grammar, etc.'''
     
-    def __init__(self, expr, base=''):
+    def __init__(self, expr, base='', postCheck=True):
         '''This constructor has an optional argument "base". This is the externally determined base iri, as per SPARQL definition par. 4.1.1.2.
         It is only applied when the constructor is called with a string as expression to be parsed. (For internal bootstrapping purposes,
         the constructor can also be called with expr equal to "None". See also the documentation for the ParseStruct constructor.)'''
@@ -34,7 +34,8 @@ class SPARQLStruct(ParseStruct):
         self.__dict__['_baseiri'] = None
         if not expr is None:
             self._applyPrefixesAndBase(baseiri=base)
-            self._checkParsedQuery()
+            if postCheck:
+                self._checkParsedQuery()
                     
     def _applyPrefixesAndBase(self, prefixes={}, baseiri=None, isexternalbase=True):
         '''Recursively attaches information to the element about the prefixes and base-iri valid at this point
@@ -77,12 +78,11 @@ class SPARQLStruct(ParseStruct):
         '''Converts all contained iri elements to normal form, taking into account the prefixes and base in force at the location of the iri.
         The expansions are performed in place.'''
         for elt in self.searchElements(element_type=SPARQLParser.iri):
-            print('about to expand iri {}'.format(elt))
             children = elt.getChildren()
             assert len(children) == 1, children
             child = children[0]
-            newiriref = '<' + expandIri(str(child), elt._prefixes, elt._baseiri) + '>'
-            print('about to update iri with {}'.format(newiriref))
+#             newiriref = '<' + getExpansion(str(child), elt._prefixes, elt._baseiri) + '>'
+            newiriref = '<' + getExpansion(child) + '>'
             elt.updateWith(newiriref)
             
     def processEscapeSeqs(self):
@@ -105,7 +105,6 @@ class SPARQLStruct(ParseStruct):
     
     def _checkIriExpansion(self):
         '''Checks if all IRIs, after prefix processing and expansion, conform to RFC3987'''
-        return
         self_copy = self.copy()
         self_copy.expandIris()
         for elt in self_copy.searchElements(element_type=iri):
@@ -202,29 +201,46 @@ def unescapeUcode(s):
 
 # helper function to determing the expanded form of an iri, in a given context of prefixes and base-iri.
     
-def expandIri(iri, prefixes, baseiri):
+# def getExpansion(iri, prefixes, baseiri):
+def getExpansion(iri):
     '''Converts iri to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
-
-    try:
-        _ = SPARQLParser.PrefixedName(iri)
-        splitiri = iri.split(':', maxsplit=1)
+    assert isinstance(iri, (SPARQLParser.iri, SPARQLParser.PrefixedName, SPARQLParser.IRIREF)), 'Cannot expand non-iri element "{}" ({})'.format(iri, iri.__class__.__name__)
+#     try:
+#         _ = SPARQLParser.PrefixedName(iri)
+#         splitiri = iri.split(':', maxsplit=1)
+#         assert len(splitiri) == 2, splitiri
+#         if splitiri[0] != '':
+#             newiristr = prefixes[splitiri[0] + ':'][1:-1] + splitiri[1]
+#         else:
+#             newiristr = splitiri[1]
+#     except ParseException:
+#         try:
+#             _ = SPARQLParser.IRIREF(iri)
+#             newiristr = iri[1:-1]
+#         except:
+#             raise SPARQLParseException('Cannot expand "{}": no PrefixedName or IRIREF'.format(iri))
+        
+    if isinstance(iri, SPARQLParser.iri):
+        children = iri.getchildren()
+        assert len(children) == 1
+        oldiri = children[0]
+    else:
+        oldiri = iri
+    if isinstance(oldiri, SPARQLParser.PrefixedName):
+        splitiri = str(oldiri).split(':', maxsplit=1)
         assert len(splitiri) == 2, splitiri
         if splitiri[0] != '':
-            newiri = prefixes[splitiri[0] + ':'][1:-1] + splitiri[1]
+            newiristr = oldiri.getPrefixes()[splitiri[0] + ':'][1:-1] + splitiri[1]
         else:
-            newiri = splitiri[1]
-    except ParseException:
-        try:
-            _ = SPARQLParser.IRIREF(iri)
-            newiri = iri[1:-1]
-        except:
-            raise SPARQLParseException('Cannot expand "{}": no PrefixedName or IRIREF'.format(iri))
-    if rfc3987.match(newiri, 'irelative_ref'):
-        print('about to resolve newiri: {} with baseiri: {}'.format(newiri, baseiri))
-        assert baseiri != None
-        newiri = rfc3987.resolve(baseiri, newiri)
-    assert rfc3987.match(newiri), 'String "{}" cannot be expanded as absolute iri'.format(newiri)
-    return newiri
+            newiristr = splitiri[1]
+    else:
+        assert isinstance(oldiri, SPARQLParser.IRIREF)
+        newiristr = str(oldiri)[1:-1]
+    if rfc3987.match(newiristr, 'irelative_ref'):
+        assert oldiri.getBaseiri() != None
+        newiristr = rfc3987.resolve(oldiri.getBaseiri(), newiristr)
+    assert rfc3987.match(newiristr), 'String "{}" cannot be expanded as absolute iri'.format(newiristr)
+    return newiristr
 
     
     
