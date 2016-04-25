@@ -1,4 +1,7 @@
 Committed, but not yet released (Build 1305)
+- added postprocessing method _checkParsedQuery to the constructor of SPARQLStrucct (when called with a string to parse). This performs the following checks:
+	- check BASE declarations for correctnets (IRI must be absolute)
+	- checks whether all IRIs (after prefix processing and base expansion) conform to RFC 3987
 - Added _applyPrefixesAndBase method to SPARQLStruct: recursively attaches prefixes and base iri locally in force to subelements as _prefixes and _baseiri attributes
 - Changed createParentPointers() to recursive form and moved it from parseStructFunc to ParseStruct.__init__()
 - Changed signature of ParseStruct.__init__(): now always takes an argument ("None" for bootstrapping by parseAction)

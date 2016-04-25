@@ -14,15 +14,15 @@ class ParseStruct:
     def __init__(self, expr):
         '''A ParseStruct object contains a _pattern attribute, that corresponds to a pyparsing _pattern.
         It can be initialized wih either a valid string for the subclass concerned,
-        using its own _pattern attribute to parse it, or it can be initialized with a list of items
-        which together form a valid parse result, together with a dictionary containing the prefixes in force at the subexpression with their
-        values, and a string containing the active base. This latter option is only meant to be
-        used by internal parser processes. The normal use case is to feed it with a string. This will build the item list as the _items attribute.
-        Each of the items in the item list is either
+        using its own _pattern attribute to parse it, or it can be initialized with an explicit "None" as argument. This latter option is only
+        meant to be used by internal parser processes. The normal use case is to feed it with a string.
+        This will build the _items attribute. This is a list. Each element is either
+        
         - a string, or
         - another ParseStruct object.
+        
         This nested list is the basic internal structure for the class.
-        The other attibutes: _label and _parent_, are context dependent and should be set by a creating higher level ParseStruct, if that exists.'''
+        The other attibutes: _label and _parent_, are context dependent and will be set by a containing higher level ParseStruct, if that exists.'''
         
         self.__dict__['_items'] = None
         self.__dict__['_label'] = None

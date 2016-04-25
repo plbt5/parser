@@ -25,17 +25,28 @@ class SPARQLStruct(ParseStruct):
     '''Optional subclass of ParseStruct for the language. Typically, this class contains attributes and methods for the language that
     go beyond context free parsing, such as pre- and post processing, checking for conditions not covered by the grammar, etc.'''
     
-    def __init__(self, expr):
+    def __init__(self, expr, base=''):
+        '''This constructor has an optional argument "base". This is the externally determined base iri, as per SPARQL definition par. 4.1.1.2.
+        It is only applied when the constructor is called with a string as expression to be parsed. (For internal bootstrapping purposes,
+        the constructor can also be called with expr equal to "None". See also the documentation for the ParseStruct constructor.)'''
         ParseStruct.__init__(self, expr)
-        self.__dict__['_prefixes'] = None
+        self.__dict__['_prefixes'] = {}
         self.__dict__['_baseiri'] = None
-        
-    def _applyPrefixesAndBase(self, prefixes={}, baseiri='', isdefaultbase=True):
+        if not expr is None:
+            self._applyPrefixesAndBase(baseiri=base)
+            self._checkParsedQuery()
+                    
+    def _applyPrefixesAndBase(self, prefixes={}, baseiri=None, isexternalbase=True):
         '''Recursively attaches information to the element about the prefixes and base-iri valid at this point
         in the expression, as determined by PREFIX and BASE declarations in the query.
-        The parameter isdefaultbase is True when there is not yet a BASE declaration in force, as per the Turtle
-        specification. The first BASE declaration replaces the current base iri instead of being appended to it,
-        which is what happens with subsequent BASE declarations.'''
+        The parameter isexternalbase is True when there is not yet a BASE declaration in force, as per the Turtle
+        specification. This indicates that the provided baseiri is externally determined, and should be overridden
+        by the first BASE declaration encountered (if any).
+        The first BASE declaration thus will replaces the externally determined base iri, instead
+        of being appended to it, which is what happens with subsequent BASE declarations.
+        Successful termination of this method does not guarantee that the base and prefixes conform to RFC 3987.
+        This is purely a syntactic (substitution) operation. Use other available tests to check BASE declarations and iri
+        expansion for conformance once this method has run.'''
         
         self.__dict__['_prefixes'] = prefixes
         self.__dict__['_baseiri'] = baseiri
@@ -44,15 +55,17 @@ class SPARQLStruct(ParseStruct):
             if isinstance(elt, SPARQLParser.Prologue):
                 for decl in elt.getChildren():
                     if isinstance(decl, SPARQLParser.PrefixDecl):
-                        assert str(decl.prefix) not in prefixes
+                        assert str(decl.prefix) not in prefixes, 'Prefixes: {}, prefix: {}'.format(prefixes, decl.prefix)
                         prefixes[str(decl.prefix)] = str(decl.namespace)[1:-1]
                     else:
                         assert isinstance(decl, SPARQLParser.BaseDecl)
-                        if isdefaultbase:
-                            baseiri = ''
-                            isdefaultbase = False
-                        baseiri = baseiri + str(decl.baseiri)[1:-1]
-            elt._applyPrefixesAndBase(prefixes, baseiri, isdefaultbase)
+                        if isexternalbase or not baseiri:
+                            baseiri = str(decl.baseiri)[1:-1]
+                            isexternalbase = False
+                        else:
+                            baseiri = baseiri + str(decl.baseiri)[1:-1]
+                            
+            elt._applyPrefixesAndBase(prefixes, baseiri, isexternalbase)
             
     def getPrefixes(self):
         return self._prefixes
@@ -61,39 +74,46 @@ class SPARQLStruct(ParseStruct):
         return self._baseiri   
         
     def expandIris(self):
-        '''Converts all iri elements to normal form, taking into account the prefixes and base in force at the location of the iri.'''
+        '''Converts all contained iri elements to normal form, taking into account the prefixes and base in force at the location of the iri.
+        The expansions are performed in place.'''
         for elt in self.searchElements(element_type=SPARQLParser.iri):
+            print('about to expand iri {}'.format(elt))
             children = elt.getChildren()
             assert len(children) == 1, children
             child = children[0]
             newiriref = '<' + expandIri(str(child), elt._prefixes, elt._baseiri) + '>'
+            print('about to update iri with {}'.format(newiriref))
             elt.updateWith(newiriref)
             
     def processEscapeSeqs(self):
         for stringtype in [SPARQLParser.STRING_LITERAL2, SPARQLParser.STRING_LITERAL1, SPARQLParser.STRING_LITERAL_LONG1, SPARQLParser.STRING_LITERAL_LONG2]:
             for elt in self.searchElements(element_type=stringtype):
                 elt.updateWith(stringEscape(str(elt)))
-                
-    def checkIris(self):
-        '''Checks if all IRIs conform to RFC3987'''
-        for elt in self.searchElements(element_type=SPARQLParser.PrefixedName):
-            try:
-                rfc3987.parse(str(elt))
-            except ValueError as e:
-                raise SPARQLParseException(str(e))
-        for elt in self.searchElements(element_type=SPARQLParser.IRIREF):
+
+    def _checkParsedQuery(self):
+        '''Used to perform additional checks on the ParseStruct resulting from a parsing action. These are conditions that are not covered by the EBNF syntax.
+        See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
+        
+        # See 19.5 "IRI References"
+        self._checkBaseDecls()
+        self._checkIriExpansion()
+    #  TODO: finish
+                    
+    def _checkBaseDecls(self):
+        for elt in self.searchElements(element_type=SPARQLParser.BaseDecl):
+            rfc3987.parse(str(elt.baseiri)[1:-1], rule='absolute_IRI')
+    
+    def _checkIriExpansion(self):
+        '''Checks if all IRIs, after prefix processing and expansion, conform to RFC3987'''
+        return
+        self_copy = self.copy()
+        self_copy.expandIris()
+        for elt in self_copy.searchElements(element_type=iri):
+            assert elt[0] + elt[-1] == '<>'
             try:
                 rfc3987.parse(str(elt)[1:-1])
             except ValueError as e:
-                raise SPARQLParseException(str(e))
-            
-    def checkBases(self):
-        for elt in self.searchElements(element_type=SPARQLParser.BaseDecl):
-            try:
-                rfc3987.parse(str(elt.baseiri)[1:-1], rule='absolute_IRI')
-            except ValueError as e:
-                raise SPARQLParseException(str(e))
-            
+                raise SPARQLParseException(str(e))        
 
 #
 # The following is boilerplate code, to be included in every Parsertools parser definition module
@@ -123,7 +143,7 @@ SPARQLParser = Parser(SPARQLStruct)
 # Main function to call. This is a convenience function, adapted to the SPARQL definition.
 #
 
-def parseQuery(querystring):
+def parseQuery(querystring, base=''):
     '''Entry point to parse any SPARQL query'''
     
     s = prepareQuery(querystring)
@@ -131,19 +151,14 @@ def parseQuery(querystring):
     # In SPARQL, there are two entry points to the grammar: QueryUnit and UpdateUnit. These are tried in order.
     
     try:
-        result = SPARQLParser.QueryUnit(s)
+        result = SPARQLParser.QueryUnit(s, base=base)
     except ParseException:
         try:
-            result = SPARQLParser.UpdateUnit(s)
+            result = SPARQLParser.UpdateUnit(s, base=base)
         except ParseException:
             raise SPARQLParseException('Query {} cannot be parsed'.format(querystring))
         
     result.processEscapeSeqs()    
-    
-    try:
-        checkQueryResult(result)
-    except SPARQLParseException:
-        raise
     
     return result
 
@@ -185,15 +200,6 @@ def unescapeUcode(s):
       
     return s
 
-def checkQueryResult(r):
-    '''Used to perform additional checks on the ParseStruct resulting from a parsing action. These are conditions that are not covered by the EBNF syntax.
-    See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
-    
-    # See 19.5 "IRI References"
-    r.checkIris()
-    r.checkBases()
-    #  TODO: finish
-
 # helper function to determing the expanded form of an iri, in a given context of prefixes and base-iri.
     
 def expandIri(iri, prefixes, baseiri):
@@ -214,8 +220,10 @@ def expandIri(iri, prefixes, baseiri):
         except:
             raise SPARQLParseException('Cannot expand "{}": no PrefixedName or IRIREF'.format(iri))
     if rfc3987.match(newiri, 'irelative_ref'):
-        newiri = rfc3987.resolve(baseiri[1:-1], newiri)
-    assert rfc3987.match(newiri), 'String "{}" cannot be expanded as iri'.format(newiri)
+        print('about to resolve newiri: {} with baseiri: {}'.format(newiri, baseiri))
+        assert baseiri != None
+        newiri = rfc3987.resolve(baseiri, newiri)
+    assert rfc3987.match(newiri), 'String "{}" cannot be expanded as absolute iri'.format(newiri)
     return newiri
 
     

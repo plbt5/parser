@@ -127,7 +127,7 @@ class Test(unittest.TestCase):
     def testParseQuery(self):
         s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testIri> <testIri> }'
         parseQuery(s)
-        s = 'BASE <prologue:22> PREFIX prologue: <prologue:33> LOAD <testIri> ; BASE <prologue:22> PREFIX prologue: <prologue:33>'
+        s = 'BASE <prologue:22> PREFIX prologue: <prologue:33> LOAD <testIri> ; BASE <prologue2:42> PREFIX prologue2: <prologue3:33>'
         parseQuery(s)
     
     def testDump(self):
@@ -196,38 +196,292 @@ class Test(unittest.TestCase):
         r = SPARQLParser.ArgList(s)
         assert r.dump() == s_dump
         
-#     def testCheckIris(self):
-#         s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <test$iri:dach][t-het-wel> }'
-#         # incorrect
-#         try:
-#             parseQuery(s)
-#             raise SPARQLParseException('Unexpected pass')
-#         except SPARQLParseException as e:
-#             if str(e) == 'Unexpected pass':
-#                 raise
-#             else:
-#                 pass
-#         s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testiri> }'
-#         # correct
-#         parseQuery(s)
-# 
-# 
-#     def testCheckBases(self):
-#         s = 'BASE <:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testiri> }'
-#         # incorrect
-#         try:
-#             parseQuery(s)
-#             raise SPARQLParseException('Unexpected pass')
-#         except SPARQLParseException as e:
-#             if str(e) == 'Unexpected pass':
-#                 raise
-#             else:
-#                 pass
-#         s = 'BASE <work:22?> SELECT REDUCED $var1 ?var2 (("*Expression*") AS $var3) { SELECT * {} } GROUP BY ROUND ( "*Expression*") VALUES $S { <testiri> }'
-#         # correct
-#         parseQuery(s)
+    def testPrefixesAndBase(self):
+        s = 'BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>'
+        
+        r = parseQuery(s)
+        
+        answer1 = '''
+UpdateUnit
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+[]
 
-# Other tests
+
+UpdateUnit
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+[]
+
+
+Update
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+[]
+
+
+Prologue
+BASE <prologue:22/> PREFIX prologue1: <prologue:33>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+BaseDecl
+BASE <prologue:22/>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+BASE
+BASE
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+IRIREF
+<prologue:22/>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+PrefixDecl
+PREFIX prologue1: <prologue:33>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+PREFIX
+PREFIX
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+PNAME_NS
+prologue1:
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+IRIREF
+<prologue:33>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+Update1
+LOAD <testIri>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+Load
+LOAD <testIri>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+LOAD
+LOAD
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+iri
+<testIri>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+IRIREF
+<testIri>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+SEMICOL
+;
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+Update
+BASE <prologue:44> PREFIX prologue2: <prologue:55>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+Prologue
+BASE <prologue:44> PREFIX prologue2: <prologue:55>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+BaseDecl
+BASE <prologue:44>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+BASE
+BASE
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+IRIREF
+<prologue:44>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+PrefixDecl
+PREFIX prologue2: <prologue:55>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+PREFIX
+PREFIX
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+PNAME_NS
+prologue2:
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+IRIREF
+<prologue:55>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+'''     
+        r_answer1 = ''
+        for elt in r.searchElements():
+            for e in [elt.__class__.__name__, elt, sorted(elt.getPrefixes().items()), elt.getBaseiri()]:
+                r_answer1 += str(e) + '\n'
+            r_answer1 += '\n'
+            
+        assert answer1.strip() == r_answer1.strip()
+        
+        r = parseQuery(s, base='ftp://nothing/')
+         
+        answer2 = '''
+UpdateUnit
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+[]
+ftp://nothing/
+
+UpdateUnit
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+[]
+ftp://nothing/
+
+Update
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+[]
+ftp://nothing/
+
+Prologue
+BASE <prologue:22/> PREFIX prologue1: <prologue:33>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+BaseDecl
+BASE <prologue:22/>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+BASE
+BASE
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+IRIREF
+<prologue:22/>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+PrefixDecl
+PREFIX prologue1: <prologue:33>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+PREFIX
+PREFIX
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+PNAME_NS
+prologue1:
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+IRIREF
+<prologue:33>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+Update1
+LOAD <testIri>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+Load
+LOAD <testIri>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+LOAD
+LOAD
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+iri
+<testIri>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+IRIREF
+<testIri>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+SEMICOL
+;
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+Update
+BASE <prologue:44> PREFIX prologue2: <prologue:55>
+[('prologue1:', 'prologue:33')]
+prologue:22/
+
+Prologue
+BASE <prologue:44> PREFIX prologue2: <prologue:55>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+BaseDecl
+BASE <prologue:44>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+BASE
+BASE
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+IRIREF
+<prologue:44>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+PrefixDecl
+PREFIX prologue2: <prologue:55>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+PREFIX
+PREFIX
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+PNAME_NS
+prologue2:
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+
+IRIREF
+<prologue:55>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:22/prologue:44
+'''
+        
+        r_answer2 = ''
+        for elt in r.searchElements():
+            for e in [elt.__class__.__name__, elt, sorted(elt.getPrefixes().items()), elt.getBaseiri()]:
+                r_answer2 += str(e) + '\n'
+            r_answer2 += '\n'
+        
+        assert answer2.strip() == r_answer2.strip()
+        
 
     def testUnescapeUcode(self):
         s = 'abra\\U000C00AAcada\\u00AAbr\u99DDa'

@@ -24,7 +24,7 @@ for fname in actions['mf:PositiveUpdateSyntaxTest11']:
     try:
         s = stripComments(open(fname).readlines())
         r = SPARQLParser.UpdateUnit(s)
-    except ParseException as e:
+    except Exception as e:
         print('\n*** {} should not raise exception? Check'.format(fname))
 
 for fname in actions['mf:NegativeUpdateSyntaxTest11']:
@@ -32,11 +32,18 @@ for fname in actions['mf:NegativeUpdateSyntaxTest11']:
         s = open(fname).read()
         r = SPARQLParser.UpdateUnit(s)
         print('\n*** {} should raise exception? Check'.format(fname))
-    except ParseException as e:
+    except Exception as e:
         pass
 print('\nPassed')
 print('''
 Note:
+
+syntax-update-01.ru and syntax-ypdate-02.ru seem to be in error. The IRIs from their BASE clause contain a '#' and therefore seem not to be an absolute IRIs,
+as required by the SPARQL 1.1 definition.
+
+A question has been asked on answers.semanticweb.com.
+
+For the time being, ignore these errors.
 
 syntax-update-54.ru seems in error. The syntax seems to be OK; the issue is that a bNode label is used across operations,
 which is a separate issue than conformance to the EBNF. 

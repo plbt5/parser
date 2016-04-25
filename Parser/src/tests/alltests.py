@@ -18,7 +18,7 @@ print(check_output(['/Library/Frameworks/Python.framework/Versions/3.5/bin/pytho
 os.chdir('../update1')
 print('\nRunning update1 test\n')
 print(check_output(['/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5', 'testCases.py']).decode('utf-8'))
-os.chdir('../query')
+os.chdir('../update2')
 print('\nRunning update2 test\n')
 print(check_output(['/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5', 'testCases.py']).decode('utf-8'))
 os.chdir('../..')
