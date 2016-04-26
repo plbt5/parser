@@ -105,14 +105,12 @@ class SPARQLStruct(ParseStruct):
     
     def _checkIriExpansion(self):
         '''Checks if all IRIs, after prefix processing and expansion, conform to RFC3987'''
-        self_copy = self.copy()
-        self_copy.expandIris()
-        for elt in self_copy.searchElements(element_type=iri):
-            assert elt[0] + elt[-1] == '<>'
+        for iri in self.searchElements(element_type=SPARQLParser.iri):
+            expanded = getExpansion(iri)
             try:
-                rfc3987.parse(str(elt)[1:-1])
+                rfc3987.parse(expanded)
             except ValueError as e:
-                raise SPARQLParseException(str(e))        
+                raise SPARQLParseException(str(e))  
 
 #
 # The following is boilerplate code, to be included in every Parsertools parser definition module
@@ -204,24 +202,9 @@ def unescapeUcode(s):
 # def getExpansion(iri, prefixes, baseiri):
 def getExpansion(iri):
     '''Converts iri to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
-    assert isinstance(iri, (SPARQLParser.iri, SPARQLParser.PrefixedName, SPARQLParser.IRIREF)), 'Cannot expand non-iri element "{}" ({})'.format(iri, iri.__class__.__name__)
-#     try:
-#         _ = SPARQLParser.PrefixedName(iri)
-#         splitiri = iri.split(':', maxsplit=1)
-#         assert len(splitiri) == 2, splitiri
-#         if splitiri[0] != '':
-#             newiristr = prefixes[splitiri[0] + ':'][1:-1] + splitiri[1]
-#         else:
-#             newiristr = splitiri[1]
-#     except ParseException:
-#         try:
-#             _ = SPARQLParser.IRIREF(iri)
-#             newiristr = iri[1:-1]
-#         except:
-#             raise SPARQLParseException('Cannot expand "{}": no PrefixedName or IRIREF'.format(iri))
-        
+    assert isinstance(iri, (SPARQLParser.iri, SPARQLParser.PrefixedName, SPARQLParser.IRIREF)), 'Cannot expand non-iri element "{}" ({})'.format(iri, iri.__class__.__name__)        
     if isinstance(iri, SPARQLParser.iri):
-        children = iri.getchildren()
+        children = iri.getChildren()
         assert len(children) == 1
         oldiri = children[0]
     else:

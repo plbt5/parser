@@ -1,12 +1,17 @@
+Version 0.2.6, Build 1757
+
+- Bug fixed in getExpansion()
+- Re-implemented _checkIriExpansion (without copy() operation)
+
 Version 0.2.5, Build 1712
 
-- sparqlparser.expandIri() has been renamed to sparqlparser.getExpansion(). Its signature has changed: it now gets called with an iri/PrefixedName/IRIREF argument.
+- The sparqlparser function expandIri() has been renamed to getExpansion(). Its signature has changed: it now gets called with a single iri/PrefixedName/IRIREF argument.
 	This is normally expected to be an element of a complete parsed query, because it needs prefixes and a base iri for expansion to be possible.
 	The function returns the string which is the expansion of its argument, in the local context of the element within the query. The element itself is NOT changed.
-- added optional parameter "postCheck" to the constructor of SPARQLStrucct (when called with a string to parse). When False, post-processing checks are skipped. This can
-	useful when constructing SPARQLStruct subelements by string argument, since prefixes and base iri might not be present.
-- added postprocessing method _checkParsedQuery to the constructor of SPARQLStrucct (when called with a string to parse). This performs the following checks:
-	- check BASE declarations for correctnets (IRI must be absolute)
+- Added optional parameter "postCheck" to the constructor of SPARQLStruct (when called with a string to parse). When False, post-processing checks are skipped. The
+	default is True. This can be useful when constructing SPARQLStruct subelements by string argument, since prefixes and base iri might not be present.
+- Added postprocessing method _checkParsedQuery to the constructor of SPARQLStruct (when called with a string to parse). This performs the following checks:
+	- check BASE declarations for correctnets (= IRI must be absolute)
 	- checks whether all IRIs (after prefix processing and base expansion) conform to RFC 3987
 - Added _applyPrefixesAndBase method to SPARQLStruct: recursively attaches prefixes and base iri locally in force to subelements as _prefixes and _baseiri attributes
 - Changed createParentPointers() to recursive form and moved it from parseStructFunc to ParseStruct.__init__()
