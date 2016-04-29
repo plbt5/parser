@@ -1,6 +1,8 @@
-Not yet released (Build 1797)
+Not yet released (Build 1843)
 
-- Parser.addElement now takes an optional parameter denoting the parent class of the element to be created
+- moved sparqlparser tests to new folder tests/sparqlparser
+- created folder tests/n3parser
+- Parser.addElement() now takes an optional parameter denoting the parent class of the element to be created
 - started development of n3parser
 
 Version 0.2.6, Build 1757
