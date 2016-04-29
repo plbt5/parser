@@ -5,7 +5,6 @@ Created on 3 mrt. 2016
 '''
 from pyparsing import *
 from parsertools import ParsertoolsException
-from test.inspect_fodder2 import cls82
 
 class ParseStruct:
     '''Parent class for all ParseStruct subclasses. These subclasses will typically correspond to productions in a given grammar,

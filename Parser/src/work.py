@@ -1,6 +1,10 @@
-from parsertools.parsers.sparqlparser import SPARQLParser, parseQuery, SPARQLStruct
+# from parsertools.parsers.sparqlparser import SPARQLParser, parseQuery, SPARQLStruct
 import rfc3987
+import lxml
 
+print(dir(lxml))
+
+print(lxml.__path__)
 # s = '''
 # # Comment
 # BASE <http://example/base#>
@@ -10,7 +14,7 @@ import rfc3987
 # LOAD <http://example.org/faraway>
 # # Comment
 # '''[1:-1]
-# 
+#
 # # r = parseQuery(s)
 # # print(r.dump())
 # # 
@@ -23,8 +27,14 @@ import rfc3987
 # 
 # r = parseQuery(s)
 # print(r.dump())
-
-s = 'http://example/base#'
-
 from pprint import pprint
-pprint(rfc3987.parse(s))
+
+base = 'http://test#'
+ 
+pprint(rfc3987.parse(base))
+rel = 'foo'
+ 
+print(rfc3987.resolve(base, rel))
+ 
+ 
+pprint(rfc3987.parse(rfc3987.resolve(base, rel)))
