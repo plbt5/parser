@@ -1,3 +1,8 @@
+Not yet released (Build 1797)
+
+- Parser.addElement now takes an optional parameter denoting the parent class of the element to be created
+- started development of n3parser
+
 Version 0.2.6, Build 1757
 
 - Bug fixed in getExpansion()

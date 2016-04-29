@@ -18,10 +18,10 @@ class SPARQLParseException(ParsertoolsException):
     pass
 
 #
-# Define the SPARQLStruct class
+# Define the SPARQLElement class
 #
 
-class SPARQLStruct(ParseStruct):
+class SPARQLElement(ParseStruct):
     '''Optional subclass of ParseStruct for the language. Typically, this class contains attributes and methods for the language that
     go beyond context free parsing, such as pre- and post processing, checking for conditions not covered by the grammar, etc.'''
     
@@ -126,15 +126,21 @@ class Parser:
     
     def __init__(self, class_=ParseStruct):
         self.class_ = class_
-    def addElement(self, pattern):
-        setattr(self, pattern.name, type(pattern.name, (self.class_,), {'_pattern': pattern}))
+#     def addElement(self, pattern):
+#         setattr(self, pattern.name, type(pattern.name, (self.class_,), {'_pattern': pattern}))
+#         pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
+    def addElement(self, pattern, newclass=None):
+        if newclass:
+            assert issubclass(newclass, self.class_)
+        else:
+            newclass = self.class_ 
+        setattr(self, pattern.name, type(pattern.name, (newclass,), {'_pattern': pattern}))
         pattern.setParseAction(parseStructFunc(getattr(self, pattern.name)))
-
 #
-# Boilerplate code: create the SPARQLParser object, optionally with a custom ParseStruct subclass
+# Create the SPARQLParser object, optionally with a custom ParseStruct subclass
 #
 
-SPARQLParser = Parser(SPARQLStruct)
+SPARQLParser = Parser(SPARQLElement)
 
 #
 # Main function to call. This is a convenience function, adapted to the SPARQL definition.
