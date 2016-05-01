@@ -5,8 +5,8 @@ Created on 29 apr. 2016
 '''
 from pyparsing import *
 from parsertools.base import ParseStruct, parseStructFunc, separatedList
-from parsertools import ParsertoolsException, NoPrefixError
-import re
+from parsertools import ParsertoolsException
+from pip._vendor.pyparsing import stringEnd
 
 # Custom exception. This is optional when defining a N3Parser. When present, it can be used in methods of the Parser class as defined below.
 
@@ -249,26 +249,71 @@ N3Parser = Parser(N3Element)
 #
 # Brackets and interpunction
 #
+LPAR = Literal('(').setName('LPAR')
+N3Parser.addElement(LPAR)
 
-# LPAR = Literal('(').setName('LPAR')
-# N3Parser.addElement(LPAR)
+RPAR = Literal(')').setName('RPAR')
+N3Parser.addElement(RPAR)
 
+LBRACK = Literal('[').setName('LBRACK')
+N3Parser.addElement(LBRACK)
 
+RBRACK = Literal(']').setName('RBRACK')
+N3Parser.addElement(RBRACK)
 
+LCURL = Literal('{').setName('LCURL')
+N3Parser.addElement(LCURL)
+
+RCURL = Literal('}').setName('RCURL')
+N3Parser.addElement(RCURL)
 #
 # Operators
 #
 
-# NEGATE = Literal('!').setName('NEGATE')
-# N3Parser.addElement(NEGATE)
-
-
 #
 # Keywords
 #
+TRUE = Literal('@true').setName('TRUE')
+N3Parser.addElement(TRUE)
 
-# ALL_VALUES = Literal('*').setName('ALL_VALUES')
-# N3Parser.addElement(ALL_VALUES)
+FALSE = Literal('@false').setName('FALSE')
+N3Parser.addElement(FALSE)
+
+BASE = Literal('@base').setName('BASE')
+N3Parser.addElement(BASE)
+
+KEYWORDS = Literal('@keywords').setName('KEYWORDS')
+N3Parser.addElement(KEYWORDS)
+
+PREFKW = Literal('@prefix').setName('PREFKW')
+N3Parser.addElement(PREFKW)
+
+IMPLIESREV = Literal('<=').setName('IMPLIESREV')
+N3Parser.addElement(IMPLIESREV)
+
+ISEQUAL = Literal('=').setName('ISEQUAL')
+N3Parser.addElement(ISEQUAL)
+
+IMPLIES = Literal('=>').setName('IMPLIES')
+N3Parser.addElement(IMPLIES)
+
+ISA = Literal('@a').setName('ISA')
+N3Parser.addElement(ISA)
+
+HAS = Literal('@has').setName('HAS')
+N3Parser.addElement(HAS)
+
+IS = Literal('@is').setName('IS')
+N3Parser.addElement(IS)
+
+OF = Literal('@of').setName('OF')
+N3Parser.addElement(OF)
+
+FORSOME = Literal('@forSome').setName('FORSOME')
+N3Parser.addElement(FORSOME)
+
+FORALL = Literal('@forAll').setName('FORALL')
+N3Parser.addElement(FORALL)
 
 # 
 # Parsers and classes for terminals
@@ -284,13 +329,260 @@ LANGCODE_e = r'[a-z]+(-[a-z0-9]+)*'
 LANGCODE = Regex(LANGCODE_e).setName('LANGCODE')
 N3Parser.addElement(LANGCODE)
 
+# integer ::=    [-+]?[0-9]+
+INTEGER_e = r'[-+]?[0-9]+'
+INTEGER = Regex(INTEGER_e).setName('INTEGER')
+N3Parser.addElement(INTEGER)
 
+# rational ::=        |    integer  "/"  unsignedint
+RATIONAL_e = r'{}\/{}'.format(INTEGER_e, UNSIGNEDINT_e)
+RATIONAL = Regex(RATIONAL_e).setName('RATIONAL')
+N3Parser.addElement(RATIONAL)
+
+# double ::=    [-+]?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)
+DOUBLE_e = r'[-+]?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)'
+DOUBLE = Regex(DOUBLE_e).setName('DOUBLE')
+N3Parser.addElement(DOUBLE)
+
+# decimal ::=    [-+]?[0-9]+(\.[0-9]+)?
+DECIMAL_e = r'[-+]?[0-9]+(\.[0-9]+)?'
+DECIMAL = Regex(DECIMAL_e).setName('DECIMAL')
+N3Parser.addElement(DECIMAL)
+
+# string ::=    ("""[^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*""")|("[^"\\]*(?:\\.[^"\\]*)*")
+STRING_e = r'("""[^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*""")|("[^"\\]*(?:\\.[^"\\]*)*")'
+STRING = Regex(STRING_e).setName('STRING')
+N3Parser.addElement(STRING)
+
+# quickvariable ::=    \?[A-Z_a-z#x00c0-#x00d6#x00d8-#x00f6#x00f8-#x02ff#x0370-#x037d#x037f-#x1fff#x200c-#x200d#x2070-#x218f#x2c00-#x2fef#x3001-#xd7ff#xf900-#xfdcf#xfdf0-#xfffd#x00010000-#x000effff][\-0-9A-Z_a-z#x00b7#x00c0-#x00d6#x00d8-#x00f6#x00f8-#x037d#x037f-#x1fff#x200c-#x200d#x203f-#x2040#x2070-#x218f#x2c00-#x2fef#x3001-#xd7ff#xf900-#xfdcf#xfdf0-#xfffd#x00010000-#x000effff]*
+QUICKVARIABLE_e = r'\?[A-Z_a-z\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c-\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\U00010000-\U000effff][\-0-9A-Z_a-z\u00b7\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u037d\u037f-\u1fff\u200c-\u200d\u203f-\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\U00010000-\U000effff]*'
+
+QUICKVARIABLE = Regex(QUICKVARIABLE_e).setName('QUICKVARIABLE')
+N3Parser.addElement(QUICKVARIABLE)
+
+# qname ::=    (([A-Z_a-z#x00c0-#x00d6#x00d8-#x00f6#x00f8-#x02ff#x0370-#x037d#x037f-#x1fff#x200c-#x200d#x2070-#x218f#x2c00-#x2fef#x3001-#xd7ff#xf900-#xfdcf#xfdf0-#xfffd#x00010000-#x000effff][\-0-9A-Z_a-z#x00b7#x00c0-#x00d6#x00d8-#x00f6#x00f8-#x037d#x037f-#x1fff#x200c-#x200d#x203f-#x2040#x2070-#x218f#x2c00-#x2fef#x3001-#xd7ff#xf900-#xfdcf#xfdf0-#xfffd#x00010000-#x000effff]*)?:)?[A-Z_a-z#x00c0-#x00d6#x00d8-#x00f6#x00f8-#x02ff#x0370-#x037d#x037f-#x1fff#x200c-#x200d#x2070-#x218f#x2c00-#x2fef#x3001-#xd7ff#xf900-#xfdcf#xfdf0-#xfffd#x00010000-#x000effff][\-0-9A-Z_a-z#x00b7#x00c0-#x00d6#x00d8-#x00f6#x00f8-#x037d#x037f-#x1fff#x200c-#x200d#x203f-#x2040#x2070-#x218f#x2c00-#x2fef#x3001-#xd7ff#xf900-#xfdcf#xfdf0-#xfffd#x00010000-#x000effff]*
+QNAME_e = r'(([A-Z_a-z\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c-\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\U00010000-\U000effff][\-0-9A-Z_a-z\u00b7\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u037d\u037f-\u1fff\u200c-\u200d\u203f-\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\U00010000-\U000effff]*)?:)?[A-Z_a-z\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c-\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\U00010000-\U000effff][\-0-9A-Z_a-z\u00b7\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u037d\u037f-\u1fff\u200c-\u200d\u203f-\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\U00010000-\U000effff]*'
+QNAME = Regex(QNAME_e).setName('QNAME')
+N3Parser.addElement(QNAME)
+
+# prefix ::=    ([A-Z_a-z#x00c0-#x00d6#x00d8-#x00f6#x00f8-#x02ff#x0370-#x037d#x037f-#x1fff#x200c-#x200d#x2070-#x218f#x2c00-#x2fef#x3001-#xd7ff#xf900-#xfdcf#xfdf0-#xfffd#x00010000-#x000effff][\-0-9A-Z_a-z#x00b7#x00c0-#x00d6#x00d8-#x00f6#x00f8-#x037d#x037f-#x1fff#x200c-#x200d#x203f-#x2040#x2070-#x218f#x2c00-#x2fef#x3001-#xd7ff#xf900-#xfdcf#xfdf0-#xfffd#x00010000-#x000effff]*)?:
+PREFIX_e = r'([A-Z_a-z\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c-\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\U00010000-\U000effff][\-0-9A-Z_a-z\u00b7\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u037d\u037f-\u1fff\u200c-\u200d\u203f-\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\U00010000-\U000effff]*)?:'
+PREFIX = Regex(PREFIX_e).setName('PREFIX')
+N3Parser.addElement(PREFIX)
+
+# barename ::=    [A-Z_a-z#x00c0-#x00d6#x00d8-#x00f6#x00f8-#x02ff#x0370-#x037d#x037f-#x1fff#x200c-#x200d#x2070-#x218f#x2c00-#x2fef#x3001-#xd7ff#xf900-#xfdcf#xfdf0-#xfffd#x00010000-#x000effff][\-0-9A-Z_a-z#x00b7#x00c0-#x00d6#x00d8-#x00f6#x00f8-#x037d#x037f-#x1fff#x200c-#x200d#x203f-#x2040#x2070-#x218f#x2c00-#x2fef#x3001-#xd7ff#xf900-#xfdcf#xfdf0-#xfffd#x00010000-#x000effff]*
+BARENAME_e = r'[A-Z_a-z\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c-\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\U00010000-\U000effff][\-0-9A-Z_a-z\u00b7\u00c0-\u00d6\u00d8-\u00f6\u00f8-\u037d\u037f-\u1fff\u200c-\u200d\u203f-\u2040\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\U00010000-\U000effff]*'
+BARENAME = Regex(BARENAME_e).setName('BARENAME')
+N3Parser.addElement(BARENAME)
+
+# explicituri ::=    <[^>]*>
+EXPLICITURI_e = r'<[^>]*>'
+EXPLICITURI = Regex(EXPLICITURI_e).setName('EXPLICITURI')
+N3Parser.addElement(EXPLICITURI)
 
 #
 # Parsers and classes for non-terminals
 #
 
-# # [138]   BlankNode         ::=   BLANK_NODE_LABEL | ANON 
-# BlankNode = Group(BLANK_NODE_LABEL | ANON).setName('BlankNode')
-# N3Parser.addElement(BlankNode)
+# numericliteral ::=        |    decimal
+#        |    double
+#        |    integer
+#        |    rational
+NumericLiteral = Group(RATIONAL | DOUBLE | DECIMAL | INTEGER).setName('NumericLiteral')
+N3Parser.addElement(NumericLiteral)
+
+# boolean ::=        |     "@false" 
+#         |     "@true" 
+Boolean = Group(TRUE | FALSE).setName('Boolean')
+N3Parser.addElement(Boolean)
+
+# barename_csl ::=        |    barename barename_csl_tail
+#         |    void
+# barename_csl_tail ::=        |     ","  barename barename_csl_tail
+#         |    void
+# Change this to:
+# barename_csl = barename ["," barename]*
+Barename_csl = Group(separatedList(BARENAME)).setName('Barename_csl')
+N3Parser.addElement(Barename_csl)
+
+# declaration ::=        |     "@base"  explicituri
+#        |     "@keywords"  barename_csl
+#        |     "@prefix"  prefix explicituri
+Declaration = Group(BASE + EXPLICITURI |
+                    KEYWORDS + Barename_csl |
+                    PREFKW + PREFIX + EXPLICITURI).setName('Declaration')
+N3Parser.addElement(Declaration)
+
+## symbol ::=        |    explicituri
+##        |    qname
+Symbol = Group(EXPLICITURI | QNAME).setName('Symbol')
+N3Parser.addElement(Symbol)
+
+# symbol_csl ::=        |    symbol symbol_csl_tail
+#         |    void
+# symbol_csl_tail ::=        |     ","  symbol symbol_csl_tail
+#         |    void
+# Change this to:
+# symbol_csl = symbol ["," symbol]*
+Symbol_csl = Group(separatedList(Symbol)).setName('Symbol_csl')
+N3Parser.addElement(Symbol_csl)
+
+# existential ::=        |     "@forSome"  symbol_csl
+Existential = Group(FORSOME + Symbol_csl).setName('Existential')
+N3Parser.addElement(Existential)
+
+# universal ::=        |     "@forAll"  symbol_csl
+Universal = Group(FORALL + Symbol_csl).setName('Universal')
+N3Parser.addElement(Universal)
+
+Expression = Forward().setName('Expression')
+N3Parser.addElement(Expression)
+# Expression << Literal('baseexpression') # temporary, will be changed down below
+
+# predicate ::=        |     "<=" 
+#         |     "=" 
+#         |     "=>" 
+#         |     "@a" 
+#         |     "@has"  expression
+#         |     "@is"  expression  "@of" 
+#         |    expression
+Predicate = Group(IMPLIESREV | IMPLIES | ISEQUAL | ISA | HAS + Expression | IS + Expression + OF | Expression).setName('Predicate')
+N3Parser.addElement(Predicate)
+
+# subject ::=        |    expression
+Subject = Group(Expression).setName('Subject')
+N3Parser.addElement(Subject)
+
+# object ::=        |    expression
+Object = Group(Expression).setName('Object')
+N3Parser.addElement(Object)
+
+# objecttail ::=        |     ","  object objecttail
+#         |    void
+#
+# objecttail only occurs in combination with object at the front (in the propertylist production).
+# We define this combination as objectlist, and skip objecttail.
+# objectlist ::=    |   object ["," object]*
+Objectlist = Group(separatedList(Object)).setName('Objectlist')
+N3Parser.addElement(Objectlist)
+
+# propertylist ::=        |    predicate object objecttail propertylisttail
+#         |    void
+# We can now replace this by:
+# propertylist ::=     |    predicate objectlist propertylisttail
+# Looking at this production:
+# propertylisttail ::=        |     ";"  propertylist
+#         |    void
+# we find that if we define:
+# property ::=     | predicate objectlist
+# propertylist ::=     | property [";" property]*
+# we end up with the same language, but easier to specify with pyparsing,
+# and easier to understand.
+# 
+# property ::=     | predicate objectlist
+Property = Group(Predicate + Objectlist).setName('Property')
+N3Parser.addElement(Property)
+
+# propertylist ::=     | property [";" property]*
+Propertylist = Optional(Group(separatedList(Property, sep=';'))).setName('Propertylist')
+N3Parser.addElement(Propertylist)
+
+# simpleStatement ::=        |    subject propertylist
+SimpleStatement = Group(Subject + Propertylist).setName('SimpleStatement')
+N3Parser.addElement(SimpleStatement)
+
+# statement ::=        |    declaration
+#         |    existential
+#         |    simpleStatement
+#         |    universal
+Statement = Group(Declaration |
+                  Existential |
+                  SimpleStatement |
+                  Universal).setName('Statement')
+N3Parser.addElement(Statement)
+
+# statementlist ::=        |    statement statementtail
+#         |    void
+# statementtail ::=        |     "."  statementlist
+#         |    void
+# Change this to:
+# statementlist ::=     | statement ["." statement]*
+Statementlist = Group(separatedList(Statement, sep='.')).setName('Statementlist')
+N3Parser.addElement(Statementlist)
+
+## formulacontent ::=        |    statementlist
+FormulaContent = Group(Statementlist).setName('FormulaContent')
+N3Parser.addElement(FormulaContent)
+
+# statements_optional ::=        |    statement  "."  statements_optional
+#        |    void
+StatementsOptional = Optional(Group(Statementlist)).setName('StatementsOptional')
+N3Parser.addElement(StatementsOptional)
+
+# dtlang ::=        |     "@"  langcode
+#         |     "^^"  symbol
+#         |    void
+DTLang = Optional(Group(Literal('@') + LANGCODE |
+               Literal('^^') + Symbol)).setName('DTLang')
+N3Parser.addElement(DTLang)
+
+# literal ::=        |    string dtlang
+N3Literal = Group(STRING + DTLang).setName('N3Literal')
+N3Parser.addElement(N3Literal)
+
+Pathlist = Forward().setName('Pathlist')
+N3Parser.addElement(Pathlist)
+Pathlist << Literal('baseexpression baseexpression') # temporary, will be changed down below
+
+# pathitem ::=        |     "("  pathlist  ")" 
+#        |     "["  propertylist  "]" 
+#        |     "{"  formulacontent  "}" 
+#        |    boolean
+#        |    literal
+#        |    numericliteral
+#        |    quickvariable
+#        |    symbol
+PathItem = Group(LPAR + Pathlist + RPAR |
+                 LBRACK + Propertylist + RBRACK |
+                 LCURL + FormulaContent + RCURL |
+                 Boolean |
+                 N3Literal |
+                 NumericLiteral |
+                 QUICKVARIABLE |
+                 Symbol).setName('PathItem')
+N3Parser.addElement(PathItem)
+
+# pathtail ::=        |     "!"  expression
+#        |     "^"  expression
+#        |    void
+#
+# This we change in:
+# pathstep ::=  | "!" expression 
+#               | "^" Expression
+# and also
+# expression ::=     | pathitem [pathstep]*
+# changing recursion into repetition
+#
+# pathstep ::=  | "!" expression 
+#               | "^" Expression
+PathStep = Group(Literal('!') + Expression |
+                 Literal('^') + Expression).setName('PathStep')
+N3Parser.addElement(PathStep)
+
+# expression ::=     | pathitem [pathstep]*
+Expression << Group(PathItem + ZeroOrMore(PathStep))
+
+# pathlist ::=        |    expression pathlist
+#        |    void
+# change to:
+# pathlist ::=        |    [expression]+
+#            | void
+Pathlist = Optional(Group(OneOrMore(Expression))).setName('Pathlist')
+N3Parser.addElement(Pathlist)
+
+# document ::=        |    statements_optional EOF
+Document = Group(StatementsOptional).setName('Document') 
+N3Parser.addElement(Document)
+
+
 
