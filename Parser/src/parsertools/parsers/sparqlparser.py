@@ -37,20 +37,22 @@ class SPARQLElement(ParseStruct):
             if postCheck:
                 self._checkParsedQuery()
                     
-    def _applyPrefixesAndBase(self, prefixes={}, baseiri=None, isexternalbase=True):
+    def _applyPrefixesAndBase(self, prefixes={}, baseiri=None):
         '''Recursively attaches information to the element about the prefixes and base-iri valid at this point
         in the expression, as determined by PREFIX and BASE declarations in the query.
-        The parameter isexternalbase is True when there is not yet a BASE declaration in force, as per the Turtle
-        specification. This indicates that the provided baseiri is externally determined, and should be overridden
-        by the first BASE declaration encountered (if any).
-        The first BASE declaration thus will replaces the externally determined base iri, instead
-        of being appended to it, which is what happens with subsequent BASE declarations.
-        Successful termination of this method does not guarantee that the base and prefixes conform to RFC 3987.
+        The parameter baseiri is as determined by the environment or an enveloping parsed entity. It must be an absolute
+        IRI, or None.
+        The treatment of BASE declarations depends on whether the IRI provided in the declaration is an absolute IRI or not.
+        If an absolute IRI, it replaces from this point on the base IRI for the query. If relative, it is resolved
+        using the baseiri parameter to give the next base IRI in force.
+        Successful termination of this method does not guarantee that the base IRI and prefixes conform to RFC 3987.
         This is purely a syntactic (substitution) operation. Use other available tests to check BASE declarations and iri
         expansion for conformance once this method has run.'''
         
         self.__dict__['_prefixes'] = prefixes
         self.__dict__['_baseiri'] = baseiri
+        if baseiri:
+            assert rfc3987.parse(baseiri, rule='absolute_IRI')
         prefixes = prefixes.copy()
         for elt in self.getChildren():
             if isinstance(elt, SPARQLParser.Prologue):
@@ -60,13 +62,16 @@ class SPARQLElement(ParseStruct):
                         prefixes[str(decl.prefix)] = str(decl.namespace)[1:-1]
                     else:
                         assert isinstance(decl, SPARQLParser.BaseDecl)
-                        if isexternalbase or not baseiri:
-                            baseiri = str(decl.baseiri)[1:-1]
-                            isexternalbase = False
-                        else:
-                            baseiri = baseiri + str(decl.baseiri)[1:-1]
+                        iripart = str(decl.baseiri)[1:-1]
+                        try:
+                            rfc3987.parse(iripart, rule='absolute_IRI')
+                            baseiri = iripart
+                        except ValueError:
+                            baseiri = rfc3987.resolve(baseiri, str(decl.baseiri)[1:-1])
+                            assert rfc3987.parse(baseiri, rule='absolute_IRI')
                             
-            elt._applyPrefixesAndBase(prefixes, baseiri, isexternalbase)
+                            
+            elt._applyPrefixesAndBase(prefixes, baseiri)
             
     def getPrefixes(self):
         return self._prefixes
@@ -95,13 +100,13 @@ class SPARQLElement(ParseStruct):
         See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
         
         # See 19.5 "IRI References"
-        self._checkBaseDecls()
+#         self._checkBaseDecls()
         self._checkIriExpansion()
     #  TODO: finish
                     
-    def _checkBaseDecls(self):
-        for elt in self.searchElements(element_type=SPARQLParser.BaseDecl):
-            rfc3987.parse(str(elt.baseiri)[1:-1], rule='absolute_IRI')
+#     def _checkBaseDecls(self):
+#         for elt in self.searchElements(element_type=SPARQLParser.BaseDecl):
+#             rfc3987.parse(str(elt.baseiri)[1:-1], rule='absolute_IRI')
     
     def _checkIriExpansion(self):
         '''Checks if all IRIs, after prefix processing and expansion, conform to RFC3987'''

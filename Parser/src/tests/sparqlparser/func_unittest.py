@@ -197,23 +197,23 @@ class Test(unittest.TestCase):
         assert r.dump() == s_dump
         
     def testPrefixesAndBase(self):
-        s = 'BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>'
+        s = 'BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>'
         
         r = parseQuery(s)
         
         answer1 = '''
 UpdateUnit
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>
 []
 
 
 UpdateUnit
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>
 []
 
 
 Update
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>
 []
 
 
@@ -288,73 +288,87 @@ SEMICOL
 prologue:22/
 
 Update
-BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>
 [('prologue1:', 'prologue:33')]
 prologue:22/
 
 Prologue
-BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 BaseDecl
 BASE <prologue:44>
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 BASE
 BASE
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 IRIREF
 <prologue:44>
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
+
+BaseDecl
+BASE </exttra>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:/exttra
+
+BASE
+BASE
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:/exttra
+
+IRIREF
+</exttra>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:/exttra
 
 PrefixDecl
 PREFIX prologue2: <prologue:55>
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 PREFIX
 PREFIX
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 PNAME_NS
 prologue2:
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 IRIREF
 <prologue:55>
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 '''     
         r_answer1 = ''
         for elt in r.searchElements():
             for e in [elt.__class__.__name__, elt, sorted(elt.getPrefixes().items()), elt.getBaseiri()]:
                 r_answer1 += str(e) + '\n'
-            r_answer1 += '\n'
-            
+            r_answer1 += '\n'            
         assert answer1.strip() == r_answer1.strip()
         
         r = parseQuery(s, base='ftp://nothing/')
          
         answer2 = '''
 UpdateUnit
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>
 []
 ftp://nothing/
 
 UpdateUnit
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>
 []
 ftp://nothing/
 
 Update
-BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>
 []
 ftp://nothing/
 
@@ -429,49 +443,64 @@ SEMICOL
 prologue:22/
 
 Update
-BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>
 [('prologue1:', 'prologue:33')]
 prologue:22/
 
 Prologue
-BASE <prologue:44> PREFIX prologue2: <prologue:55>
+BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 BaseDecl
 BASE <prologue:44>
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 BASE
 BASE
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 IRIREF
 <prologue:44>
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
+
+BaseDecl
+BASE </exttra>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:/exttra
+
+BASE
+BASE
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:/exttra
+
+IRIREF
+</exttra>
+[('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
+prologue:/exttra
 
 PrefixDecl
 PREFIX prologue2: <prologue:55>
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 PREFIX
 PREFIX
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 PNAME_NS
 prologue2:
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 
 IRIREF
 <prologue:55>
 [('prologue1:', 'prologue:33'), ('prologue2:', 'prologue:55')]
-prologue:22/prologue:44
+prologue:/exttra
 '''
         
         r_answer2 = ''

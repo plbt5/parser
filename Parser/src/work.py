@@ -1,40 +1,16 @@
-# from parsertools.parsers.sparqlparser import SPARQLParser, parseQuery, SPARQLStruct
+from parsertools.parsers.sparqlparser import SPARQLParser, parseQuery, SPARQLElement
 import rfc3987
-import lxml
 
-print(dir(lxml))
+s = 'BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>'
 
-print(lxml.__path__)
-# s = '''
-# # Comment
-# BASE <http://example/base#>
-# # Comment
-# PREFIX : <http://example/>
-# # Comment
-# LOAD <http://example.org/faraway>
-# # Comment
-# '''[1:-1]
-#
-# # r = parseQuery(s)
-# # print(r.dump())
-# # 
-# # s = '''
-# # BASE <http://example/base#>
-# # PREFIX : <http://example/>
-# # LOAD <http://example.org/faraway>
-# # '''[1:-1]
-# 
-# 
-# r = parseQuery(s)
-# print(r.dump())
-from pprint import pprint
+r = parseQuery(s, base='test:')
 
-base = 'http://test#'
- 
-pprint(rfc3987.parse(base))
-rel = 'foo'
- 
-print(rfc3987.resolve(base, rel))
- 
- 
-pprint(rfc3987.parse(rfc3987.resolve(base, rel)))
+print(r.dump())
+
+r_answer1 = ''
+for elt in r.searchElements():
+    for e in [elt.__class__.__name__, elt, sorted(elt.getPrefixes().items()), elt.getBaseiri()]:
+        r_answer1 += str(e) + '\n'
+    r_answer1 += '\n'
+    
+print(r_answer1)

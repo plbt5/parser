@@ -1,8 +1,9 @@
-Not yet released (Build 2173)
+Not yet released (Build 2213)
 
-- implemented grammar and unit tests for n3parser
-- moved sparqlparser tests to new folder tests/sparqlparser
-- created folder tests/n3parser
+- Fixed a problem with base IRI processing (SPARQLParser)
+- Implemented grammar and unit tests for n3parser
+- Moved sparqlparser tests to new folder tests/sparqlparser
+- Created folder tests/n3parser
 - Parser.addElement() now takes an optional parameter denoting the parent class of the element to be created
 
 Version 0.2.6, Build 1757
