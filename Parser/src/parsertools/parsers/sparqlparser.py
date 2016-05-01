@@ -69,6 +69,13 @@ class SPARQLElement(ParseStruct):
                         except ValueError:
                             baseiri = rfc3987.resolve(baseiri, str(decl.baseiri)[1:-1])
                             assert rfc3987.parse(baseiri, rule='absolute_IRI')
+                    if isinstance(elt, SPARQLParser.iri):
+                        expanded = getExpansion(elt)
+                        try:
+                            rfc3987.parse(expanded)
+                        except ValueError as e:
+                            raise SPARQLParseException(str(e)) 
+                        
                             
                             
             elt._applyPrefixesAndBase(prefixes, baseiri)
@@ -86,7 +93,6 @@ class SPARQLElement(ParseStruct):
             children = elt.getChildren()
             assert len(children) == 1, children
             child = children[0]
-#             newiriref = '<' + getExpansion(str(child), elt._prefixes, elt._baseiri) + '>'
             newiriref = '<' + getExpansion(child) + '>'
             elt.updateWith(newiriref)
             
@@ -100,22 +106,8 @@ class SPARQLElement(ParseStruct):
         See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
         
         # See 19.5 "IRI References"
-#         self._checkBaseDecls()
-        self._checkIriExpansion()
+        pass
     #  TODO: finish
-                    
-#     def _checkBaseDecls(self):
-#         for elt in self.searchElements(element_type=SPARQLParser.BaseDecl):
-#             rfc3987.parse(str(elt.baseiri)[1:-1], rule='absolute_IRI')
-    
-    def _checkIriExpansion(self):
-        '''Checks if all IRIs, after prefix processing and expansion, conform to RFC3987'''
-        for iri in self.searchElements(element_type=SPARQLParser.iri):
-            expanded = getExpansion(iri)
-            try:
-                rfc3987.parse(expanded)
-            except ValueError as e:
-                raise SPARQLParseException(str(e))  
 
 #
 # The following is boilerplate code, to be included in every Parsertools parser definition module

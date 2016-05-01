@@ -1,6 +1,10 @@
-Not yet released (Build 2213)
+Not yet released (Build 2233)
 
-- Fixed a problem with base IRI processing (SPARQLParser)
+- Moved prefix checking in module sparqlparser from method _checkIriExpansion() to _applyPrefixesAndBase()
+- Fixed a problem with base IRI processing (SPARQLParser). In the process:
+	- removed parameter "isdefaultbase" from _applyPrefixesAndBase()
+	- moved check on absolute iri for BASE declarations from _checkBaseDecls() into _applyPrefixesAndBase() (module sparqlparser)
+	- removed _checkBaseDecls from this module
 - Implemented grammar and unit tests for n3parser
 - Moved sparqlparser tests to new folder tests/sparqlparser
 - Created folder tests/n3parser
