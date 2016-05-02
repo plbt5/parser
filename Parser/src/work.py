@@ -1,16 +1,41 @@
-from parsertools.parsers.sparqlparser import SPARQLParser, parseQuery, SPARQLElement
-import rfc3987
+'''
+Created on 23 feb. 2016
 
-s = 'BASE <prologue:22/> PREFIX prologue1: <prologue:33> LOAD <t:testIri> ; BASE <prologue:44> BASE </exttra> PREFIX prologue2: <prologue:55>'
+@author: jeroenbruijning
+'''
 
-r = parseQuery(s, base='test:')
+from pyparsing import ParseException
+from parsertools.parsers.sparqlparser import SPARQLParser
+from parsertools.parsers.sparqlparser import stripComments
 
-print(r.dump())
+actions = {'mf:PositiveSyntaxTest11': [], 'mf:NegativeSyntaxTest11': []}
 
-r_answer1 = ''
-for elt in r.searchElements():
-    for e in [elt.__class__.__name__, elt, sorted(elt.getPrefixes().items()), elt.getBaseiri()]:
-        r_answer1 += str(e) + '\n'
-    r_answer1 += '\n'
-    
-print(r_answer1)
+lines = [l.split() for l in open('tests/sparqlparser/reftest/fed/manifest.ttl') if ('mf:PositiveSyntaxTest11' in l or 'mf:NegativeSyntaxTest11' in l or 'mf:action' in l) and not l.startswith('#')]
+
+# for l in lines: print(l)
+
+for i in range(len(lines)//2):
+#     print(i)
+    actions[lines[2*i][2]].append(lines[2*i+1][1][1:-1])
+
+posNum = len(actions['mf:PositiveSyntaxTest11'])
+negNum = len(actions['mf:NegativeSyntaxTest11'])
+
+print('Testing {} positive and {} negative testcases'.format(posNum, negNum))
+
+for fname in actions['mf:PositiveSyntaxTest11']:
+    try:
+        s = stripComments(open('tests/sparqlparser/reftest/fed/' + fname).readlines())
+        print('parsing "{}"'.format(s))
+        r = SPARQLParser.QueryUnit(s, base='http:', postCheck=True)
+    except ParseException as e:
+        print('\n*** {} should not raise exception? Check\n'.format(fname))
+
+for fname in actions['mf:NegativeSyntaxTest11']:
+    try:
+        s = open(fname).read()
+        r = SPARQLParser.UpdateUnit(s, base='http:', postCheck=False)
+        print('\n*** {} should raise exception? Check\n'.format(fname))
+    except ParseException as e:
+        pass
+print('\nPassed')

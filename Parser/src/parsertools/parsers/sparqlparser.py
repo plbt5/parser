@@ -25,7 +25,7 @@ class SPARQLElement(ParseStruct):
     '''Optional subclass of ParseStruct for the language. Typically, this class contains attributes and methods for the language that
     go beyond context free parsing, such as pre- and post processing, checking for conditions not covered by the grammar, etc.'''
     
-    def __init__(self, expr, base='', postCheck=True):
+    def __init__(self, expr, base=None, postCheck=True):
         '''This constructor has an optional argument "base". This is the externally determined base iri, as per SPARQL definition par. 4.1.1.2.
         It is only applied when the constructor is called with a string as expression to be parsed. (For internal bootstrapping purposes,
         the constructor can also be called with expr equal to "None". See also the documentation for the ParseStruct constructor.)'''
@@ -45,9 +45,9 @@ class SPARQLElement(ParseStruct):
         The treatment of BASE declarations depends on whether the IRI provided in the declaration is an absolute IRI or not.
         If an absolute IRI, it replaces from this point on the base IRI for the query. If relative, it is resolved
         using the baseiri parameter to give the next base IRI in force.
-        Successful termination of this method does not guarantee that the base IRI and prefixes conform to RFC 3987.
+        Successful termination of this method does not guarantee that IRI expansion is possible, or that expanded IRIs conform to RFC3987.
         This is purely a syntactic (substitution) operation. Use other available tests to check BASE declarations and iri
-        expansion for conformance once this method has run.'''
+        expansion for conformance once this method has run (for example, use _checkParsedQuery).'''
         
         self.__dict__['_prefixes'] = prefixes
         self.__dict__['_baseiri'] = baseiri
@@ -68,16 +68,7 @@ class SPARQLElement(ParseStruct):
                             baseiri = iripart
                         except ValueError:
                             baseiri = rfc3987.resolve(baseiri, str(decl.baseiri)[1:-1])
-                            assert rfc3987.parse(baseiri, rule='absolute_IRI')
-                    if isinstance(elt, SPARQLParser.iri):
-                        expanded = getExpansion(elt)
-                        try:
-                            rfc3987.parse(expanded)
-                        except ValueError as e:
-                            raise SPARQLParseException(str(e)) 
-                        
-                            
-                            
+                            assert rfc3987.parse(baseiri, rule='absolute_IRI')                            
             elt._applyPrefixesAndBase(prefixes, baseiri)
             
     def getPrefixes(self):
@@ -101,12 +92,20 @@ class SPARQLElement(ParseStruct):
             for elt in self.searchElements(element_type=stringtype):
                 elt.updateWith(stringEscape(str(elt)))
 
+    def _checkExpansion(self):
+        iris = self.searchElements(element_type=SPARQLParser.PrefixedName) + self.searchElements(element_type=SPARQLParser.IRIREF)
+        for iri in iris:
+            expansion = getExpansion(iri)
+            assert rfc3987.match(expansion, rule='IRI_reference'), 'Expression "{}" with expansion "{}" is not an IRI Reference'.format(iri, expansion)
+
     def _checkParsedQuery(self):
         '''Used to perform additional checks on the ParseStruct resulting from a parsing action. These are conditions that are not covered by the EBNF syntax.
         See the applicable comments and remarks in https://www.w3.org/TR/sparql11-query/, sections 19.1 - 19.8.'''
         
         # See 19.5 "IRI References"
-        pass
+        self._checkExpansion()
+            
+        
     #  TODO: finish
 
 #
@@ -222,7 +221,7 @@ def getExpansion(iri):
     else:
         assert isinstance(oldiri, SPARQLParser.IRIREF)
         newiristr = str(oldiri)[1:-1]
-    if rfc3987.match(newiristr, 'irelative_ref'):
+    if not rfc3987.match(newiristr, 'absolute_IRI'):
         assert oldiri.getBaseiri() != None
         newiristr = rfc3987.resolve(oldiri.getBaseiri(), newiristr)
     assert rfc3987.match(newiristr), 'String "{}" cannot be expanded as absolute iri'.format(newiristr)

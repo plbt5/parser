@@ -49,8 +49,8 @@ class Test(unittest.TestCase):
             assert str(e) == 'Direct setting of attributes not allowed. To change an element e, try e.updateWith() instead.'
             
         s = '<c:check#22?> ( $var, ?var )'
-        r = SPARQLParser.PrimaryExpression(s)
-        assert r.iriOrFunction.iri == SPARQLParser.iri('<c:check#22?>')
+        r = SPARQLParser.PrimaryExpression(s, postCheck=False)
+        assert r.iriOrFunction.iri == SPARQLParser.iri('<c:check#22?>', postCheck=False)
     
     def testUpdateWith(self):
         s = "'work' ^^<work:>"
@@ -97,7 +97,7 @@ class Test(unittest.TestCase):
     def testSearchElements(self):
         
         s = '<c:check#22?> ( $var, ?var )'
-        r = SPARQLParser.PrimaryExpression(s)
+        r = SPARQLParser.PrimaryExpression(s, postCheck=False)
         
         found = r.searchElements()
         assert len(found) == 32, len(found)
@@ -116,7 +116,7 @@ class Test(unittest.TestCase):
 
     def testGetChildOrAncestors(self):
         s = '<c:check#22?> ( $var, ?var )'
-        r = SPARQLParser.PrimaryExpression(s)
+        r = SPARQLParser.PrimaryExpression(s, postCheck=False)
         found = r.searchElements(element_type=SPARQLParser.ArgList)
         arglist = found[0]
         assert(len(arglist.getChildren())) == 4, len(arglist.getChildren())
