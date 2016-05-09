@@ -24,18 +24,26 @@ class N3Element(ParseStruct):
     '''Optional subclass of ParseStruct for the language. Typically, this class contains attributes and methods for the language that
     go beyond context free parsing, such as pre- and post processing, checking for conditions not covered by the grammar, etc.'''
     
-    pass
-#     def __init__(self, expr, base='', postCheck=True):
-#         '''This constructor has an optional argument "base". This is the externally determined base iri, as per SPARQL definition par. 4.1.1.2.
-#         It is only applied when the constructor is called with a string as expression to be parsed. (For internal bootstrapping purposes,
-#         the constructor can also be called with expr equal to "None". See also the documentation for the ParseStruct constructor.)'''
-#         ParseStruct.__init__(self, expr)
-#         self.__dict__['_prefixes'] = {}
-#         self.__dict__['_baseiri'] = None
-#         if not expr is None:
-#             self._applyPrefixesAndBase(baseiri=base)
+    def __init__(self, expr):
+        '''This constructor has an optional argument "base". This is the externally determined base iri, as per SPARQL definition par. 4.1.1.2.
+        It is only applied when the constructor is called with a string as expression to be parsed. (For internal bootstrapping purposes,
+        the constructor can also be called with expr equal to "None". See also the documentation for the ParseStruct constructor.)'''
+        ParseStruct.__init__(self, expr)
+        if not expr is None:
+            newexpr = _applyKeywords(expr)
 #             if postCheck:
 #                 self._checkParsedQuery()
+
+    def _applyKeywords(self, keywords=[], keywordsDecl=False):
+        for elt in self.getItems():
+            if isinstance(elt, KEYWORDS):
+                print('found keyword:', elt)
+                keywordsDecl = True
+                keywords += str(elt)
+            
+                
+                
+            
 #                     
 #     def _applyPrefixesAndBase(self, prefixes={}, baseiri=None, isexternalbase=True):
 #         '''Recursively attaches information to the element about the prefixes and base-iri valid at this point
@@ -140,6 +148,18 @@ class Parser:
 
 N3Parser = Parser(N3Element)
 
+def _applyKeywords(expr):
+    newexpr = ''
+    keywords = set(['a', 'is', 'of'])
+    keywordsDeclared = False
+    inKeywordDeclaration = False
+    tokens = iter(expr.split())
+    while True:
+        token = next(tokens)
+        print(token)
+            
+            
+    
 # #
 # # Main function to call. This is a convenience function, adapted to the SPARQL definition.
 # #

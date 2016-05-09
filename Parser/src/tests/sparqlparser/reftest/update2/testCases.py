@@ -22,14 +22,14 @@ print('Testing {} positive and {} negative testcases'.format(posNum, negNum))
 for fname in actions['mf:PositiveUpdateSyntaxTest11']:
     try:
         s = stripComments(open(fname).readlines())
-        r = SPARQLParser.UpdateUnit(s, postCheck=False)
+        r = SPARQLParser.UpdateUnit(s, postParseCheck=False)
     except ParseException as e:
         print('\n*** {} should not raise exception? Check'.format(fname))
 
 for fname in actions['mf:NegativeUpdateSyntaxTest11']:
     try:
         s = open(fname).read()
-        r = SPARQLParser.UpdateUnit(s, postCheck=False)
+        r = SPARQLParser.UpdateUnit(s, postParseCheck=False)
         print('\n*** {} should raise exception? Check'.format(fname))
     except ParseException as e:
         pass

@@ -1,41 +1,26 @@
-'''
-Created on 23 feb. 2016
+from pyparsing import *
+from parsertools.parsers.sparqlparser import *
 
-@author: jeroenbruijning
-'''
 
-from pyparsing import ParseException
-from parsertools.parsers.sparqlparser import SPARQLParser
-from parsertools.parsers.sparqlparser import stripComments
+        
+        
+if __name__ == '__main__':
 
-actions = {'mf:PositiveSyntaxTest11': [], 'mf:NegativeSyntaxTest11': []}
+    s = '''
+PREFIX  dc: <http://purl.org/dc/elements/1.1/>
+PREFIX  : <http://example.org/book/>
 
-lines = [l.split() for l in open('tests/sparqlparser/reftest/fed/manifest.ttl') if ('mf:PositiveSyntaxTest11' in l or 'mf:NegativeSyntaxTest11' in l or 'mf:action' in l) and not l.startswith('#')]
-
-# for l in lines: print(l)
-
-for i in range(len(lines)//2):
-#     print(i)
-    actions[lines[2*i][2]].append(lines[2*i+1][1][1:-1])
-
-posNum = len(actions['mf:PositiveSyntaxTest11'])
-negNum = len(actions['mf:NegativeSyntaxTest11'])
-
-print('Testing {} positive and {} negative testcases'.format(posNum, negNum))
-
-for fname in actions['mf:PositiveSyntaxTest11']:
-    try:
-        s = stripComments(open('tests/sparqlparser/reftest/fed/' + fname).readlines())
-        print('parsing "{}"'.format(s))
-        r = SPARQLParser.QueryUnit(s, base='http:', postCheck=True)
-    except ParseException as e:
-        print('\n*** {} should not raise exception? Check\n'.format(fname))
-
-for fname in actions['mf:NegativeSyntaxTest11']:
-    try:
-        s = open(fname).read()
-        r = SPARQLParser.UpdateUnit(s, base='http:', postCheck=False)
-        print('\n*** {} should raise exception? Check\n'.format(fname))
-    except ParseException as e:
-        pass
-print('\nPassed')
+SELECT  $title
+WHERE   { :book1  dc:title  $title }
+'''[1:-1]
+    
+    r = parseQuery(s)
+    print(r)
+    r.expandIris()
+    print(r)
+#     r_answer1 = ''
+#     for elt in r.searchElements():
+#         for e in [elt.__class__.__name__, elt, sorted(elt.getPrefixes().items()), elt.getBaseiri()]:
+#             r_answer1 += str(e) + '\n'
+#         r_answer1 += '\n'
+#     print(r_answer1)

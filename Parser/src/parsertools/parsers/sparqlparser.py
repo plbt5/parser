@@ -25,7 +25,7 @@ class SPARQLElement(ParseStruct):
     '''Optional subclass of ParseStruct for the language. Typically, this class contains attributes and methods for the language that
     go beyond context free parsing, such as pre- and post processing, checking for conditions not covered by the grammar, etc.'''
     
-    def __init__(self, expr, base=None, postCheck=True):
+    def __init__(self, expr, base=None, postParseCheck=True):
         '''This constructor has an optional argument "base". This is the externally determined base iri, as per SPARQL definition par. 4.1.1.2.
         It is only applied when the constructor is called with a string as expression to be parsed. (For internal bootstrapping purposes,
         the constructor can also be called with expr equal to "None". See also the documentation for the ParseStruct constructor.)'''
@@ -34,7 +34,7 @@ class SPARQLElement(ParseStruct):
         self.__dict__['_baseiri'] = None
         if not expr is None:
             self._applyPrefixesAndBase(baseiri=base)
-            if postCheck:
+            if postParseCheck:
                 self._checkParsedQuery()
                     
     def _applyPrefixesAndBase(self, prefixes={}, baseiri=None):
@@ -44,10 +44,10 @@ class SPARQLElement(ParseStruct):
         IRI, or None.
         The treatment of BASE declarations depends on whether the IRI provided in the declaration is an absolute IRI or not.
         If an absolute IRI, it replaces from this point on the base IRI for the query. If relative, it is resolved
-        using the baseiri parameter to give the next base IRI in force.
+        using the baseiri parameter (which may not be None in this case) to give the next base IRI in force.
         Successful termination of this method does not guarantee that IRI expansion is possible, or that expanded IRIs conform to RFC3987.
-        This is purely a syntactic (substitution) operation. Use other available tests to check BASE declarations and iri
-        expansion for conformance once this method has run (for example, use _checkParsedQuery).'''
+        This is purely a syntactic (substitution) operation. Use other available tests afterwards to check whether iris can be correctly
+        expanded using base and prefixes in force at their location. The function _checkParsedQuery can be used for this.'''
         
         self.__dict__['_prefixes'] = prefixes
         self.__dict__['_baseiri'] = baseiri
@@ -142,7 +142,7 @@ SPARQLParser = Parser(SPARQLElement)
 # Main function to call. This is a convenience function, adapted to the SPARQL definition.
 #
 
-def parseQuery(querystring, base=''):
+def parseQuery(querystring, base=None):
     '''Entry point to parse any SPARQL query'''
     
     s = prepareQuery(querystring)
@@ -211,17 +211,16 @@ def getExpansion(iri):
         oldiri = children[0]
     else:
         oldiri = iri
+#     print('found oldiri:', oldiri)
     if isinstance(oldiri, SPARQLParser.PrefixedName):
         splitiri = str(oldiri).split(':', maxsplit=1)
         assert len(splitiri) == 2, splitiri
-        if splitiri[0] != '':
-            newiristr = oldiri.getPrefixes()[splitiri[0] + ':'][1:-1] + splitiri[1]
-        else:
-            newiristr = splitiri[1]
+        newiristr = oldiri.getPrefixes()[splitiri[0] + ':'] + splitiri[1]
     else:
         assert isinstance(oldiri, SPARQLParser.IRIREF)
         newiristr = str(oldiri)[1:-1]
-    if not rfc3987.match(newiristr, 'absolute_IRI'):
+    if rfc3987.match(newiristr, 'irelative_ref'):
+#         print('found relative iri:', oldiri)
         assert oldiri.getBaseiri() != None
         newiristr = rfc3987.resolve(oldiri.getBaseiri(), newiristr)
     assert rfc3987.match(newiristr), 'String "{}" cannot be expanded as absolute iri'.format(newiristr)

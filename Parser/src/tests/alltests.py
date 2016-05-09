@@ -10,7 +10,7 @@ import os
 from parsertools import buildfilepath, versionfilepath
 
 print('Running SPARQLParser tests')
-os.chdir('reftest/fed')
+os.chdir('sparqlparser/reftest/fed')
 print('Running fed test/n')
 print(check_output(['/Library/Frameworks/Python.framework/Versions/3.5/bin/python3.5', 'testCases.py']).decode('utf-8'))
 os.chdir('../query')
