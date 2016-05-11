@@ -21,7 +21,7 @@ class ParsertoolsException(Exception):
 class NoPrefixError(ParsertoolsException):
     pass
 
-# print('parsertools version {}, build {}'.format(open(versionfilepath).read().strip(), buildno))
+print('parsertools version {}, build {}'.format(open(versionfilepath).read().strip(), buildno))
 
 
 if sys.version_info < (3,3):

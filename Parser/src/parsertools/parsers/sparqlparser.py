@@ -45,7 +45,7 @@ class SPARQLElement(ParseStruct):
         The treatment of BASE declarations depends on whether the IRI provided in the declaration is an absolute IRI or not.
         If an absolute IRI, it replaces from this point on the base IRI for the query. If relative, it is resolved
         using the baseiri parameter (which may not be None in this case) to give the next base IRI in force.
-        Successful termination of this method does not guarantee that IRI expansion is possible, or that expanded IRIs conform to RFC3987.
+        Successful termination of this method does not guarantee that IRI expansion is possible, or that expanded IRIs conform to RFC 3987.
         This is purely a syntactic (substitution) operation. Use other available tests afterwards to check whether iris can be correctly
         expanded using base and prefixes in force at their location. The function _checkParsedQuery can be used for this.'''
         
@@ -86,7 +86,7 @@ class SPARQLElement(ParseStruct):
             child = children[0]
             newiriref = '<' + getExpansion(child) + '>'
             elt.updateWith(newiriref)
-            
+             
     def processEscapeSeqs(self):
         for stringtype in [SPARQLParser.STRING_LITERAL2, SPARQLParser.STRING_LITERAL1, SPARQLParser.STRING_LITERAL_LONG1, SPARQLParser.STRING_LITERAL_LONG2]:
             for elt in self.searchElements(element_type=stringtype):
@@ -199,9 +199,13 @@ def unescapeUcode(s):
       
     return s
 
-# helper function to determing the expanded form of an iri, in a given context of prefixes and base-iri.
+# various helper functions
+
+# def isInScope(variable, element):
+#     assert isinstance(element, (SPARQLParser.GroupGraphPattern, SPARQLParser.Path, SPARQLParser.GroupOrUnionGraphPattern, SPARQLParser.GraphGraphPattern, SPARQLParser.InlineData, SPARQLParser., SPARQLParser.SubSelect, ))
+#     if isinstance(element, SPARQLParser.GroupGraphPattern):
+#         return element in variable.getAncestors()
     
-# def getExpansion(iri, prefixes, baseiri):
 def getExpansion(iri):
     '''Converts iri to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
     assert isinstance(iri, (SPARQLParser.iri, SPARQLParser.PrefixedName, SPARQLParser.IRIREF)), 'Cannot expand non-iri element "{}" ({})'.format(iri, iri.__class__.__name__)        

@@ -511,6 +511,38 @@ prologue:/exttra
         
         assert answer2.strip() == r_answer2.strip()
         
+    def testExpandIris(self):
+        s1 = '''
+PREFIX  dc: <http://purl.org/dc/elements/1.1/>
+SELECT  ?title
+WHERE   { <http://example.org/book/book1> dc:title ?title }  
+'''[1:-1]
+    
+        s2 = '''
+PREFIX  dc: <http://purl.org/dc/elements/1.1/>
+PREFIX  : <http://example.org/book/>
+
+SELECT  $title
+WHERE   { :book1  dc:title  $title }
+'''[1:-1]
+    
+        s3 = '''
+BASE    <http://example.org/book/>
+PREFIX  dc: <http://purl.org/dc/elements/1.1/>
+
+SELECT  $title
+WHERE   { <book1>  dc:title  ?title }
+'''[1:-1]
+    
+        r1 = parseQuery(s1)
+        r2 = parseQuery(s2)
+        r3 = parseQuery(s3)
+        r1.expandIris()
+        r2.expandIris()
+        r3.expandIris()
+        assert str(r1) == 'PREFIX dc: <http://purl.org/dc/elements/1.1/> SELECT ?title WHERE { <http://example.org/book/book1> <http://purl.org/dc/elements/1.1/title> ?title }'
+        assert str(r2) == 'PREFIX dc: <http://purl.org/dc/elements/1.1/> PREFIX : <http://example.org/book/> SELECT $title WHERE { <http://example.org/book/book1> <http://purl.org/dc/elements/1.1/title> $title }'
+        assert str(r3) == 'BASE <http://example.org/book/> PREFIX dc: <http://purl.org/dc/elements/1.1/> SELECT $title WHERE { <http://example.org/book/book1> <http://purl.org/dc/elements/1.1/title> ?title }'
 
     def testUnescapeUcode(self):
         s = 'abra\\U000C00AAcada\\u00AAbr\u99DDa'

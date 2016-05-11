@@ -1,5 +1,7 @@
-Not yet released (Build 2284)
+Build 2490
+- parsertools again prints version and build information when run
 
+Build 2284
 - SPARQLParser: fixed prefix expansion where prefix equal to ":"
 - SPARQLParser: changed default value of parameter "base" for parseQuery() from "''" to "None"; adapted func_unittest.py accordingly
 - adapted a few SPARQLParser tests with non-absolute IRI expansions: these are now called with "postParseCheck=False" to avoid irrelevant assertion failures

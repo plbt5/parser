@@ -2,25 +2,18 @@ from pyparsing import *
 from parsertools.parsers.sparqlparser import *
 
 
-        
-        
-if __name__ == '__main__':
+s = '''        
+# query op ontoTemp1A
+PREFIX    ontoA:    <http://ts.tno.nl/mediator/1.0/examples/ontoTemp1A#>
+PREFIX    rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-    s = '''
-PREFIX  dc: <http://purl.org/dc/elements/1.1/>
-PREFIX  : <http://example.org/book/>
-
-SELECT  $title
-WHERE   { :book1  dc:title  $title }
+SELECT ?p ?v
+WHERE {
+    ?p rdf:type ontoA:Patient .
+    ?p ontoA:hasTemp ?v
+    FILTER (?v > 37.0)
+}
 '''[1:-1]
-    
-    r = parseQuery(s)
-    print(r)
-    r.expandIris()
-    print(r)
-#     r_answer1 = ''
-#     for elt in r.searchElements():
-#         for e in [elt.__class__.__name__, elt, sorted(elt.getPrefixes().items()), elt.getBaseiri()]:
-#             r_answer1 += str(e) + '\n'
-#         r_answer1 += '\n'
-#     print(r_answer1)
+
+r = parseQuery(s)
+print(r.dump())
