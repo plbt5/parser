@@ -207,7 +207,7 @@ def unescapeUcode(s):
 #         return element in variable.getAncestors()
     
 def getExpansion(iri):
-    '''Converts iri to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
+    '''Converts iri (or PrefixedName, or IRIREF) to normal form by replacing prefixes, if any, with their value and resolving the result, if relative, to absolute form.'''
     assert isinstance(iri, (SPARQLParser.iri, SPARQLParser.PrefixedName, SPARQLParser.IRIREF)), 'Cannot expand non-iri element "{}" ({})'.format(iri, iri.__class__.__name__)        
     if isinstance(iri, SPARQLParser.iri):
         children = iri.getChildren()

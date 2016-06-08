@@ -159,6 +159,7 @@ class ParseStruct:
         except ParseException:
             raise ParsertoolsException('{} is not a valid string for {} element'.format(new_content, self.__class__.__name__))        
         self.__dict__['_items'] = other.__dict__['_items']
+        self.createParentPointers()
         assert self.isValid()
     
     def check(self, *, report = False, render=False, dump=False):

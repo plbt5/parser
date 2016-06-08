@@ -61,6 +61,21 @@ class Test(unittest.TestCase):
         r_copy.lexical_form.updateWith("'work'")
         assert r_copy == r
         
+        q = '''
+PREFIX foaf:   <http://xmlns.com/foaf/0.1/>
+
+SELECT ?p WHERE 
+    {
+        ?p a foaf:Person
+    } 
+'''
+        r = parseQuery(q)
+        r.expandIris()
+        subjpath = r.searchElements(element_type=SPARQLParser.IRIREF, value=None)[1]
+        assert str(subjpath.getParent()) == '<http://xmlns.com/foaf/0.1/Person>'
+        assert str(subjpath.getAncestors()) == '[iri("<http://xmlns.com/foaf/0.1/Person>"), GraphTerm("<http://xmlns.com/foaf/0.1/Person>"), VarOrTerm("<http://xmlns.com/foaf/0.1/Person>"), GraphNodePath("<http://xmlns.com/foaf/0.1/Person>"), ObjectPath("<http://xmlns.com/foaf/0.1/Person>"), ObjectListPath("<http://xmlns.com/foaf/0.1/Person>"), PropertyListPathNotEmpty("a <http://xmlns.com/foaf/0.1/Person>"), TriplesSameSubjectPath("?p a <http://xmlns.com/foaf/0.1/Person>"), TriplesBlock("?p a <http://xmlns.com/foaf/0.1/Person>"), GroupGraphPatternSub("?p a <http://xmlns.com/foaf/0.1/Person>"), GroupGraphPattern("{ ?p a <http://xmlns.com/foaf/0.1/Person> }"), WhereClause("WHERE { ?p a <http://xmlns.com/foaf/0.1/Person> }"), SelectQuery("SELECT ?p WHERE { ?p a <http://xmlns.com/foaf/0.1/Person> }"), Query("PREFIX foaf: <http://xmlns.com/foaf/0.1/> SELECT ?p WHERE { ?p a <http://xmlns.com/foaf/0.1/Person> }"), QueryUnit("PREFIX foaf: <http://xmlns.com/foaf/0.1/> SELECT ?p WHERE { ?p a <http://xmlns.com/foaf/0.1/Person> }")]'
+
+        
     def testBranchAndAtom(self):
         s = "'work' ^^<work:>"
         r = SPARQLParser.RDFLiteral(s)
@@ -547,6 +562,7 @@ WHERE   { <book1>  dc:title  ?title }
     def testUnescapeUcode(self):
         s = 'abra\\U000C00AAcada\\u00AAbr\u99DDa'
         assert unescapeUcode(s) == 'abra󀂪cadaªbr駝a'
+
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
