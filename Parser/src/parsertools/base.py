@@ -107,11 +107,12 @@ class ParseStruct:
         result.extend(flattenList(self.getItems()))
         return result  
     
-    def createParentPointers(self):
+    def createParentPointers(self, recursive=True):
         for i in self.getItems():
             if isinstance(i, ParseStruct):
                 i.__dict__['_parent'] = self
-                i.createParentPointers()
+                if recursive:
+                    i.createParentPointers()
 
     def copy(self):
         '''Returns a deep copy of itself.'''
@@ -159,7 +160,7 @@ class ParseStruct:
         except ParseException:
             raise ParsertoolsException('{} is not a valid string for {} element'.format(new_content, self.__class__.__name__))        
         self.__dict__['_items'] = other.__dict__['_items']
-        self.createParentPointers()
+        self.createParentPointers(recursive=False)
         assert self.isValid()
     
     def check(self, *, report = False, render=False, dump=False):
@@ -265,6 +266,12 @@ class ParseStruct:
         '''Returns True if the object is equal to the result of re-parsing its own rendering.
         This should normally be the case.'''
         return self == self.__getPattern().parseString(self.__str__())[0]
+    
+    def hasParentPointers(self):
+        for item in [i for i in self.getItems() if isinstance(i, ParseStruct)]:
+            if not item.getParent() == self or not item.hasParentPointers():
+                return False
+        return True
     
 def parseStructFunc(class_):
     '''Returns the function that converts a ParseResults object to a ParseStruct object of class "class_", with label set to None, and

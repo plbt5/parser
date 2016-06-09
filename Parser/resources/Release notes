@@ -1,3 +1,7 @@
+Build 2647
+- Added check hasParentPointers() to base.py
+- Small changes to updateWith() and createParentPointers() in base.py, no functional change
+
 Build 2620
 - fixed a problem where IRIREF nodes upon expansion lost their parent and ancestors
 
